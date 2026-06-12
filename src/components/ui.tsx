@@ -1,11 +1,17 @@
 // Shared presentational building blocks (warm palette).
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, ViewStyle } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ViewStyle, Platform } from 'react-native';
 import { colors, cat, urgency, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon, IconName } from './Icon';
 import { CATEGORY, CategoryCode, STOCK, StockLevel, emojiFor, recipeEmojiFor } from '../data/constants';
 import { RECIPE_ART } from './RecipeArt';
+
+// 웹에서 이모지가 흑백 외곽선(text-presentation)으로 폴백되지 않도록 컬러 이모지 폰트를 명시한다.
+// (RNW 기본 폰트 스택에는 색상 이모지 폰트가 없어 환경에 따라 흑백 외곽선으로 떨어질 수 있음.)
+const emojiFont = Platform.OS === 'web'
+  ? ({ fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' } as const)
+  : null;
 
 /** Fake phone status bar (9:41 · signal · wifi · battery). */
 export function PhoneStatusBar({ dark = false }: { dark?: boolean }) {
@@ -29,7 +35,7 @@ export function FoodTile({ name, category, size = 46 }: { name?: string; categor
   const emoji = emojiFor(name ?? '', category);
   return (
     <View style={{ width: size, height: size, borderRadius: size * 0.28, backgroundColor: c.bg, alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ fontSize: size * 0.5, lineHeight: size * 0.62, textAlign: 'center' }}>{emoji}</Text>
+      <Text style={[{ fontSize: size * 0.5, lineHeight: size * 0.62, textAlign: 'center' }, emojiFont]}>{emoji}</Text>
     </View>
   );
 }
@@ -42,7 +48,7 @@ export function RecipeTile({ id, size = 52, bg }: { id: string; size?: number; b
       {Art ? (
         <Art size={size * 0.78} />
       ) : (
-        <Text style={{ fontSize: size * 0.5, lineHeight: size * 0.62, textAlign: 'center' }}>{recipeEmojiFor(id)}</Text>
+        <Text style={[{ fontSize: size * 0.5, lineHeight: size * 0.62, textAlign: 'center' }, emojiFont]}>{recipeEmojiFor(id)}</Text>
       )}
     </View>
   );
