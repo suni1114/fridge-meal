@@ -18,6 +18,12 @@ expo-env.d.ts
 *.key
 *.mobileprovision
 
+# OMC tooling state
+.omc/
+
+# Vercel
+.vercel/
+
 # Metro
 .metro-health-check*
 
