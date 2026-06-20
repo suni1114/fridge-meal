@@ -4,8 +4,8 @@
   "main": "index.ts",
   "dependencies": {
     "@expo/metro-runtime": "~56.0.15",
-    "expo": "~56.0.11",
-    "expo-font": "~56.0.6",
+    "expo": "~56.0.12",
+    "expo-font": "~56.0.7",
     "expo-status-bar": "~56.0.4",
     "phosphor-react-native": "^3.0.6",
     "react": "19.2.3",

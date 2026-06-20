@@ -88,6 +88,19 @@ export const INGREDIENT_INFO: Record<string, Info> = {
   사과: { category: 'fruit', storage: 'room_temp' },
   바나나: { category: 'fruit', storage: 'room_temp' },
   아몬드: { category: 'etc', storage: 'room_temp' },
+  // 요리 애호가형 — 추가 식재료 · 양념 · 향신료
+  고추: { category: 'veg', storage: 'refrigerated' },
+  스파게티: { category: 'grain', storage: 'room_temp' },
+  버터: { category: 'dairy', storage: 'refrigerated' },
+  올리브유: { category: 'sauce', storage: 'sauce' },
+  소금: { category: 'sauce', storage: 'sauce' },
+  후추: { category: 'sauce', storage: 'sauce' },
+  설탕: { category: 'sauce', storage: 'sauce' },
+  굴소스: { category: 'sauce', storage: 'refrigerated' },
+  식초: { category: 'sauce', storage: 'sauce' },
+  케첩: { category: 'sauce', storage: 'refrigerated' },
+  마요네즈: { category: 'sauce', storage: 'refrigerated' },
+  카레가루: { category: 'sauce', storage: 'room_temp' },
 };
 
 export function infoFor(name: string): Info {
@@ -99,7 +112,7 @@ export interface PresetPack {
   code: string;
   label: string;
   desc: string;
-  icon: 'cooking-pot' | 'user' | 'house-line' | 'leaf';
+  icon: 'cooking-pot' | 'user' | 'house-line' | 'leaf' | 'flame';
   items: string[];
 }
 export const PRESET_PACKS: PresetPack[] = [
@@ -130,6 +143,20 @@ export const PRESET_PACKS: PresetPack[] = [
     desc: '단백질과 채소 위주로 먹어요.',
     icon: 'leaf',
     items: ['닭가슴살', '계란', '두부', '양상추', '오이', '방울토마토', '브로콜리', '고구마', '현미밥', '그릭요거트', '아몬드', '참치캔', '두유', '양배추', '버섯'],
+  },
+  {
+    code: 'cooking_lover',
+    label: '요리 애호가형',
+    desc: '직접 요리를 즐겨, 양념·향신료가 다양해요.',
+    icon: 'flame',
+    items: [
+      '계란', '돼지고기', '소고기', '닭고기', '닭가슴살', '두부', '냉동새우',
+      '대파', '양파', '마늘', '감자', '당근', '애호박', '브로콜리', '버섯', '양배추', '토마토', '오이', '고추', '콩나물',
+      '밥', '현미밥', '라면', '식빵', '스파게티',
+      '우유', '치즈', '그릭요거트', '버터',
+      '고추장', '된장', '간장', '참기름', '식용유', '올리브유', '소금', '후추', '설탕', '굴소스', '식초', '케첩', '마요네즈', '카레가루',
+      '참치캔', '스팸', '김',
+    ],
   },
 ];
 
