@@ -4,7 +4,7 @@ import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { colors, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon } from '../components/Icon';
-import { FoodTile, DdayBadge, SectionTitle, Pill, RecipeTile } from '../components/ui';
+import { FoodTile, DdayBadge, SectionTitle, Pill, RecipeTile, HeaderActions } from '../components/ui';
 import { useApp, matchAll } from '../data/store';
 import { useNav } from '../navigation/nav';
 
@@ -27,7 +27,7 @@ export function HomeScreen() {
           </View>
           <Text style={s.brandText}>냉장고비서</Text>
         </View>
-        <Icon name="bell" size={24} color={colors.ink} />
+        <HeaderActions showSearch={false} />
       </View>
 
       <ScrollView contentContainerStyle={{ paddingBottom: 28 }} showsVerticalScrollIndicator={false}>
@@ -114,6 +114,7 @@ const s = StyleSheet.create({
   brand: { flexDirection: 'row', alignItems: 'center', gap: 9 },
   brandDot: { width: 28, height: 28, borderRadius: 9, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   brandText: { fontFamily: font.extrabold, fontSize: 20, color: colors.ink, letterSpacing: -0.5 },
+  topActions: { flexDirection: 'row', alignItems: 'center', gap: 16 },
 
   section: { paddingHorizontal: 20, paddingTop: 18 },
   card: { backgroundColor: colors.surface, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.line, paddingHorizontal: 16 },

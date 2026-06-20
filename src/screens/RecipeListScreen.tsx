@@ -5,7 +5,7 @@ import { colors, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon } from '../components/Icon';
 import { useApp, matchAll, RecipeMatch } from '../data/store';
-import { RecipeTile } from '../components/ui';
+import { RecipeTile, HeaderActions } from '../components/ui';
 import { useNav } from '../navigation/nav';
 
 const TABS = [
@@ -29,8 +29,11 @@ export function RecipeListScreen() {
   return (
     <View style={s.root}>
       <View style={s.header}>
-        <Text style={s.title}>오늘 뭐 먹지?</Text>
-        <Text style={s.sub}>냉장고 재료로 만들 수 있는 요리예요</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={s.title}>오늘 뭐 먹지?</Text>
+          <Text style={s.sub}>냉장고 재료로 만들 수 있는 요리예요</Text>
+        </View>
+        <HeaderActions />
       </View>
 
       <View style={s.tabs}>
@@ -109,7 +112,7 @@ function RecipeCard({ m, onOpen, onAdd }: { m: RecipeMatch; onOpen: () => void; 
 
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.cream },
-  header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 10 },
+  header: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 10 },
   title: { fontFamily: font.extrabold, fontSize: 24, color: colors.ink, letterSpacing: -0.5 },
   sub: { fontFamily: font.medium, fontSize: 13.5, color: colors.inkAlt, marginTop: 5 },
 

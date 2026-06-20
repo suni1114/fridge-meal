@@ -51,3 +51,5 @@ yarn-error.*
 # Claude Code (로컬 전용)
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
+
+.vercel

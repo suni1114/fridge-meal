@@ -6,6 +6,7 @@ import { font } from '../theme/fonts';
 import { Icon, IconName } from './Icon';
 import { CATEGORY, CategoryCode, STOCK, StockLevel, emojiFor, recipeEmojiFor } from '../data/constants';
 import { RECIPE_ART } from './RecipeArt';
+import { useNav } from '../navigation/nav';
 
 // 웹에서 이모지가 흑백 외곽선(text-presentation)으로 폴백되지 않도록 컬러 이모지 폰트를 명시한다.
 // (RNW 기본 폰트 스택에는 색상 이모지 폰트가 없어 환경에 따라 흑백 외곽선으로 떨어질 수 있음.)
@@ -27,6 +28,45 @@ export function PhoneStatusBar({ dark = false }: { dark?: boolean }) {
     </View>
   );
 }
+
+/** 모든 페이지 공통 우측 상단 액션 — 검색·알림·설정 (동일 크기/색/스타일). */
+export function HeaderActions({
+  onSearch,
+  searchActive,
+  showSearch = true,
+  showBell = true,
+  showSettings = true,
+}: {
+  onSearch?: () => void;
+  searchActive?: boolean;
+  showSearch?: boolean;
+  showBell?: boolean;
+  showSettings?: boolean;
+}) {
+  const nav = useNav();
+  return (
+    <View style={ha.row}>
+      {showSearch && (
+        <Pressable hitSlop={6} onPress={onSearch}>
+          <Icon name="search" size={20} color={searchActive ? colors.primary : colors.ink} weight={searchActive ? 'bold' : 'regular'} />
+        </Pressable>
+      )}
+      {showBell && (
+        <Pressable hitSlop={6}>
+          <Icon name="bell" size={20} color={colors.ink} />
+        </Pressable>
+      )}
+      {showSettings && (
+        <Pressable hitSlop={6} onPress={() => nav.setTab('settings')}>
+          <Icon name="gear" size={20} color={colors.ink} />
+        </Pressable>
+      )}
+    </View>
+  );
+}
+const ha = StyleSheet.create({
+  row: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+});
 
 /** Colored tile with a food emoji illustration for the ingredient. */
 export function FoodTile({ name, category, size = 46 }: { name?: string; category: CategoryCode; size?: number }) {

@@ -4,7 +4,7 @@ import { View, Text, ScrollView, Pressable, TextInput, Modal, StyleSheet } from 
 import { colors, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon } from '../components/Icon';
-import { FoodTile, SectionTitle, AppButton } from '../components/ui';
+import { FoodTile, SectionTitle, AppButton, HeaderActions } from '../components/ui';
 import { STORAGE_LABEL, STOCK, StockLevel } from '../data/constants';
 import { useApp, ShoppingItem, infoFor } from '../data/store';
 
@@ -74,10 +74,7 @@ export function ShoppingScreen() {
     <View style={s.root}>
       <View style={s.header}>
         <Text style={s.title}>장보기</Text>
-        <Pressable style={s.addBtn} onPress={() => setAddOpen(true)}>
-          <Icon name="plus" size={16} color={colors.white} weight="bold" />
-          <Text style={s.addBtnText}>직접 추가</Text>
-        </Pressable>
+        <HeaderActions />
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 8, paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
@@ -86,7 +83,7 @@ export function ShoppingScreen() {
           {auto.length ? auto.map((it) => <Row key={it.id} item={it} />) : <Text style={s.empty}>자동으로 모인 재료가 없어요.</Text>}
         </View>
 
-        <SectionTitle title={`직접 추가 ${manual.length}`} style={{ marginTop: 22 }} />
+        <SectionTitle title={`직접 추가 ${manual.length}`} actionLabel="추가" onAction={() => setAddOpen(true)} style={{ marginTop: 22 }} />
         <View style={s.group}>
           {manual.length ? manual.map((it) => <Row key={it.id} item={it} />) : <Text style={s.empty}>직접 추가한 재료가 없어요.</Text>}
         </View>
