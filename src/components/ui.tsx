@@ -1,6 +1,6 @@
 // Shared presentational building blocks (warm palette).
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, ViewStyle, Platform } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ViewStyle, Platform, Image } from 'react-native';
 import { colors, cat, urgency, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon, IconName } from './Icon';
@@ -11,7 +11,7 @@ import { useNav } from '../navigation/nav';
 // 웹에서 이모지가 흑백 외곽선(text-presentation)으로 폴백되지 않도록 컬러 이모지 폰트를 명시한다.
 // (RNW 기본 폰트 스택에는 색상 이모지 폰트가 없어 환경에 따라 흑백 외곽선으로 떨어질 수 있음.)
 const emojiFont = Platform.OS === 'web'
-  ? ({ fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' } as const)
+  ? ({ fontFamily: '"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji",sans-serif' } as const)
   : null;
 
 /** Fake phone status bar (9:41 · signal · wifi · battery). */
@@ -80,8 +80,23 @@ export function FoodTile({ name, category, size = 46 }: { name?: string; categor
   );
 }
 
-/** Colored tile with a recipe illustration — custom SVG art when available, else emoji. */
+// 레시피 실제 사진. assets/recipes/<id>.jpg 파일을 넣고 아래 require 주석을 해제하면
+// 일러스트 대신 실제 사진이 표시된다. (파일이 없으면 require가 번들 에러를 내므로 반드시 파일을 먼저 넣을 것)
+const RECIPE_PHOTO: Record<string, any> = {
+  'kimchi-fried-rice': require('../../assets/recipes/kimchi-fried-rice.jpg'),
+  'tofu-kimchi': require('../../assets/recipes/tofu-kimchi.jpg'),
+  'egg-roll': require('../../assets/recipes/egg-roll.jpg'),
+  'kimchi-stew': require('../../assets/recipes/kimchi-stew.jpg'),
+  'doenjang-stew': require('../../assets/recipes/doenjang-stew.jpg'),
+  'bean-sprout-soup': require('../../assets/recipes/bean-sprout-soup.jpg'),
+};
+
+/** 레시피 타일 — 실제 사진(있으면) > 커스텀 SVG 일러스트 > 이모지 순. */
 export function RecipeTile({ id, size = 52, bg }: { id: string; size?: number; bg: string }) {
+  const photo = RECIPE_PHOTO[id];
+  if (photo) {
+    return <Image source={photo} style={{ width: size, height: size, borderRadius: size * 0.28 }} resizeMode="cover" />;
+  }
   const Art = RECIPE_ART[id];
   return (
     <View style={{ width: size, height: size, borderRadius: size * 0.28, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }}>
@@ -119,12 +134,12 @@ export function DdayBadge({ dday }: { dday: number | null }) {
 }
 
 /** 남은 정도 태그. */
-export function StockTag({ stock }: { stock: StockLevel }) {
+export function StockTag({ stock, qty }: { stock: StockLevel; qty?: string }) {
   const meta = STOCK[stock];
   const tone = meta.color === 'urgent' ? urgency.urgent : meta.color === 'warn' ? urgency.warn : urgency.ok;
   return (
     <View style={[s.stockTag, { backgroundColor: tone.bg }]}>
-      <Text style={[s.stockText, { color: tone.fg }]}>{meta.label}</Text>
+      <Text style={[s.stockText, { color: tone.fg }]}>{qty ?? meta.label}</Text>
     </View>
   );
 }

@@ -1,6 +1,6 @@
 // 냉장고비서 (fridge-meal) — V1.0 데모
 // 온보딩 → 빠른 세팅 → 메인(홈·냉장고·요리추천·장보기·설정) + 오버레이(레시피 상세·식재료 폼)
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -77,6 +77,20 @@ function PhoneShell({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   const [fontsLoaded] = useFonts(fontAssets);
+
+  // 웹에서 Windows 기본 이모지(Segoe, 두꺼운 검정 외곽선) 대신 외곽선이 얇은 Noto Color Emoji를 사용.
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      const id = 'noto-color-emoji';
+      if (!document.getElementById(id)) {
+        const link = document.createElement('link');
+        link.id = id;
+        link.rel = 'stylesheet';
+        link.href = 'https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap';
+        document.head.appendChild(link);
+      }
+    }
+  }, []);
 
   return (
     <SafeAreaProvider>

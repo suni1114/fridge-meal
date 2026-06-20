@@ -94,7 +94,7 @@ export function FridgeScreen() {
       <View style={{ flex: 1 }}>
         <View style={s.itemTop}>
           <Text style={s.itemName}>{it.name}</Text>
-          <StockTag stock={it.stock} />
+          <StockTag stock={it.stock} qty={it.qty} />
         </View>
         <Text style={s.itemMeta}>
           {STORAGE_LABEL[it.storage] ?? '기타'} · {CATEGORY[it.category]?.label}
@@ -226,7 +226,7 @@ export function FridgeScreen() {
                   <FoodTile name={sheet.name} category={sheet.category} size={40} />
                   <View style={{ flex: 1 }}>
                     <Text style={s.sheetName}>{sheet.name}</Text>
-                    <Text style={s.itemMeta}>{STORAGE_LABEL[sheet.storage]} · {STOCK[sheet.stock].label}</Text>
+                    <Text style={s.itemMeta}>{STORAGE_LABEL[sheet.storage]} · {sheet.qty ?? STOCK[sheet.stock].label}</Text>
                   </View>
                   <DdayBadge dday={sheet.dday} />
                 </View>
@@ -294,7 +294,7 @@ const s = StyleSheet.create({
 
   // 카테고리 그룹 헤더
   catHeader: { flexDirection: 'row', alignItems: 'center', gap: 7, paddingTop: 14, paddingBottom: 8 },
-  catHeaderEmoji: { fontSize: 16, ...(Platform.OS === 'web' ? { fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' } : null) },
+  catHeaderEmoji: { fontSize: 16, ...(Platform.OS === 'web' ? { fontFamily: '"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji",sans-serif' } : null) },
   catHeaderLabel: { fontFamily: font.extrabold, fontSize: 14, color: colors.ink },
   catHeaderCount: { fontFamily: font.semibold, fontSize: 12, color: colors.inkAsst, marginLeft: 2 },
 

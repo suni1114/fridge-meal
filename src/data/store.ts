@@ -11,6 +11,7 @@ export interface FridgeItem {
   category: CategoryCode;
   storage: string; // refrigerated | frozen | room_temp | sauce | etc
   stock: StockLevel;
+  qty?: string; // 표시용 수량 (예: "2개", "300g", "75%"). 내부 정렬/장보기는 stock 사용.
   dday: number | null; // days to expiry (1 → D-1); null = 미입력
   memo?: string;
 }
