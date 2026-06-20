@@ -88,8 +88,8 @@ export function FridgeScreen() {
     }
   };
 
-  const renderCard = (it: FridgeItem) => (
-    <Pressable key={it.id} style={s.itemCard} onPress={() => setSheet(it)}>
+  const renderRow = (it: FridgeItem, idx: number) => (
+    <Pressable key={it.id} style={[s.itemRow, idx > 0 && s.rowDivider]} onPress={() => setSheet(it)}>
       <FoodTile name={it.name} category={it.category} size={40} />
       <View style={{ flex: 1 }}>
         <View style={s.itemTop}>
@@ -186,7 +186,7 @@ export function FridgeScreen() {
                 const list = listFor(i);
                 return (
                   <ScrollView key={t.label} style={{ width: w }} contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 4, paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
-                    {list.map(renderCard)}
+                    {list.length > 0 && <View style={s.listBox}>{list.map(renderRow)}</View>}
                     {list.length === 0 && <Text style={s.empty}>{t.label} 보관 재료가 없어요.</Text>}
                   </ScrollView>
                 );
@@ -208,7 +208,7 @@ export function FridgeScreen() {
                     <Icon name={open ? 'caret-down' : 'caret-right'} size={15} color={colors.inkAsst} weight="bold" />
                   </View>
                 </Pressable>
-                {open && items.map(renderCard)}
+                {open && <View style={s.listBox}>{items.map(renderRow)}</View>}
               </View>
             );
           })}
@@ -316,7 +316,10 @@ const s = StyleSheet.create({
   sortChipTextOn: { fontFamily: font.bold, color: colors.primary },
   countText: { fontFamily: font.extrabold, fontSize: 15, color: colors.ink, marginLeft: 'auto' },
 
-  itemCard: { flexDirection: 'row', alignItems: 'center', gap: 11, backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.line, padding: 10, marginBottom: 7 },
+  // 홈 '오늘 먼저 써야 할 재료'처럼 — 박스 하나에 행을 라인으로 구분.
+  listBox: { backgroundColor: colors.surface, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.line, paddingHorizontal: 14 },
+  itemRow: { flexDirection: 'row', alignItems: 'center', gap: 11, paddingVertical: 11 },
+  rowDivider: { borderTopWidth: 1, borderTopColor: colors.line },
   itemTop: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   itemName: { fontFamily: font.bold, fontSize: 15, color: colors.ink },
   itemMeta: { fontFamily: font.medium, fontSize: 11.5, color: colors.inkAlt, marginTop: 2 },
