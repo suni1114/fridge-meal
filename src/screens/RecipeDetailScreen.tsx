@@ -1,6 +1,7 @@
 // 레시피 상세 (spec §9.10)
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon } from '../components/Icon';
@@ -11,6 +12,7 @@ import { useNav } from '../navigation/nav';
 export function RecipeDetailScreen({ recipeId }: { recipeId: string }) {
   const { fridge, addToShopping } = useApp();
   const nav = useNav();
+  const insets = useSafeAreaInsets();
   const recipe = RECIPES.find((r) => r.id === recipeId);
   if (!recipe) return null;
   const m = matchRecipe(recipe, fridge);
@@ -70,7 +72,7 @@ export function RecipeDetailScreen({ recipeId }: { recipeId: string }) {
       </ScrollView>
 
       {m.missing.length > 0 && (
-        <View style={s.footer}>
+        <View style={[s.footer, { paddingBottom: 16 + insets.bottom }]}>
           <AppButton
             label={`부족 재료 ${m.missing.length}개 장보기 추가`}
             icon="basket"

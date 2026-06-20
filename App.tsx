@@ -3,6 +3,7 @@
 import React from 'react';
 import { View, StyleSheet, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
 import { fontAssets } from './src/theme/fonts';
 import { colors } from './src/theme/tokens';
@@ -57,25 +58,43 @@ function Root() {
   );
 }
 
+// 폰 셸: 웹은 데모용 폰 프레임(가짜 상태바 포함), 네이티브는 실기기 세이프에어리어를 반영한다.
+function PhoneShell({ children }: { children: React.ReactNode }) {
+  const insets = useSafeAreaInsets();
+
+  if (Platform.OS === 'web') {
+    return (
+      <View style={s.phone}>
+        <PhoneStatusBar />
+        {children}
+      </View>
+    );
+  }
+
+  // 실기기: 상단 인셋(노치/다이나믹 아일랜드)만큼만 패딩 — 가짜 상태바는 쓰지 않는다.
+  return <View style={[s.phoneNative, { paddingTop: insets.top }]}>{children}</View>;
+}
+
 export default function App() {
   const [fontsLoaded] = useFonts(fontAssets);
 
   return (
-    <View style={s.backdrop}>
-      <StatusBar style="dark" />
-      <View style={s.phone}>
-        <PhoneStatusBar />
-        {fontsLoaded ? (
-          <AppProvider>
-            <NavProvider>
-              <Root />
-            </NavProvider>
-          </AppProvider>
-        ) : (
-          <View style={{ flex: 1, backgroundColor: colors.cream }} />
-        )}
+    <SafeAreaProvider>
+      <View style={s.backdrop}>
+        <StatusBar style="dark" />
+        <PhoneShell>
+          {fontsLoaded ? (
+            <AppProvider>
+              <NavProvider>
+                <Root />
+              </NavProvider>
+            </AppProvider>
+          ) : (
+            <View style={{ flex: 1, backgroundColor: colors.cream }} />
+          )}
+        </PhoneShell>
       </View>
-    </View>
+    </SafeAreaProvider>
   );
 }
 
@@ -86,22 +105,21 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  phone: Platform.select({
-    web: {
-      width: 390,
-      height: 844,
-      backgroundColor: colors.cream,
-      borderRadius: 40,
-      overflow: 'hidden',
-      boxShadow: '0 24px 60px rgba(20,30,20,0.22)',
-    } as any,
-    default: {
-      flex: 1,
-      width: '100%',
-      backgroundColor: colors.cream,
-      paddingTop: Platform.OS === 'ios' ? 44 : 24,
-    },
-  }),
+  // 웹: 데모용 고정 폰 프레임
+  phone: {
+    width: 390,
+    height: 844,
+    backgroundColor: colors.cream,
+    borderRadius: 40,
+    overflow: 'hidden',
+    boxShadow: '0 24px 60px rgba(20,30,20,0.22)',
+  } as any,
+  // 네이티브: 화면 전체를 채우고 상단 인셋은 PhoneShell에서 동적으로 적용
+  phoneNative: {
+    flex: 1,
+    width: '100%',
+    backgroundColor: colors.cream,
+  },
   body: { flex: 1, backgroundColor: colors.cream },
   overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: colors.cream },
 });

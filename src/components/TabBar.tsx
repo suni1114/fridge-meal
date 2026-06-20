@@ -1,6 +1,7 @@
 // Bottom tab navigation: 홈 · 냉장고 · 요리추천 · 장보기 · 설정
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon, IconName } from './Icon';
@@ -15,8 +16,11 @@ const TABS: { key: TabKey; label: string; icon: IconName }[] = [
 ];
 
 export function TabBar({ active, onChange }: { active: TabKey; onChange: (k: TabKey) => void }) {
+  const insets = useSafeAreaInsets();
+  // 웹은 기존 데모 값(20)을 유지하고, 실기기는 홈 인디케이터만큼 띄운다.
+  const paddingBottom = Platform.OS === 'web' ? 20 : Math.max(insets.bottom, 12);
   return (
-    <View style={s.nav}>
+    <View style={[s.nav, { paddingBottom }]}>
       {TABS.map((t) => {
         const on = t.key === active;
         return (

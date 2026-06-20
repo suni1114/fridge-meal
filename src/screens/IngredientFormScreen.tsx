@@ -1,6 +1,7 @@
 // 식재료 등록/수정 (spec §9.8). 필수: 식재료명·보관위치·남은정도. 선택: 카테고리·유통기한·메모.
 import React, { useState } from 'react';
 import { View, Text, ScrollView, Pressable, TextInput, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon } from '../components/Icon';
@@ -21,6 +22,7 @@ const DDAY_PICKS: { label: string; v: number | null }[] = [
 export function IngredientFormScreen({ itemId, prefillName }: { itemId?: string; prefillName?: string }) {
   const { fridge, upsertFridge, removeFridge } = useApp();
   const nav = useNav();
+  const insets = useSafeAreaInsets();
   const editing = fridge.find((x) => x.id === itemId);
 
   const [name, setName] = useState(editing?.name ?? prefillName ?? '');
@@ -105,7 +107,7 @@ export function IngredientFormScreen({ itemId, prefillName }: { itemId?: string;
         )}
       </ScrollView>
 
-      <View style={s.footer}>
+      <View style={[s.footer, { paddingBottom: 16 + insets.bottom }]}>
         <AppButton label={editing ? '저장하기' : '냉장고에 추가'} onPress={save} disabled={!canSave} />
       </View>
     </View>
