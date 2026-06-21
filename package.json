@@ -9,6 +9,7 @@
     "expo-font": "~56.0.7",
     "expo-linear-gradient": "~56.0.4",
     "expo-status-bar": "~56.0.4",
+    "expo-updates": "~56.0.19",
     "phosphor-react-native": "^3.0.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",

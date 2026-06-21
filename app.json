@@ -3,6 +3,9 @@
     "name": "냉장고비서",
     "slug": "fridge-assistant",
     "version": "1.0.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
