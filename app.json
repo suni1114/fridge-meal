@@ -28,6 +28,15 @@
     },
     "plugins": [
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "81df6c3f-d036-492c-9c63-ddeb1eb8e8cb"
+      }
+    },
+    "owner": "seungmiseo",
+    "updates": {
+      "url": "https://u.expo.dev/81df6c3f-d036-492c-9c63-ddeb1eb8e8cb"
+    }
   }
 }
