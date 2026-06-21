@@ -1,4 +1,4 @@
-// 냉장고 (spec §9.7) — 보관위치 스와이프 탭(냉장·냉동·실온) · 임박순 정렬 · 상태변경/수정/삭제/장보기
+// 냉장고 (spec §9.7) — 보관위치 스와이프 탭(냉장·냉동·실온) · 임박순 정렬 · 수량변경/수정/삭제/장보기
 import React, { useRef, useState } from 'react';
 import {
   View,
@@ -18,6 +18,7 @@ import { Icon, IconName } from '../components/Icon';
 import { FoodTile, DdayBadge, StockTag, HeaderActions } from '../components/ui';
 import { STORAGE_LABEL, CATEGORY, STOCK, STOCK_ORDER, StockLevel, FINE_CATEGORIES, fineCategoryOf } from '../data/constants';
 import { useApp, FridgeItem } from '../data/store';
+import { daysUntil } from '../data/date';
 import { useNav } from '../navigation/nav';
 
 // 보관 위치 탭 — 냉장·냉동·실온. 실온에는 양념/소스·기타 보관 재료도 함께 묶어 보여준다.
@@ -53,7 +54,7 @@ export function FridgeScreen() {
   const sortList = (arr: FridgeItem[]) => {
     if (sortKey === 'recent') return [...arr].reverse(); // 나중에 추가된 재료가 위로
     return [...arr].sort((a, b) => {
-      if (sortKey === 'expiry') return (a.dday ?? 9999) - (b.dday ?? 9999);
+      if (sortKey === 'expiry') return (daysUntil(a.expiry) ?? 9999) - (daysUntil(b.expiry) ?? 9999);
       if (sortKey === 'name') return a.name.localeCompare(b.name, 'ko');
       if (sortKey === 'stock') return STOCK_ORDER.indexOf(b.stock) - STOCK_ORDER.indexOf(a.stock);
       return 0;
@@ -97,10 +98,10 @@ export function FridgeScreen() {
           <StockTag stock={it.stock} qty={it.qty} />
         </View>
         <Text style={s.itemMeta}>
-          {STORAGE_LABEL[it.storage] ?? '기타'} · {CATEGORY[it.category]?.label}
+          {STORAGE_LABEL[it.storage] ?? '기타'} · {FINE_CATEGORIES.find((c) => c.code === fineCategoryOf(it.name, it.category))?.label ?? CATEGORY[it.category]?.label}
         </Text>
       </View>
-      <DdayBadge dday={it.dday} />
+      <DdayBadge expiry={it.expiry} />
     </Pressable>
   );
 
@@ -228,9 +229,9 @@ export function FridgeScreen() {
                     <Text style={s.sheetName}>{sheet.name}</Text>
                     <Text style={s.itemMeta}>{STORAGE_LABEL[sheet.storage]} · {sheet.qty ?? STOCK[sheet.stock].label}</Text>
                   </View>
-                  <DdayBadge dday={sheet.dday} />
+                  <DdayBadge expiry={sheet.expiry} />
                 </View>
-                <SheetAction icon="arrows-clockwise" label="상태 변경" onPress={() => setStockSheet(sheet)} />
+                <SheetAction icon="arrows-clockwise" label="수량 변경" onPress={() => setStockSheet(sheet)} />
                 <SheetAction icon="pencil" label="수정" onPress={() => { const it = sheet; setSheet(null); nav.openIngredientForm({ itemId: it.id }); }} />
                 <SheetAction icon="basket" label="장보기 목록에 추가" onPress={() => { addToShopping(sheet.name, 'low_stock'); setSheet(null); }} />
                 <SheetAction icon="fork-knife" label="이 재료로 요리 보기" onPress={() => { setSheet(null); nav.setTab('recipe'); }} />
@@ -241,7 +242,7 @@ export function FridgeScreen() {
         </Pressable>
       </Modal>
 
-      {/* 상태 변경 시트 */}
+      {/* 수량 변경 시트 */}
       <Modal visible={!!stockSheet} transparent animationType="fade" onRequestClose={() => setStockSheet(null)}>
         <Pressable style={s.backdrop} onPress={() => setStockSheet(null)}>
           <Pressable style={s.sheet}>

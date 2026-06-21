@@ -5,6 +5,7 @@ import { colors, cat, urgency, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon, IconName } from './Icon';
 import { CATEGORY, CategoryCode, STOCK, StockLevel, emojiFor, recipeEmojiFor } from '../data/constants';
+import { daysUntil } from '../data/date';
 import { RECIPE_ART } from './RecipeArt';
 import { useNav } from '../navigation/nav';
 
@@ -89,6 +90,36 @@ const RECIPE_PHOTO: Record<string, any> = {
   'kimchi-stew': require('../../assets/recipes/kimchi-stew.jpg'),
   'doenjang-stew': require('../../assets/recipes/doenjang-stew.jpg'),
   'bean-sprout-soup': require('../../assets/recipes/bean-sprout-soup.jpg'),
+  // 밥·덮밥류 (14)
+  'bibimbap': require('../../assets/recipes/bibimbap.jpg'),
+  'soy-egg-rice': require('../../assets/recipes/soy-egg-rice.jpg'),
+  'spam-fried-rice': require('../../assets/recipes/spam-fried-rice.jpg'),
+  'bacon-fried-rice': require('../../assets/recipes/bacon-fried-rice.jpg'),
+  'shrimp-fried-rice': require('../../assets/recipes/shrimp-fried-rice.jpg'),
+  'bulgogi-rice': require('../../assets/recipes/bulgogi-rice.jpg'),
+  'pork-rice-bowl': require('../../assets/recipes/pork-rice-bowl.jpg'),
+  'chicken-mayo-rice': require('../../assets/recipes/chicken-mayo-rice.jpg'),
+  'tuna-mayo-rice': require('../../assets/recipes/tuna-mayo-rice.jpg'),
+  'curry-rice': require('../../assets/recipes/curry-rice.jpg'),
+  'omurice': require('../../assets/recipes/omurice.jpg'),
+  'tofu-rice-bowl': require('../../assets/recipes/tofu-rice-bowl.jpg'),
+  'mushroom-rice': require('../../assets/recipes/mushroom-rice.jpg'),
+  'egg-fried-rice': require('../../assets/recipes/egg-fried-rice.jpg'),
+  // 찌개·국·탕 (14)
+  'soft-tofu-stew': require('../../assets/recipes/soft-tofu-stew.jpg'),
+  'beef-radish-soup': require('../../assets/recipes/beef-radish-soup.jpg'),
+  'egg-drop-soup': require('../../assets/recipes/egg-drop-soup.jpg'),
+  'mushroom-soup': require('../../assets/recipes/mushroom-soup.jpg'),
+  'potato-soup': require('../../assets/recipes/potato-soup.jpg'),
+  'fish-cake-soup': require('../../assets/recipes/fish-cake-soup.jpg'),
+  'army-stew': require('../../assets/recipes/army-stew.jpg'),
+  'yukgaejang': require('../../assets/recipes/yukgaejang.jpg'),
+  'rice-cake-soup': require('../../assets/recipes/rice-cake-soup.jpg'),
+  'napa-doenjang-soup': require('../../assets/recipes/napa-doenjang-soup.jpg'),
+  'kimchi-soup': require('../../assets/recipes/kimchi-soup.jpg'),
+  'spicy-pork-stew': require('../../assets/recipes/spicy-pork-stew.jpg'),
+  'chicken-soup': require('../../assets/recipes/chicken-soup.jpg'),
+  'spinach-soup': require('../../assets/recipes/spinach-soup.jpg'),
 };
 
 /** 레시피 타일 — 실제 사진(있으면) > 커스텀 SVG 일러스트 > 이모지 순. */
@@ -115,8 +146,9 @@ function ddayTone(dday: number) {
   return urgency.ok;
 }
 
-/** D-day badge. dday null → 미입력(옅게). */
-export function DdayBadge({ dday }: { dday: number | null }) {
+/** D-day badge. expiry(절대 날짜)로부터 오늘 기준 남은 일수를 계산해 표시. null → 미입력(옅게). */
+export function DdayBadge({ expiry }: { expiry: string | null }) {
+  const dday = daysUntil(expiry);
   if (dday == null) {
     return (
       <View style={[s.badge, { backgroundColor: colors.fill }]}>
@@ -125,7 +157,7 @@ export function DdayBadge({ dday }: { dday: number | null }) {
     );
   }
   const tone = ddayTone(dday);
-  const label = dday <= 0 ? 'D-day' : `D-${dday}`;
+  const label = dday < 0 ? `D+${-dday}` : dday === 0 ? 'D-day' : `D-${dday}`;
   return (
     <View style={[s.badge, { backgroundColor: tone.bg }]}>
       <Text style={[s.badgeText, { color: tone.fg }]}>{label}</Text>
@@ -145,14 +177,21 @@ export function StockTag({ stock, qty }: { stock: StockLevel; qty?: string }) {
 }
 
 /** Section title with optional right action. */
-export function SectionTitle({ title, actionLabel, onAction, style }: { title: string; actionLabel?: string; onAction?: () => void; style?: ViewStyle }) {
+export function SectionTitle({ title, count, actionLabel, actionIcon, onAction, style, compact }: { title: string; count?: number; actionLabel?: string; actionIcon?: IconName; onAction?: () => void; style?: ViewStyle; compact?: boolean }) {
   return (
     <View style={[s.sectionTitle, style]}>
-      <Text style={s.sectionTitleText}>{title}</Text>
+      <View style={s.sectionTitleLeft}>
+        <Text style={[s.sectionTitleText, compact && s.sectionTitleCompact]}>{title}</Text>
+        {count != null && (
+          <View style={s.sectionCount}>
+            <Text style={s.sectionCountText}>{count}</Text>
+          </View>
+        )}
+      </View>
       {actionLabel && (
         <Pressable onPress={onAction} hitSlop={8} style={s.sectionAction}>
           <Text style={s.sectionActionText}>{actionLabel}</Text>
-          <Icon name="caret-right" size={14} color={colors.inkAlt} weight="bold" />
+          <Icon name={actionIcon ?? 'caret-right'} size={14} color={colors.inkAlt} weight="bold" />
         </Pressable>
       )}
     </View>
@@ -240,7 +279,11 @@ const s = StyleSheet.create({
   stockText: { fontFamily: font.bold, fontSize: 12 },
 
   sectionTitle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4, marginBottom: 12 },
+  sectionTitleLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   sectionTitleText: { fontFamily: font.extrabold, fontSize: 18, color: colors.ink, letterSpacing: -0.3 },
+  sectionTitleCompact: { fontFamily: font.bold, fontSize: 16, color: colors.ink },
+  sectionCount: { minWidth: 22, height: 22, borderRadius: 11, paddingHorizontal: 7, backgroundColor: '#E2DFD3', alignItems: 'center', justifyContent: 'center' },
+  sectionCountText: { fontFamily: font.bold, fontSize: 12.5, color: colors.inkAlt },
   sectionAction: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   sectionActionText: { fontFamily: font.semibold, fontSize: 13, color: colors.inkAlt },
 

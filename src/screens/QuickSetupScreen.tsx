@@ -6,12 +6,13 @@ import { font } from '../theme/fonts';
 import { Icon } from '../components/Icon';
 import { AppButton } from '../components/ui';
 import { CATEGORY } from '../data/constants';
-import { PRESET_PACKS, useApp, matchAll, infoFor } from '../data/store';
+import { PRESET_PACKS, useApp, matchAll, infoFor, FridgeItem } from '../data/store';
+import { todayISO } from '../data/date';
 
 const SUGGESTED = ['우유', '치즈', '콩나물', '토마토', '버섯', '참치캔', '두유', '사과'];
 
 export function QuickSetupScreen({ onDone }: { onDone: () => void }) {
-  const { fridge } = useApp();
+  const { fridge, setFridge } = useApp();
   const [step, setStep] = useState(0);
   const [packCode, setPackCode] = useState('home_basic');
   const [checked, setChecked] = useState<Record<string, boolean>>({});
@@ -35,14 +36,28 @@ export function QuickSetupScreen({ onDone }: { onDone: () => void }) {
 
   const addItem = (n: string) => {
     const name = n.trim();
-    if (!name || added.includes(name) || pack.items.includes(name)) return;
-    setAdded((a) => [...a, name]);
+    if (!name) return;
+    // 함수형 업데이트로 최신 상태 기준 중복만 막는다(빠른 연타 시 중복/유실 방지).
+    setAdded((a) => (a.includes(name) ? a : [...a, name]));
   };
 
   const matches = matchAll(fridge);
   const readyCount = matches.filter((m) => m.missing.length === 0).length;
   const almostCount = matches.filter((m) => m.missing.length >= 1 && m.missing.length <= 2).length;
   const total = pack.items.filter(isChecked).length + added.length;
+
+  // 선택한 프리셋 재료 + 직접 추가한 재료를 실제 냉장고에 채운다(기존 내용은 대체).
+  // 등록 단계라 수량은 '충분함', 유통기한은 미입력(null)으로 시작한다.
+  const buildFridge = () => {
+    // 선택한 프리셋 재료 + 추가한 재료를 합치되 중복 이름은 한 번만.
+    const names = [...new Set([...pack.items.filter(isChecked), ...added])];
+    setFridge(
+      names.map((name, i): FridgeItem => {
+        const info = infoFor(name);
+        return { id: `fr-${name}-${i}`, name, category: info.category, storage: info.storage, stock: 'enough', expiry: null, added: todayISO() };
+      })
+    );
+  };
 
   const back = () => (step === 0 ? undefined : setStep(step - 1));
 
@@ -96,7 +111,7 @@ export function QuickSetupScreen({ onDone }: { onDone: () => void }) {
             <Text style={s.h1}>우리집에 있는 재료만{'\n'}남겨주세요.</Text>
             <Text style={s.sub}>기본은 체크된 상태예요. 없는 재료만 해제하세요.</Text>
           </View>
-          <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 16 }} showsVerticalScrollIndicator={false}>
+          <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 18, paddingBottom: 16 }} showsVerticalScrollIndicator={false}>
             {Object.entries(grouped).map(([cat, items]) => (
               <View key={cat} style={{ marginBottom: 18 }}>
                 <Text style={s.catLabel}>{CATEGORY[cat]?.label ?? cat}</Text>
@@ -105,7 +120,7 @@ export function QuickSetupScreen({ onDone }: { onDone: () => void }) {
                     const on = isChecked(n);
                     return (
                       <Pressable key={n} onPress={() => toggle(n)} style={[s.checkTile, on && s.checkTileOn]}>
-                        <Icon name={on ? 'check-circle' : 'plus-circle'} size={18} color={on ? colors.primary : colors.inkAsst} weight={on ? 'fill' : 'regular'} />
+                        <Icon name={on ? 'check-circle' : 'plus-circle'} size={16} color={on ? colors.primary : colors.inkAsst} weight={on ? 'fill' : 'regular'} />
                         <Text style={[s.checkText, on && { color: colors.ink }]}>{n}</Text>
                       </Pressable>
                     );
@@ -173,7 +188,7 @@ export function QuickSetupScreen({ onDone }: { onDone: () => void }) {
               </>
             )}
           </ScrollView>
-          <AppButton label="냉장고 만들기" icon="magic-wand" onPress={() => setStep(3)} style={s.cta} />
+          <AppButton label="냉장고 만들기" icon="magic-wand" onPress={() => { buildFridge(); setStep(3); }} style={s.cta} />
         </>
       )}
 
@@ -214,9 +229,9 @@ const s = StyleSheet.create({
   progressFill: { height: 6, borderRadius: 3, backgroundColor: colors.primary },
   progressText: { fontFamily: font.bold, fontSize: 12, color: colors.inkAlt, width: 28, textAlign: 'right' },
 
-  head: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 4 },
+  head: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 4 },
   h1: { fontFamily: font.extrabold, fontSize: 26, color: colors.ink, lineHeight: 34, letterSpacing: -0.5 },
-  sub: { fontFamily: font.medium, fontSize: 14, color: colors.inkAlt, marginTop: 10 },
+  sub: { fontFamily: font.regular, fontSize: 14, color: colors.inkAlt, marginTop: 10 },
 
   cta: { marginHorizontal: 20, marginBottom: 20, marginTop: 6 },
 
@@ -227,10 +242,10 @@ const s = StyleSheet.create({
   typeDesc: { fontFamily: font.medium, fontSize: 13, color: colors.inkAlt, marginTop: 4 },
 
   catLabel: { fontFamily: font.extrabold, fontSize: 14, color: colors.inkAlt, marginBottom: 10 },
-  checkWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  checkTile: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 10, paddingHorizontal: 13, borderRadius: radius.pill, borderWidth: 1.5, borderColor: colors.line, backgroundColor: colors.surface },
+  checkWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
+  checkTile: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 7, paddingHorizontal: 11, borderRadius: radius.pill, borderWidth: 1.5, borderColor: colors.line, backgroundColor: colors.surface },
   checkTileOn: { borderColor: colors.primary, backgroundColor: colors.primaryBg },
-  checkText: { fontFamily: font.bold, fontSize: 14, color: colors.inkAsst },
+  checkText: { fontFamily: font.bold, fontSize: 13, color: colors.inkAsst },
 
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.line, borderRadius: radius.lg, paddingHorizontal: 14, paddingVertical: 6 },
   input: { flex: 1, fontFamily: font.medium, fontSize: 15, color: colors.ink, paddingVertical: 8 },

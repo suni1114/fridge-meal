@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon, IconName } from './Icon';
@@ -41,12 +42,18 @@ export function TabBar({ active, onChange }: { active: TabKey; onChange: (k: Tab
   return (
     <View style={[s.nav, { paddingBottom }]}>
       {LEFT.map(renderTab)}
-      {/* 가운데 강조된 식재료 추가 버튼 */}
+      {/* 가운데 식재료 추가 버튼 — 원형 + 11시 방향 그라데이션, 원 전체 균일 글로우 */}
       <Pressable style={s.item} onPress={() => nav.openIngredientForm()}>
-        <View style={s.addFab}>
-          <Icon name="plus" size={26} color={colors.white} weight="bold" />
+        <View style={s.addFabGlow}>
+          <LinearGradient
+            colors={[colors.primaryDark, colors.primary]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={s.addFab}
+          >
+            <Icon name="plus" size={19} color={colors.white} weight="bold" />
+          </LinearGradient>
         </View>
-        <Text style={[s.label, s.addLabel]}>추가</Text>
       </Pressable>
       {RIGHT.map(renderTab)}
     </View>
@@ -66,19 +73,21 @@ const s = StyleSheet.create({
   },
   item: { alignItems: 'center', gap: 4, flex: 1 },
   label: { fontSize: 11 },
-  // 가운데 추가 버튼 — 둥근 사각(스퀘어클) + 부드러운 그림자로 세련되게.
-  addFab: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: -14,
+  // 글로우(드롭쉐도우) — 방향 없이 원 전체에 균일, 연두에 초록끼를 살짝.
+  addFabGlow: {
+    borderRadius: 22,
     ...Platform.select({
-      web: { boxShadow: '0 8px 18px rgba(46,90,46,0.28)' } as any,
-      default: { elevation: 6, shadowColor: colors.primary, shadowOpacity: 0.3, shadowRadius: 9, shadowOffset: { width: 0, height: 6 } },
+      web: { boxShadow: '0 0 20px rgba(124,205,84,0.65)' } as any,
+      default: { elevation: 8, shadowColor: '#7CCD54', shadowOpacity: 0.65, shadowRadius: 12, shadowOffset: { width: 0, height: 0 } },
     }),
   },
-  addLabel: { color: colors.primary, fontFamily: font.bold, marginTop: 6 },
+  // 추가 버튼 본체 — 원형, 다른 탭 아이콘과 같은 줄에 맞춤, 11시 방향 그라데이션.
+  addFab: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
 });

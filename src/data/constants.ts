@@ -195,7 +195,7 @@ const FINE_BY_NAME: Record<string, string> = {
   카레가루: 'sauce', 쌈장: 'sauce', 고춧가루: 'sauce', 다진마늘: 'sauce', 물엿: 'sauce', 올리고당: 'sauce',
   맛술: 'sauce', 액젓: 'sauce', 멸치액젓: 'sauce', 토마토소스: 'sauce', 파스타소스: 'sauce', 돈가스소스: 'sauce',
   머스타드: 'sauce', 스리라차: 'sauce', 발사믹식초: 'sauce', 들기름: 'sauce', 두반장: 'sauce', 칠리소스: 'sauce',
-  데리야끼소스: 'sauce', 꿀: 'sauce', 잼: 'sauce', 땅콩버터: 'sauce', 생강: 'sauce',
+  데리야끼소스: 'sauce', 꿀: 'sauce', 잼: 'sauce', 땅콩버터: 'sauce',
   // 견과·간식
   아몬드: 'nuts_snack', 과자: 'nuts_snack', 초콜릿: 'nuts_snack', 호두: 'nuts_snack', 캐슈넛: 'nuts_snack',
   피스타치오: 'nuts_snack', 마카다미아: 'nuts_snack', 땅콩: 'nuts_snack', 잣: 'nuts_snack', 해바라기씨: 'nuts_snack',
@@ -264,8 +264,9 @@ const UNIT_BY_NAME: Record<string, QtyUnit> = {
   아몬드: 'gram', 콩: 'gram', 콩나물: 'gram',
 };
 
-export function unitOf(name: string): QtyUnit {
-  return UNIT_BY_NAME[name] ?? UNIT_BY_FINE[fineCategoryOf(name)] ?? 'percent';
+// 단위 결정: 알려진 재료명이 우선, 없으면 (직접 입력한 커스텀명 대비) 선택한 세분류 기준.
+export function unitOf(name: string, fineCat?: string): QtyUnit {
+  return UNIT_BY_NAME[name] ?? UNIT_BY_FINE[fineCat ?? fineCategoryOf(name)] ?? 'percent';
 }
 
 export const UNIT_SUFFIX: Record<QtyUnit, string> = { count: '개', gram: 'g', percent: '%' };
@@ -286,6 +287,31 @@ export const RECIPE_EMOJI: Record<string, string> = {
   'kimchi-stew': '🍲', // 김치찌개
   'doenjang-stew': '🫕', // 된장찌개
   'bean-sprout-soup': '🥣', // 콩나물국
+  // ── 확장 레시피 (94종) ──
+  'bibimbap': '🍚', 'soy-egg-rice': '🍚', 'spam-fried-rice': '🍚', 'bacon-fried-rice': '🍚',
+  'shrimp-fried-rice': '🍤', 'bulgogi-rice': '🍚', 'pork-rice-bowl': '🍚', 'chicken-mayo-rice': '🍚',
+  'tuna-mayo-rice': '🍚', 'curry-rice': '🍛', 'omurice': '🍳', 'tofu-rice-bowl': '🍚',
+  'mushroom-rice': '🍚', 'egg-fried-rice': '🍚', 'soft-tofu-stew': '🍲', 'beef-radish-soup': '🍲',
+  'egg-drop-soup': '🍲', 'mushroom-soup': '🍲', 'potato-soup': '🍲', 'fish-cake-soup': '🍲',
+  'army-stew': '🍲', 'yukgaejang': '🍲', 'rice-cake-soup': '🍲', 'napa-doenjang-soup': '🍲',
+  'kimchi-soup': '🍲', 'spicy-pork-stew': '🍲', 'chicken-soup': '🍲', 'spinach-soup': '🍲',
+  'stir-fried-pork': '🍖', 'dak-galbi': '🍗', 'squid-stir-fry': '🦑', 'fish-cake-stir-fry': '🍢',
+  'sausage-stir-fry': '🌭', 'spam-kimchi-stir-fry': '🥫', 'mushroom-stir-fry': '🍄', 'zucchini-stir-fry': '🥒',
+  'potato-stir-fry': '🥔', 'anchovy-stir-fry': '🐟', 'bean-sprout-stir-fry': '🌱', 'bacon-cabbage-stir-fry': '🥬',
+  'eggplant-stir-fry': '🍆', 'broccoli-stir-fry': '🥦', 'japchae': '🍜', 'beef-mushroom-stir-fry': '🍖',
+  'shrimp-garlic-stir-fry': '🍤', 'grilled-mackerel': '🐟', 'braised-mackerel': '🐟', 'grilled-salmon': '🐟',
+  'braised-tofu': '🍲', 'braised-potato': '🥔', 'braised-quail-egg': '🥚', 'braised-beef': '🍖',
+  'grilled-pork-belly': '🥓', 'jjimdak': '🍗', 'grilled-chicken-thigh': '🍗', 'grilled-cutlassfish': '🐟',
+  'braised-cutlassfish': '🐟', 'teriyaki-chicken': '🍗', 'pork-bulgogi': '🍖', 'kimchi-pancake': '🥞',
+  'green-onion-pancake': '🥞', 'zucchini-pancake': '🥞', 'potato-pancake': '🥞', 'tofu-pan-fry': '🍳',
+  'egg-pancake': '🍳', 'ham-pancake': '🥞', 'seafood-pancake': '🥞', 'meatball-pancake': '🥞',
+  'perilla-pancake': '🥞', 'pumpkin-pancake': '🥞', 'seasoned-spinach': '🥗', 'seasoned-bean-sprout': '🥗',
+  'seasoned-cucumber': '🥗', 'seasoned-chive': '🥗', 'seasoned-radish': '🥗', 'cucumber-pickle': '🥒',
+  'green-onion-salad': '🥗', 'egg-soy-braise': '🥚', 'seasoned-cabbage': '🥗', 'kalguksu': '🍜',
+  'janchi-noodle': '🍜', 'bibim-noodle': '🍜', 'kimchi-noodle': '🍜', 'udon': '🍜',
+  'tomato-spaghetti': '🍝', 'cream-pasta': '🍝', 'aglio-olio': '🍝', 'stir-fried-udon': '🍜',
+  'egg-ramen': '🍜', 'tteokbokki': '🌶️', 'rabokki': '🌶️', 'gimbap': '🍙',
+  'cheese-toast': '🍞', 'chicken-salad': '🥗',
 };
 
 export function recipeEmojiFor(id: string): string {
