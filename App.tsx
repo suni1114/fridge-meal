@@ -37,7 +37,7 @@ function Root() {
   return (
     <View style={s.body}>
       {nav.phase === 'onboarding' && <OnboardingScreen onDone={() => nav.setPhase('setup')} />}
-      {nav.phase === 'setup' && <QuickSetupScreen onDone={() => nav.setPhase('main')} />}
+      {nav.phase === 'setup' && <QuickSetupScreen onDone={() => { nav.setTab('home'); nav.setPhase('main'); }} />}
       {nav.phase === 'main' && (
         <>
           <View style={{ flex: 1 }}>{renderTab()}</View>
