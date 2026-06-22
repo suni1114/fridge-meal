@@ -9,14 +9,17 @@ import { AppButton } from '../components/ui';
 import { CATEGORY } from '../data/constants';
 import { PRESET_PACKS, useApp, matchAll, infoFor, FridgeItem } from '../data/store';
 import { todayISO } from '../data/date';
+import { useNav } from '../navigation/nav';
 
 const SUGGESTED = ['우유', '치즈', '콩나물', '토마토', '버섯', '참치캔', '두유', '사과'];
 
 export function QuickSetupScreen({ onDone }: { onDone: () => void }) {
   const insets = useSafeAreaInsets();
+  const nav = useNav();
+  const append = nav.setupMode === 'append'; // 설정에서 '기존 냉장고에 추가하기'로 들어온 경우
   // 실기기 하단 제스처 바에 하단 CTA 버튼이 가리지 않도록 안전영역만큼 띄운다.
   const bottomPad = Platform.OS === 'web' ? 0 : insets.bottom;
-  const { fridge, setFridge } = useApp();
+  const { fridge, setFridge, logUsage } = useApp();
   const [step, setStep] = useState(0);
   const [packCode, setPackCode] = useState('home_basic');
   const [checked, setChecked] = useState<Record<string, boolean>>({});
@@ -50,17 +53,26 @@ export function QuickSetupScreen({ onDone }: { onDone: () => void }) {
   const almostCount = matches.filter((m) => m.missing.length >= 1 && m.missing.length <= 2).length;
   const total = pack.items.filter(isChecked).length + added.length;
 
-  // 선택한 프리셋 재료 + 직접 추가한 재료를 실제 냉장고에 채운다(기존 내용은 대체).
+  // 선택한 프리셋 재료 + 직접 추가한 재료로 냉장고를 채운다.
   // 등록 단계라 수량은 '충분함', 유통기한은 미입력(null)으로 시작한다.
+  // append 모드(설정 → 기존 냉장고에 추가하기)면 기존 재료를 보존하고 새 이름만 더한다.
   const buildFridge = () => {
     // 선택한 프리셋 재료 + 추가한 재료를 합치되 중복 이름은 한 번만.
     const names = [...new Set([...pack.items.filter(isChecked), ...added])];
-    setFridge(
-      names.map((name, i): FridgeItem => {
-        const info = infoFor(name);
-        return { id: `fr-${name}-${i}`, name, category: info.category, storage: info.storage, stock: 'enough', expiry: null, added: todayISO() };
-      })
-    );
+    const toItem = (name: string, i: number, idPrefix: string): FridgeItem => {
+      const info = infoFor(name);
+      return { id: `${idPrefix}-${name}-${i}`, name, category: info.category, storage: info.storage, stock: 'enough', expiry: null, added: todayISO() };
+    };
+    if (append) {
+      const existing = new Set(fridge.map((x) => x.name));
+      const additions = names.filter((n) => !existing.has(n)).map((n, i) => toItem(n, i, 'fr-add'));
+      setFridge((prev) => [...prev, ...additions]);
+      logUsage(additions.map((a) => ({ name: a.name, category: a.category })));
+    } else {
+      const items = names.map((name, i) => toItem(name, i, 'fr'));
+      setFridge(items);
+      logUsage(items.map((it) => ({ name: it.name, category: it.category })));
+    }
   };
 
   const back = () => (step === 0 ? undefined : setStep(step - 1));
@@ -202,7 +214,7 @@ export function QuickSetupScreen({ onDone }: { onDone: () => void }) {
             <Icon name="check-circle" size={64} color={colors.primary} weight="fill" />
           </View>
           <Text style={s.doneTitle}>냉장고가 준비됐어요.</Text>
-          <Text style={s.doneSub}>{pack.label} 기준으로 채웠어요.</Text>
+          <Text style={s.doneSub}>{append ? `${pack.label} 재료를 기존 냉장고에 더했어요.` : `${pack.label} 기준으로 채웠어요.`}</Text>
           <View style={s.statCard}>
             <Stat n={fridge.length} label="등록된 식재료" />
             <View style={s.statDivider} />

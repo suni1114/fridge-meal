@@ -6,6 +6,8 @@ export const STORAGE_KEYS = {
   fridge: 'fm.fridge.v1',
   shopping: 'fm.shopping.v1',
   phase: 'fm.phase.v1',
+  notify: 'fm.notify.v1',
+  usage: 'fm.usage.v1',
 } as const;
 
 // 저장된 값을 읽어 파싱한다. 없거나 손상되면 null.

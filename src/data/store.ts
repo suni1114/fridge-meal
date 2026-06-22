@@ -1726,9 +1726,18 @@ export function matchAll(fridge: FridgeItem[]): RecipeMatch[] {
 }
 
 // ---- context -------------------------------------------------------------
+// 식재료 등록 1건 = 사용 로그 1건. 기간별 '자주 쓰는 식재료' 집계에 쓴다.
+export interface UsageEntry {
+  name: string;
+  category: CategoryCode;
+  date: string; // 등록일 ISO
+}
+
 interface AppState {
   fridge: FridgeItem[];
   shopping: ShoppingItem[];
+  usageLog: UsageEntry[];
+  logUsage: (entries: { name: string; category: CategoryCode; date?: string }[]) => void;
   setFridge: React.Dispatch<React.SetStateAction<FridgeItem[]>>;
   updateStock: (id: string, stock: StockLevel) => void;
   removeFridge: (id: string) => void;
@@ -1739,6 +1748,7 @@ interface AppState {
   renameShopping: (id: string, name: string) => void;
   removeShopping: (id: string) => void;
   clearCheckedShopping: () => void;
+  resetAll: () => void; // 데이터 초기화 — 냉장고/장보기 전부 비운다.
 }
 
 const Ctx = createContext<AppState | null>(null);
@@ -1746,19 +1756,24 @@ const Ctx = createContext<AppState | null>(null);
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [fridge, setFridge] = useState<FridgeItem[]>(INITIAL_FRIDGE);
   const [shopping, setShopping] = useState<ShoppingItem[]>(INITIAL_SHOPPING);
+  const [usageLog, setUsageLog] = useState<UsageEntry[]>([]);
   const [hydrated, setHydrated] = useState(false);
 
-  // 앱 시작 시 저장된 냉장고/장보기 데이터를 한 번 복원한다.
+  // 앱 시작 시 저장된 냉장고/장보기/사용로그를 한 번 복원한다.
   useEffect(() => {
     let alive = true;
     (async () => {
-      const [savedFridge, savedShopping] = await Promise.all([
+      const [savedFridge, savedShopping, savedUsage] = await Promise.all([
         loadJSON<FridgeItem[]>(STORAGE_KEYS.fridge),
         loadJSON<ShoppingItem[]>(STORAGE_KEYS.shopping),
+        loadJSON<UsageEntry[]>(STORAGE_KEYS.usage),
       ]);
       if (!alive) return;
       if (savedFridge) setFridge(savedFridge);
       if (savedShopping) setShopping(savedShopping);
+      // 사용 로그가 없으면(최초) 현재 냉장고 재료의 등록일로 시드한다 — 적재 시작점을 만든다.
+      if (savedUsage) setUsageLog(savedUsage);
+      else setUsageLog((savedFridge ?? INITIAL_FRIDGE).map((f) => ({ name: f.name, category: f.category, date: f.added ?? todayISO() })));
       setHydrated(true);
     })();
     return () => {
@@ -1773,16 +1788,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (hydrated) saveJSON(STORAGE_KEYS.shopping, shopping);
   }, [shopping, hydrated]);
+  useEffect(() => {
+    if (hydrated) saveJSON(STORAGE_KEYS.usage, usageLog);
+  }, [usageLog, hydrated]);
 
   const value = useMemo<AppState>(
     () => ({
       fridge,
       shopping,
+      usageLog,
+      // 사용 로그 적재(직접 setFridge로 추가하는 경로용 — 빠른 세팅 등).
+      logUsage: (entries) =>
+        setUsageLog((u) => [...u, ...entries.map((e) => ({ name: e.name, category: e.category, date: e.date ?? todayISO() }))]),
       setFridge,
       updateStock: (id, stock) => setFridge((p) => p.map((x) => (x.id === id ? { ...x, stock } : x))),
       removeFridge: (id) => setFridge((p) => p.filter((x) => x.id !== id)),
-      upsertFridge: (item) =>
-        setFridge((p) => (p.some((x) => x.id === item.id) ? p.map((x) => (x.id === item.id ? item : x)) : [...p, item])),
+      upsertFridge: (item) => {
+        // 새 id면 등록 → 사용 로그 적재. 기존 id 수정이면 적재하지 않는다.
+        const isNew = !fridge.some((x) => x.id === item.id);
+        setFridge((p) => (p.some((x) => x.id === item.id) ? p.map((x) => (x.id === item.id ? item : x)) : [...p, item]));
+        if (isNew) setUsageLog((u) => [...u, { name: item.name, category: item.category, date: item.added ?? todayISO() }]);
+      },
       addToShopping: (name, source, note) =>
         setShopping((p) =>
           p.some((x) => x.name === name && !x.checked)
@@ -1791,24 +1817,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         ),
       toggleShoppingChecked: (id) => setShopping((p) => p.map((x) => (x.id === id ? { ...x, checked: !x.checked } : x))),
       markAddedToFridge: (id, storage, stock, expiry) => {
-        setShopping((prev) => {
-          const it = prev.find((x) => x.id === id);
-          if (it) {
-            setFridge((pf) => [
-              ...pf,
-              { id: `fr-${it.name}-${pf.length}`, name: it.name, category: it.category ?? 'etc', storage, stock, expiry, added: todayISO() },
-            ]);
-          }
-          return prev.map((x) => (x.id === id ? { ...x, addedToFridge: true, checked: true } : x));
-        });
+        const it = shopping.find((x) => x.id === id);
+        if (it) {
+          const category = it.category ?? 'etc';
+          setFridge((pf) => [...pf, { id: `fr-${it.name}-${pf.length}`, name: it.name, category, storage, stock, expiry, added: todayISO() }]);
+          setUsageLog((u) => [...u, { name: it.name, category, date: todayISO() }]);
+        }
+        setShopping((prev) => prev.map((x) => (x.id === id ? { ...x, addedToFridge: true, checked: true } : x)));
       },
       renameShopping: (id, name) =>
         setShopping((p) => p.map((x) => (x.id === id ? { ...x, name: name.trim() || x.name } : x))),
       removeShopping: (id) => setShopping((p) => p.filter((x) => x.id !== id)),
       // 구매 완료(체크된) 항목 일괄 삭제. 냉장고 재료는 그대로.
       clearCheckedShopping: () => setShopping((p) => p.filter((x) => !x.checked)),
+      // 데이터 초기화 — 냉장고/장보기/사용로그를 모두 비운다(빈 배열도 hydrated 이후 저장소에 반영됨).
+      resetAll: () => { setFridge([]); setShopping([]); setUsageLog([]); },
     }),
-    [fridge, shopping]
+    [fridge, shopping, usageLog]
   );
 
   // 복원 전에는 렌더하지 않아 초기 데이터로 저장본을 덮어쓰는 일을 막는다.
