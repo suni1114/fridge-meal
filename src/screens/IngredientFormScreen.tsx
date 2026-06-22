@@ -2,7 +2,7 @@
 //  0) 카테고리 선택(그리드) / 검색  →  1) 식재료 선택  →  2) 재료 상세 설정(등록일·소비기한·보관·수량·메모)
 //  + AI 등록(영수증·사진).
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, TextInput, Modal, Platform, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Pressable, TextInput, Modal, Platform, StyleSheet, BackHandler } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
@@ -199,6 +199,14 @@ export function IngredientFormScreen({ itemId, prefillName }: { itemId?: string;
     else if (step === 1) setStep(0);
     else nav.closeOverlay();
   };
+
+  // 하드웨어 백: 상단 뒤로가기와 동일(단계 뒤로 / 닫기). 폼이 열린 동안엔 앱이 종료되지
+  // 않도록 항상 소비한다. (AI 인식/달력 모달은 RN Modal의 onRequestClose가 먼저 처리)
+  useEffect(() => {
+    const onHwBack = () => { onBack(); return true; };
+    const sub = BackHandler.addEventListener('hardwareBackPress', onHwBack);
+    return () => sub.remove();
+  }, [step, editing?.id, prefillName]);
 
   const headerTitle = editing ? '재료 상세 설정' : step === 2 ? '재료 상세 설정' : '식재료 추가';
 

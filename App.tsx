@@ -1,7 +1,7 @@
 // 냉장고비서 (fridge-meal) — V1.0 데모
 // 온보딩 → 빠른 세팅 → 메인(홈·냉장고·요리추천·장보기·설정) + 오버레이(레시피 상세·식재료 폼)
 import React, { useEffect } from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet, Platform, BackHandler } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
@@ -23,6 +23,19 @@ import { IngredientFormScreen } from './src/screens/IngredientFormScreen';
 
 function Root() {
   const nav = useNav();
+
+  // 안드로이드 하드웨어 백 버튼: 앱을 바로 닫지 않고 이전 화면으로 보낸다.
+  // 내부 모달은 RN Modal의 onRequestClose가, 다단계 화면(온보딩/세팅/식재료 폼)은
+  // 각 화면이 자체 등록한 핸들러가 먼저 처리한다(LIFO). 여기서는 그 외 최상위 단계만 처리.
+  useEffect(() => {
+    const onBack = () => {
+      if (nav.overlay) { nav.closeOverlay(); return true; } // 오버레이(레시피 상세 등) 닫기
+      if (nav.phase === 'main' && nav.tab !== 'home') { nav.setTab('home'); return true; } // 다른 탭 → 홈
+      return false; // 홈에서 더 뒤로 → 기본 동작(앱 종료)
+    };
+    const sub = BackHandler.addEventListener('hardwareBackPress', onBack);
+    return () => sub.remove();
+  }, [nav.overlay, nav.phase, nav.tab]);
 
   const renderTab = () => {
     switch (nav.tab) {

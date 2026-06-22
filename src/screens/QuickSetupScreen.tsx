@@ -1,6 +1,6 @@
 // 냉장고 빠른 세팅 (spec §9.2~9.5) — 유형 선택 → 기본재료 체크 → 빠진재료 추가 → 완료
-import React, { useMemo, useState } from 'react';
-import { View, Text, ScrollView, Pressable, TextInput, StyleSheet, Platform } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { View, Text, ScrollView, Pressable, TextInput, StyleSheet, Platform, BackHandler } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
@@ -77,6 +77,19 @@ export function QuickSetupScreen({ onDone }: { onDone: () => void }) {
   };
 
   const back = () => (step === 0 ? undefined : setStep(step - 1));
+
+  // 하드웨어 백: 완료 화면→홈, 이전 스텝으로, 첫 스텝에서는
+  // 설정에서 재세팅으로 들어왔으면 설정(메인)으로 복귀, 최초 실행이면 종료 허용.
+  useEffect(() => {
+    const onBack = () => {
+      if (step === 3) { onDone(); return true; }
+      if (step > 0) { setStep(step - 1); return true; }
+      if (nav.setupMode !== 'fresh') { nav.setPhase('main'); return true; }
+      return false;
+    };
+    const sub = BackHandler.addEventListener('hardwareBackPress', onBack);
+    return () => sub.remove();
+  }, [step, nav.setupMode]);
 
   return (
     <View style={[s.root, { paddingBottom: bottomPad }]}>

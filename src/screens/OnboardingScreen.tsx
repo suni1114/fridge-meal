@@ -1,6 +1,6 @@
 // 온보딩 (spec §9.1) — 3 slides, 앱 가치 전달.
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, Animated, Easing, Platform, PanResponder } from 'react-native';
+import { View, Text, StyleSheet, Animated, Easing, Platform, PanResponder, BackHandler } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../theme/tokens';
 import { font } from '../theme/fonts';
@@ -39,6 +39,16 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
   useEffect(() => {
     prog.setValue(0);
     Animated.timing(prog, { toValue: 1, duration: 300, easing: Easing.out(Easing.cubic), useNativeDriver: USE_NATIVE_DRIVER }).start();
+  }, [i]);
+
+  // 하드웨어 백: 이전 슬라이드로. 첫 슬라이드면 기본 동작(앱 종료) 허용.
+  useEffect(() => {
+    const onBack = () => {
+      if (i > 0) { dirRef.current = -1; setI((p) => Math.max(p - 1, 0)); return true; }
+      return false;
+    };
+    const sub = BackHandler.addEventListener('hardwareBackPress', onBack);
+    return () => sub.remove();
   }, [i]);
 
   // 좌우 스와이프로 슬라이드 이동. 40px 이상 끌면 다음/이전으로.
