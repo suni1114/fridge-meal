@@ -1,6 +1,6 @@
 // 설정 — 사용자 화면 (관리자용 기본식재료/레시피 데이터 관리는 별도 관리자 화면으로 분리)
-import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, Pressable, Modal, Switch, Linking, Platform, StyleSheet } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, ScrollView, Pressable, Modal, Animated, Easing, Linking, Platform, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
@@ -69,12 +69,9 @@ export function SettingsScreen() {
   type Item = { icon: IconName; label: string; danger?: boolean; disabled?: boolean; badge?: string; onPress?: () => void };
   const groups: { title: string; items: Item[] }[] = [
     {
-      title: '내 활동',
-      items: [{ icon: 'flame', label: '자주 쓰는 식재료', onPress: () => setSheet('topItems') }],
-    },
-    {
       title: '냉장고',
       items: [
+        { icon: 'flame', label: '자주 쓰는 식재료', onPress: () => setSheet('topItems') },
         { icon: 'magic-wand', label: '냉장고 빠른 세팅 다시 하기', onPress: () => setSheet('restart') },
         { icon: 'bell-ringing', label: '알림 설정', onPress: () => setSheet('notif') },
       ],
@@ -88,11 +85,8 @@ export function SettingsScreen() {
       items: [
         { icon: 'info', label: '앱 정보', onPress: () => setSheet('appInfo') },
         { icon: 'heart', label: '문의하기', onPress: () => setSheet('contact') },
+        { icon: 'trash', label: '데이터 초기화', danger: true, onPress: () => setSheet('reset') },
       ],
-    },
-    {
-      title: '데이터',
-      items: [{ icon: 'trash', label: '데이터 초기화', danger: true, onPress: () => setSheet('reset') }],
     },
   ];
 
@@ -244,16 +238,43 @@ function ToggleRow({ label, desc, value, onChange }: { label: string; desc: stri
         <Text style={s.toggleLabel}>{label}</Text>
         <Text style={s.toggleDesc}>{desc}</Text>
       </View>
-      <Switch
-        value={value}
-        onValueChange={onChange}
-        trackColor={{ true: colors.primary, false: colors.lineStrong }}
-        thumbColor={colors.white}
-        ios_backgroundColor={colors.lineStrong}
-      />
+      <Toggle value={value} onChange={onChange} />
     </View>
   );
 }
+
+// 앱 디자인에 맞춘 커스텀 토글 — 트랙 색/썸 위치가 부드럽게 전환된다(웹·네이티브 동일).
+const TOGGLE_W = 48;
+const TOGGLE_THUMB = 22;
+function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+  const anim = useRef(new Animated.Value(value ? 1 : 0)).current;
+  useEffect(() => {
+    Animated.timing(anim, { toValue: value ? 1 : 0, duration: 180, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
+  }, [value]);
+  const trackColor = anim.interpolate({ inputRange: [0, 1], outputRange: [colors.lineStrong, colors.primary] });
+  const tx = anim.interpolate({ inputRange: [0, 1], outputRange: [3, TOGGLE_W - TOGGLE_THUMB - 3] });
+  return (
+    <Pressable onPress={() => onChange(!value)} hitSlop={8}>
+      <Animated.View style={[t.track, { backgroundColor: trackColor }]}>
+        <Animated.View style={[t.thumb, { transform: [{ translateX: tx }] }]} />
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+const t = StyleSheet.create({
+  track: { width: TOGGLE_W, height: 28, borderRadius: 14, justifyContent: 'center' },
+  thumb: {
+    width: TOGGLE_THUMB,
+    height: TOGGLE_THUMB,
+    borderRadius: TOGGLE_THUMB / 2,
+    backgroundColor: colors.white,
+    ...Platform.select({
+      web: { boxShadow: '0 1px 3px rgba(20,30,20,0.28)' } as any,
+      default: { elevation: 2, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 2, shadowOffset: { width: 0, height: 1 } },
+    }),
+  },
+});
 
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.cream },
