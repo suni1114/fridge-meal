@@ -9,6 +9,7 @@ import { AppButton } from '../components/ui';
 import { CATEGORY } from '../data/constants';
 import { PRESET_PACKS, useApp, matchAll, infoFor, FridgeItem } from '../data/store';
 import { todayISO } from '../data/date';
+import { uid, nowISO } from '../data/id';
 import { useNav } from '../navigation/nav';
 
 const SUGGESTED = ['우유', '치즈', '콩나물', '토마토', '버섯', '참치캔', '두유', '사과'];
@@ -59,17 +60,17 @@ export function QuickSetupScreen({ onDone }: { onDone: () => void }) {
   const buildFridge = () => {
     // 선택한 프리셋 재료 + 추가한 재료를 합치되 중복 이름은 한 번만.
     const names = [...new Set([...pack.items.filter(isChecked), ...added])];
-    const toItem = (name: string, i: number, idPrefix: string): FridgeItem => {
+    const toItem = (name: string): FridgeItem => {
       const info = infoFor(name);
-      return { id: `${idPrefix}-${name}-${i}`, name, category: info.category, storage: info.storage, stock: 'enough', expiry: null, added: todayISO() };
+      return { id: uid(), name, category: info.category, storage: info.storage, stock: 'enough', expiry: null, added: todayISO(), updatedAt: nowISO() };
     };
     if (append) {
       const existing = new Set(fridge.map((x) => x.name));
-      const additions = names.filter((n) => !existing.has(n)).map((n, i) => toItem(n, i, 'fr-add'));
+      const additions = names.filter((n) => !existing.has(n)).map(toItem);
       setFridge((prev) => [...prev, ...additions]);
       logUsage(additions.map((a) => ({ name: a.name, category: a.category })));
     } else {
-      const items = names.map((name, i) => toItem(name, i, 'fr'));
+      const items = names.map(toItem);
       setFridge(items);
       logUsage(items.map((it) => ({ name: it.name, category: it.category })));
     }

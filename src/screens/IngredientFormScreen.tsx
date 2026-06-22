@@ -20,6 +20,7 @@ import {
   emojiFor,
 } from '../data/constants';
 import { useApp, infoFor } from '../data/store';
+import { uid } from '../data/id';
 import { startOfToday, addDays, toISO, fromISO, daysUntil, todayISO, sameYMD, fmtFull, fmtDot, WEEKDAYS } from '../data/date';
 import { useNav } from '../navigation/nav';
 
@@ -141,7 +142,7 @@ export function IngredientFormScreen({ itemId, prefillName }: { itemId?: string;
   const save = () => {
     if (!canSave) return;
     upsertFridge({
-      id: editing?.id ?? `fr-${Date.now()}`,
+      id: editing?.id ?? uid(),
       name: name.trim(),
       category: coarseFromFine(fineCat), // 카테고리는 그대로, 이름만 바뀔 수 있음
       storage,
@@ -167,7 +168,7 @@ export function IngredientFormScreen({ itemId, prefillName }: { itemId?: string;
   const aiSave = () => {
     if (!aiItems) return;
     let firstStorage: string | undefined; // 여러 재료 중 첫 번째 저장 항목의 보관 위치로 이동
-    aiItems.forEach((it, idx) => {
+    aiItems.forEach((it) => {
       const n = it.name.trim();
       const a = parseFloat(it.amount) || 0;
       if (!n || a <= 0) return;
@@ -176,7 +177,7 @@ export function IngredientFormScreen({ itemId, prefillName }: { itemId?: string;
       const st = normStorage(info.storage);
       if (firstStorage === undefined) firstStorage = st;
       upsertFridge({
-        id: `fr-ai-${Date.now()}-${idx}`,
+        id: uid(),
         name: n,
         category: info.category,
         storage: st,

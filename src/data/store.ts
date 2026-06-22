@@ -5,6 +5,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from '
 import { CategoryCode, StockLevel } from './constants';
 import { loadJSON, saveJSON, STORAGE_KEYS } from './persist';
 import { daysUntil, todayISO } from './date';
+import { uid, nowISO } from './id';
 
 // ---- types ---------------------------------------------------------------
 export interface FridgeItem {
@@ -17,6 +18,7 @@ export interface FridgeItem {
   expiry: string | null; // 소비기한 절대 날짜 'YYYY-MM-DD'; null = 미입력. D-day는 매번 계산.
   added?: string; // 등록일 'YYYY-MM-DD' (냉장고에 넣은 날). 기본 오늘.
   memo?: string;
+  updatedAt?: string; // 마지막 변경 시각(ISO) — 동기화 충돌 해결용.
 }
 
 export interface RecipeReq {
@@ -42,6 +44,7 @@ export interface ShoppingItem {
   note?: string;
   checked: boolean;
   addedToFridge: boolean;
+  updatedAt?: string; // 마지막 변경 시각(ISO) — 동기화 충돌 해결용.
 }
 
 // ---- ingredient knowledge (name → category / storage) --------------------
@@ -1728,6 +1731,7 @@ export function matchAll(fridge: FridgeItem[]): RecipeMatch[] {
 // ---- context -------------------------------------------------------------
 // 식재료 등록 1건 = 사용 로그 1건. 기간별 '자주 쓰는 식재료' 집계에 쓴다.
 export interface UsageEntry {
+  id?: string; // 이벤트 고유 ID — 동기화 시 append-only 로그의 중복 제거용.
   name: string;
   category: CategoryCode;
   date: string; // 등록일 ISO
@@ -1773,7 +1777,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (savedShopping) setShopping(savedShopping);
       // 사용 로그가 없으면(최초) 현재 냉장고 재료의 등록일로 시드한다 — 적재 시작점을 만든다.
       if (savedUsage) setUsageLog(savedUsage);
-      else setUsageLog((savedFridge ?? INITIAL_FRIDGE).map((f) => ({ name: f.name, category: f.category, date: f.added ?? todayISO() })));
+      else setUsageLog((savedFridge ?? INITIAL_FRIDGE).map((f) => ({ id: uid(), name: f.name, category: f.category, date: f.added ?? todayISO() })));
       setHydrated(true);
     })();
     return () => {
@@ -1799,34 +1803,35 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       usageLog,
       // 사용 로그 적재(직접 setFridge로 추가하는 경로용 — 빠른 세팅 등).
       logUsage: (entries) =>
-        setUsageLog((u) => [...u, ...entries.map((e) => ({ name: e.name, category: e.category, date: e.date ?? todayISO() }))]),
+        setUsageLog((u) => [...u, ...entries.map((e) => ({ id: uid(), name: e.name, category: e.category, date: e.date ?? todayISO() }))]),
       setFridge,
-      updateStock: (id, stock) => setFridge((p) => p.map((x) => (x.id === id ? { ...x, stock } : x))),
+      updateStock: (id, stock) => setFridge((p) => p.map((x) => (x.id === id ? { ...x, stock, updatedAt: nowISO() } : x))),
       removeFridge: (id) => setFridge((p) => p.filter((x) => x.id !== id)),
       upsertFridge: (item) => {
         // 새 id면 등록 → 사용 로그 적재. 기존 id 수정이면 적재하지 않는다.
         const isNew = !fridge.some((x) => x.id === item.id);
-        setFridge((p) => (p.some((x) => x.id === item.id) ? p.map((x) => (x.id === item.id ? item : x)) : [...p, item]));
-        if (isNew) setUsageLog((u) => [...u, { name: item.name, category: item.category, date: item.added ?? todayISO() }]);
+        const stamped = { ...item, updatedAt: nowISO() }; // 모든 쓰기에 변경 시각 기록
+        setFridge((p) => (p.some((x) => x.id === item.id) ? p.map((x) => (x.id === item.id ? stamped : x)) : [...p, stamped]));
+        if (isNew) setUsageLog((u) => [...u, { id: uid(), name: item.name, category: item.category, date: item.added ?? todayISO() }]);
       },
       addToShopping: (name, source, note) =>
         setShopping((p) =>
           p.some((x) => x.name === name && !x.checked)
             ? p
-            : [...p, { id: `sh-${name}-${p.length}`, name, category: infoFor(name).category as CategoryCode, source, note, checked: false, addedToFridge: false }]
+            : [...p, { id: uid(), name, category: infoFor(name).category as CategoryCode, source, note, checked: false, addedToFridge: false, updatedAt: nowISO() }]
         ),
-      toggleShoppingChecked: (id) => setShopping((p) => p.map((x) => (x.id === id ? { ...x, checked: !x.checked } : x))),
+      toggleShoppingChecked: (id) => setShopping((p) => p.map((x) => (x.id === id ? { ...x, checked: !x.checked, updatedAt: nowISO() } : x))),
       markAddedToFridge: (id, storage, stock, expiry) => {
         const it = shopping.find((x) => x.id === id);
         if (it) {
           const category = it.category ?? 'etc';
-          setFridge((pf) => [...pf, { id: `fr-${it.name}-${pf.length}`, name: it.name, category, storage, stock, expiry, added: todayISO() }]);
-          setUsageLog((u) => [...u, { name: it.name, category, date: todayISO() }]);
+          setFridge((pf) => [...pf, { id: uid(), name: it.name, category, storage, stock, expiry, added: todayISO(), updatedAt: nowISO() }]);
+          setUsageLog((u) => [...u, { id: uid(), name: it.name, category, date: todayISO() }]);
         }
-        setShopping((prev) => prev.map((x) => (x.id === id ? { ...x, addedToFridge: true, checked: true } : x)));
+        setShopping((prev) => prev.map((x) => (x.id === id ? { ...x, addedToFridge: true, checked: true, updatedAt: nowISO() } : x)));
       },
       renameShopping: (id, name) =>
-        setShopping((p) => p.map((x) => (x.id === id ? { ...x, name: name.trim() || x.name } : x))),
+        setShopping((p) => p.map((x) => (x.id === id ? { ...x, name: name.trim() || x.name, updatedAt: nowISO() } : x))),
       removeShopping: (id) => setShopping((p) => p.filter((x) => x.id !== id)),
       // 구매 완료(체크된) 항목 일괄 삭제. 냉장고 재료는 그대로.
       clearCheckedShopping: () => setShopping((p) => p.filter((x) => !x.checked)),
