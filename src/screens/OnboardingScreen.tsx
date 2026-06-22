@@ -1,6 +1,7 @@
 // 온보딩 (spec §9.1) — 3 slides, 앱 가치 전달.
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Animated, Easing, Platform, PanResponder } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon, IconName } from '../components/Icon';
@@ -25,6 +26,9 @@ const SLIDES: { icon: IconName; title: string; body: string }[] = [
 ];
 
 export function OnboardingScreen({ onDone }: { onDone: () => void }) {
+  const insets = useSafeAreaInsets();
+  // 실기기 하단 제스처 바(홈 인디케이터)에 버튼이 가리지 않도록 안전영역만큼 띄운다.
+  const bottomPad = Platform.OS === 'web' ? 24 : Math.max(insets.bottom, 24);
   const [i, setI] = useState(0);
   const last = i === SLIDES.length - 1;
   const slide = SLIDES[i];
@@ -70,7 +74,7 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
       : pan.panHandlers;
 
   return (
-    <View style={s.root} {...handlers}>
+    <View style={[s.root, { paddingBottom: bottomPad }]} {...handlers}>
       <Animated.View
         style={[
           s.hero,

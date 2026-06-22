@@ -1,6 +1,7 @@
 // 냉장고 빠른 세팅 (spec §9.2~9.5) — 유형 선택 → 기본재료 체크 → 빠진재료 추가 → 완료
 import React, { useMemo, useState } from 'react';
-import { View, Text, ScrollView, Pressable, TextInput, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Pressable, TextInput, StyleSheet, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon } from '../components/Icon';
@@ -12,6 +13,9 @@ import { todayISO } from '../data/date';
 const SUGGESTED = ['우유', '치즈', '콩나물', '토마토', '버섯', '참치캔', '두유', '사과'];
 
 export function QuickSetupScreen({ onDone }: { onDone: () => void }) {
+  const insets = useSafeAreaInsets();
+  // 실기기 하단 제스처 바에 하단 CTA 버튼이 가리지 않도록 안전영역만큼 띄운다.
+  const bottomPad = Platform.OS === 'web' ? 0 : insets.bottom;
   const { fridge, setFridge } = useApp();
   const [step, setStep] = useState(0);
   const [packCode, setPackCode] = useState('home_basic');
@@ -62,7 +66,7 @@ export function QuickSetupScreen({ onDone }: { onDone: () => void }) {
   const back = () => (step === 0 ? undefined : setStep(step - 1));
 
   return (
-    <View style={s.root}>
+    <View style={[s.root, { paddingBottom: bottomPad }]}>
       {/* progress */}
       <View style={s.progressRow}>
         {step > 0 ? (
