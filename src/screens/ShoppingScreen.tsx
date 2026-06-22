@@ -1,7 +1,8 @@
 // 장보기 (spec §9.11~9.12) — 자동 추천 / 직접 추가 / 구매 완료
 //  · 체크 = 구매 완료 토글  · 항목 탭 = 액션(냉장고에 추가 / 이름 수정 / 삭제)
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable, TextInput, Modal, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Pressable, TextInput, Modal, StyleSheet, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon, IconName } from '../components/Icon';
@@ -25,6 +26,9 @@ const DDAY_PICKS: { label: string; v: number | null }[] = [
 ];
 
 export function ShoppingScreen() {
+  const insets = useSafeAreaInsets();
+  // 바텀시트는 화면 하단에 붙으므로 실기기 제스처 바만큼 더 띄워 마지막 버튼(삭제)이 바닥에 붙지 않게 한다.
+  const sheetPad = Platform.OS === 'web' ? 30 : insets.bottom + 30;
   const { shopping, toggleShoppingChecked, markAddedToFridge, addToShopping, renameShopping, removeShopping, clearCheckedShopping } = useApp();
   const [addOpen, setAddOpen] = useState(false);
   const [clearOpen, setClearOpen] = useState(false);
@@ -104,7 +108,7 @@ export function ShoppingScreen() {
       {/* 직접 추가 모달 */}
       <Modal visible={addOpen} transparent animationType="fade" onRequestClose={() => setAddOpen(false)}>
         <Pressable style={s.backdrop} onPress={() => setAddOpen(false)}>
-          <Pressable style={s.sheet}>
+          <Pressable style={[s.sheet, { paddingBottom: sheetPad }]}>
             <Text style={s.sheetTitle}>장보기 항목 추가</Text>
             <View style={s.inputRow}>
               <TextInput
@@ -127,7 +131,7 @@ export function ShoppingScreen() {
       {/* 구매 완료 일괄 삭제 확인 */}
       <Modal visible={clearOpen} transparent animationType="fade" onRequestClose={() => setClearOpen(false)}>
         <Pressable style={s.backdrop} onPress={() => setClearOpen(false)}>
-          <Pressable style={s.sheet}>
+          <Pressable style={[s.sheet, { paddingBottom: sheetPad }]}>
             <Text style={s.sheetTitle}>구매 완료 {done.length}개를 모두 삭제할까요?</Text>
             <Text style={s.confirmSub}>장보기 목록에서만 지워져요. 이미 냉장고에 넣은 재료는 그대로 남아요.</Text>
             <View style={s.dialogBtns}>
@@ -141,7 +145,7 @@ export function ShoppingScreen() {
       {/* 항목 액션 시트 */}
       <Modal visible={!!actionItem} transparent animationType="fade" onRequestClose={() => setActionItem(null)}>
         <Pressable style={s.backdrop} onPress={() => setActionItem(null)}>
-          <Pressable style={s.sheet}>
+          <Pressable style={[s.sheet, { paddingBottom: sheetPad }]}>
             {actionItem && (
               <>
                 <View style={s.sheetHead}>
@@ -165,7 +169,7 @@ export function ShoppingScreen() {
       {/* 이름 수정 모달 */}
       <Modal visible={!!editItem} transparent animationType="fade" onRequestClose={() => setEditItem(null)}>
         <Pressable style={s.backdrop} onPress={() => setEditItem(null)}>
-          <Pressable style={s.sheet}>
+          <Pressable style={[s.sheet, { paddingBottom: sheetPad }]}>
             <Text style={s.sheetTitle}>이름 수정</Text>
             <View style={s.inputRow}>
               <TextInput
@@ -186,7 +190,7 @@ export function ShoppingScreen() {
       {/* 냉장고 입고 다이얼로그 */}
       <Modal visible={!!restock} transparent animationType="fade" onRequestClose={() => setRestock(null)}>
         <Pressable style={s.backdrop} onPress={() => setRestock(null)}>
-          <Pressable style={s.sheet}>
+          <Pressable style={[s.sheet, { paddingBottom: sheetPad }]}>
             {restock && (
               <>
                 <Text style={s.sheetTitle}>{restock.name}를 냉장고에 추가할까요?</Text>

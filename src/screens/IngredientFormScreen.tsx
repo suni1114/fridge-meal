@@ -151,6 +151,8 @@ export function IngredientFormScreen({ itemId, prefillName }: { itemId?: string;
       added,
       memo: memo.trim() || undefined,
     });
+    // 저장한 보관 위치(냉장/냉동/실온)에 맞는 냉장고 하위 탭으로 보낸다(어느 탭에서 열었든).
+    nav.goToFridge(storage);
     nav.closeOverlay();
   };
 
@@ -164,17 +166,20 @@ export function IngredientFormScreen({ itemId, prefillName }: { itemId?: string;
   const addAiRow = () => setAiItems((arr) => [...(arr ?? []), { id: `ai-new-${Date.now()}`, name: '', amount: '1' }]);
   const aiSave = () => {
     if (!aiItems) return;
+    let firstStorage: string | undefined; // 여러 재료 중 첫 번째 저장 항목의 보관 위치로 이동
     aiItems.forEach((it, idx) => {
       const n = it.name.trim();
       const a = parseFloat(it.amount) || 0;
       if (!n || a <= 0) return;
       const u = unitOf(n);
       const info = infoFor(n);
+      const st = normStorage(info.storage);
+      if (firstStorage === undefined) firstStorage = st;
       upsertFridge({
         id: `fr-ai-${Date.now()}-${idx}`,
         name: n,
         category: info.category,
-        storage: normStorage(info.storage),
+        storage: st,
         stock: stockFromQty(u, a),
         qty: `${a}${UNIT_SUFFIX[u]}`,
         expiry: null,
@@ -182,6 +187,8 @@ export function IngredientFormScreen({ itemId, prefillName }: { itemId?: string;
       });
     });
     setAiItems(null);
+    // AI 등록 후에도 첫 재료의 보관 위치 하위 탭으로 이동.
+    nav.goToFridge(firstStorage);
     nav.closeOverlay();
   };
 

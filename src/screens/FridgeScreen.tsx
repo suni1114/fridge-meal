@@ -1,5 +1,5 @@
 // 냉장고 (spec §9.7) — 보관위치 스와이프 탭(냉장·냉동·실온) · 임박순 정렬 · 수량변경/수정/삭제/장보기
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon, IconName } from '../components/Icon';
@@ -37,6 +38,9 @@ const SORTS: { key: string; label: string }[] = [
 ];
 
 export function FridgeScreen() {
+  const insets = useSafeAreaInsets();
+  // 바텀시트는 화면 하단에 붙으므로 실기기 제스처 바만큼 더 띄워 하단 버튼이 바닥에 붙지 않게 한다.
+  const sheetPad = Platform.OS === 'web' ? 30 : insets.bottom + 30;
   const { fridge, updateStock, removeFridge, addToShopping } = useApp();
   const nav = useNav();
   const [query, setQuery] = useState('');
@@ -79,6 +83,21 @@ export function FridgeScreen() {
       if (i !== tab) setTab(i);
     }
   };
+
+  // 식재료 저장 직후 nav.fridgeFocus가 설정되면 그 보관 위치(냉장/냉동/실온) 하위 탭으로 이동한다.
+  // 다른 탭에서 들어와 페이지 폭(w)이 아직 0이면, 폭이 정해진 뒤(아래 의존성 w)에 페이저까지 맞추고 신호를 소비한다.
+  useEffect(() => {
+    const f = nav.fridgeFocus;
+    if (!f) return;
+    const i = TABS.findIndex((t) => t.match(f));
+    if (i < 0) { nav.clearFridgeFocus(); return; }
+    setViewMode('storage');
+    setTab(i);
+    if (w > 0) {
+      pagerRef.current?.scrollTo({ x: i * w, animated: false });
+      nav.clearFridgeFocus();
+    }
+  }, [nav.fridgeFocus, w]);
 
   const onStockPick = (item: FridgeItem, level: StockLevel) => {
     updateStock(item.id, level);
@@ -220,7 +239,7 @@ export function FridgeScreen() {
       {/* 액션 시트 */}
       <Modal visible={!!sheet} transparent animationType="fade" onRequestClose={() => setSheet(null)}>
         <Pressable style={s.backdrop} onPress={() => setSheet(null)}>
-          <Pressable style={s.sheet}>
+          <Pressable style={[s.sheet, { paddingBottom: sheetPad }]}>
             {sheet && (
               <>
                 <View style={s.sheetHead}>
@@ -245,7 +264,7 @@ export function FridgeScreen() {
       {/* 수량 변경 시트 */}
       <Modal visible={!!stockSheet} transparent animationType="fade" onRequestClose={() => setStockSheet(null)}>
         <Pressable style={s.backdrop} onPress={() => setStockSheet(null)}>
-          <Pressable style={s.sheet}>
+          <Pressable style={[s.sheet, { paddingBottom: sheetPad }]}>
             <Text style={s.sheetTitle}>남은 정도</Text>
             {STOCK_ORDER.map((lv) => {
               const on = stockSheet?.stock === lv;
