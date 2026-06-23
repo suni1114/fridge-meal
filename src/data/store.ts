@@ -35,7 +35,7 @@ export interface Recipe {
   steps: string[];
 }
 
-export type ShoppingSource = 'manual' | 'low_stock' | 'recipe_missing' | 'expired';
+export type ShoppingSource = 'manual' | 'low_stock' | 'recipe_missing' | 'expired' | 'near_expiry';
 export interface ShoppingItem {
   id: string;
   name: string;
@@ -1749,6 +1749,7 @@ interface AppState {
   addToShopping: (name: string, source: ShoppingSource, note?: string) => void;
   toggleShoppingChecked: (id: string) => void;
   markAddedToFridge: (id: string, storage: string, stock: StockLevel, expiry: string | null) => void;
+  markShoppingDone: (id: string) => void;
   renameShopping: (id: string, name: string) => void;
   removeShopping: (id: string) => void;
   clearCheckedShopping: () => void;
@@ -1796,6 +1797,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (hydrated) saveJSON(STORAGE_KEYS.usage, usageLog);
   }, [usageLog, hydrated]);
 
+  // 소비기한이 지났거나(D+) 1일 이내로 임박한(D-1·D-day) 냉장고 재료를
+  // 장보기 '자동 추천'에 자동으로 올린다. (이미 미구매 목록에 있으면 건너뜀)
+  useEffect(() => {
+    if (!hydrated) return;
+    setShopping((prev) => {
+      let next = prev;
+      const hasUnchecked = (name: string) => next.some((x) => x.name === name && !x.checked);
+      fridge.forEach((f) => {
+        const d = daysUntil(f.expiry);
+        if (d == null || d > 1) return; // 미입력이거나 2일 이상 남으면 제외
+        if (hasUnchecked(f.name)) return;
+        const source: ShoppingSource = d < 0 ? 'expired' : 'near_expiry';
+        const note = d < 0 ? '소비기한이 지났어요' : d === 0 ? '오늘까지예요' : '소비기한 D-1';
+        next = [...next, { id: uid(), name: f.name, category: f.category, source, note, checked: false, addedToFridge: false, updatedAt: nowISO() }];
+      });
+      return next === prev ? prev : next;
+    });
+  }, [fridge, hydrated]);
+
   const value = useMemo<AppState>(
     () => ({
       fridge,
@@ -1830,6 +1850,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
         setShopping((prev) => prev.map((x) => (x.id === id ? { ...x, addedToFridge: true, checked: true, updatedAt: nowISO() } : x)));
       },
+      // 식재료 등록 폼으로 냉장고에 넣은 경우 — 냉장고 항목은 폼이 생성하므로 장보기 항목만 완료 처리.
+      markShoppingDone: (id) =>
+        setShopping((prev) => prev.map((x) => (x.id === id ? { ...x, addedToFridge: true, checked: true, updatedAt: nowISO() } : x))),
       renameShopping: (id, name) =>
         setShopping((p) => p.map((x) => (x.id === id ? { ...x, name: name.trim() || x.name, updatedAt: nowISO() } : x))),
       removeShopping: (id) => setShopping((p) => p.filter((x) => x.id !== id)),

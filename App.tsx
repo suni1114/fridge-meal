@@ -63,7 +63,7 @@ function Root() {
         <View style={s.overlay}>
           {nav.overlay.name === 'recipeDetail' && <RecipeDetailScreen recipeId={nav.overlay.recipeId} />}
           {nav.overlay.name === 'ingredientForm' && (
-            <IngredientFormScreen itemId={nav.overlay.itemId} prefillName={nav.overlay.prefillName} />
+            <IngredientFormScreen itemId={nav.overlay.itemId} prefillName={nav.overlay.prefillName} shoppingId={nav.overlay.shoppingId} />
           )}
         </View>
       )}
