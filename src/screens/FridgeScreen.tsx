@@ -7,6 +7,7 @@ import {
   Pressable,
   TextInput,
   Modal,
+  KeyboardAvoidingView,
   StyleSheet,
   Platform,
   NativeSyntheticEvent,
@@ -16,8 +17,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon, IconName } from '../components/Icon';
-import { FoodTile, DdayBadge, StockTag, HeaderActions } from '../components/ui';
-import { STORAGE_LABEL, CATEGORY, STOCK, STOCK_ORDER, StockLevel, FINE_CATEGORIES, fineCategoryOf } from '../data/constants';
+import { FoodTile, DdayBadge, StockTag, HeaderActions, AppButton, SheetHandle } from '../components/ui';
+import { STORAGE_LABEL, CATEGORY, STOCK, STOCK_ORDER, StockLevel, FINE_CATEGORIES, fineCategoryOf, unitOf, UNIT_SUFFIX, stockFromQty, QtyUnit } from '../data/constants';
 import { useApp, FridgeItem } from '../data/store';
 import { daysUntil } from '../data/date';
 import { useNav } from '../navigation/nav';
@@ -41,7 +42,7 @@ export function FridgeScreen() {
   const insets = useSafeAreaInsets();
   // 바텀시트는 화면 하단에 붙으므로 실기기 제스처 바만큼 더 띄워 하단 버튼이 바닥에 붙지 않게 한다.
   const sheetPad = Platform.OS === 'web' ? 30 : insets.bottom + 30;
-  const { fridge, updateStock, removeFridge, addToShopping } = useApp();
+  const { fridge, upsertFridge, removeFridge, addToShopping } = useApp();
   const nav = useNav();
   const [query, setQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -51,6 +52,7 @@ export function FridgeScreen() {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [sheet, setSheet] = useState<FridgeItem | null>(null);
   const [stockSheet, setStockSheet] = useState<FridgeItem | null>(null);
+  const [stockAmount, setStockAmount] = useState(''); // 수량 변경 시트에서 편집 중인 수량
   const [w, setW] = useState(0);
   const pagerRef = useRef<ScrollView>(null);
 
@@ -99,13 +101,43 @@ export function FridgeScreen() {
     }
   }, [nav.fridgeFocus, w]);
 
-  const onStockPick = (item: FridgeItem, level: StockLevel) => {
-    updateStock(item.id, level);
+  // 식재료의 단위 — 저장된 수량 표기(qty)의 접미사 우선, 없으면 이름/카테고리 기준.
+  const unitForItem = (it: FridgeItem): QtyUnit =>
+    it.qty?.includes('%') ? 'percent' : it.qty?.includes('g') ? 'gram' : it.qty?.includes('개') ? 'count' : unitOf(it.name, fineCategoryOf(it.name, it.category));
+
+  const openStock = (it: FridgeItem) => {
+    const u = unitForItem(it);
+    const f = it.qty ? parseFloat(it.qty) : NaN;
+    setStockAmount(!isNaN(f) ? String(f) : u === 'count' ? '1' : '100');
+    setStockSheet(it);
+  };
+
+  const stockUnit = stockSheet ? unitForItem(stockSheet) : 'count';
+  const stockStep = stockUnit === 'gram' ? 50 : 1;
+  const adjustStock = (d: number) => {
+    const v = parseFloat(stockAmount) || 0;
+    setStockAmount(String(Math.max(0, Math.round((v + d) * 10) / 10)));
+  };
+
+  // 수량 저장 — 수정 페이지와 동일하게 단위/수량으로 잔량(stock)과 표기(qty)를 함께 갱신.
+  const saveStock = () => {
+    if (!stockSheet) return;
+    const amt = parseFloat(stockAmount) || 0;
+    const u = unitForItem(stockSheet);
+    const stock = stockFromQty(u, amt);
+    upsertFridge({ ...stockSheet, qty: `${amt}${UNIT_SUFFIX[u]}`, stock });
     setStockSheet(null);
     setSheet(null);
-    if (level === 'very_low' || level === 'empty') {
-      setTimeout(() => addToShopping(item.name, 'low_stock', '냉장고에서 ' + STOCK[level].label), 0);
+    if (stock === 'very_low' || stock === 'empty') {
+      setTimeout(() => addToShopping(stockSheet.name, 'low_stock', '냉장고에서 ' + STOCK[stock].label), 0);
     }
+  };
+
+  // 식재료 소진 — 다 써서 없어졌으므로 냉장고에서 빼고 장보기 목록에 추가한다.
+  const useUp = (it: FridgeItem) => {
+    removeFridge(it.id);
+    setSheet(null);
+    setTimeout(() => addToShopping(it.name, 'low_stock', '다 소진했어요'), 0);
   };
 
   const renderRow = (it: FridgeItem, idx: number) => (
@@ -240,6 +272,7 @@ export function FridgeScreen() {
       <Modal visible={!!sheet} transparent animationType="fade" onRequestClose={() => setSheet(null)}>
         <Pressable style={s.backdrop} onPress={() => setSheet(null)}>
           <Pressable style={[s.sheet, { paddingBottom: sheetPad }]}>
+            <SheetHandle />
             {sheet && (
               <>
                 <View style={s.sheetHead}>
@@ -250,34 +283,76 @@ export function FridgeScreen() {
                   </View>
                   <DdayBadge expiry={sheet.expiry} />
                 </View>
-                <SheetAction icon="arrows-clockwise" label="수량 변경" onPress={() => setStockSheet(sheet)} />
+                <SheetAction icon="arrows-clockwise" label="수량 변경" onPress={() => sheet && openStock(sheet)} />
                 <SheetAction icon="pencil" label="수정" onPress={() => { const it = sheet; setSheet(null); nav.openIngredientForm({ itemId: it.id }); }} />
                 <SheetAction icon="basket" label="장보기 목록에 추가" onPress={() => { addToShopping(sheet.name, 'low_stock'); setSheet(null); }} />
                 <SheetAction icon="fork-knife" label="이 재료로 요리 보기" onPress={() => { setSheet(null); nav.setTab('recipe'); }} />
                 <SheetAction icon="trash" label="삭제" danger onPress={() => { removeFridge(sheet.id); setSheet(null); }} />
+                {/* 식재료 소진 — 하단에 분리해서 배치 */}
+                <View style={s.sheetFootDivider} />
+                <AppButton icon="check-circle" label="식재료 소진" variant="ghost" onPress={() => sheet && useUp(sheet)} />
               </>
             )}
           </Pressable>
         </Pressable>
       </Modal>
 
-      {/* 수량 변경 시트 */}
+      {/* 수량 변경 시트 — 수정 페이지와 동일하게 단위별(개/그람/%)로 수량 편집 */}
       <Modal visible={!!stockSheet} transparent animationType="fade" onRequestClose={() => setStockSheet(null)}>
-        <Pressable style={s.backdrop} onPress={() => setStockSheet(null)}>
-          <Pressable style={[s.sheet, { paddingBottom: sheetPad }]}>
-            <Text style={s.sheetTitle}>남은 정도</Text>
-            {STOCK_ORDER.map((lv) => {
-              const on = stockSheet?.stock === lv;
-              return (
-                <Pressable key={lv} style={[s.stockOpt, on && s.stockOptOn]} onPress={() => stockSheet && onStockPick(stockSheet, lv)}>
-                  <Text style={[s.stockOptText, on && { color: colors.primary }]}>{STOCK[lv].label}</Text>
-                  {on && <Icon name="check" size={18} color={colors.primary} weight="bold" />}
-                </Pressable>
-              );
-            })}
-            <Text style={s.stockHint}>‘거의 없음·없음’을 고르면 장보기 목록에 자동으로 추가돼요.</Text>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={s.kav}>
+          <Pressable style={s.backdrop} onPress={() => setStockSheet(null)}>
+            <Pressable style={[s.sheet, { paddingBottom: sheetPad }]}>
+              <SheetHandle />
+              {stockSheet && (
+                <>
+                  <View style={s.sheetHead}>
+                    <FoodTile name={stockSheet.name} category={stockSheet.category} size={40} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.sheetName}>{stockSheet.name}</Text>
+                      <Text style={s.itemMeta}>
+                        {stockUnit === 'count' ? '개수' : stockUnit === 'gram' ? '그람(g)' : '퍼센트(%)'}로 수량을 조절해요
+                      </Text>
+                    </View>
+                  </View>
+
+                  {stockUnit === 'percent' ? (
+                    <View style={s.qtyWrap}>
+                      {['100', '75', '50', '25'].map((p) => (
+                        <Pressable key={p} onPress={() => setStockAmount(p)} style={[s.qtyChip, stockAmount === p && s.qtyChipOn]}>
+                          <Text style={[s.qtyChipText, stockAmount === p && s.qtyChipTextOn]}>{p}%</Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  ) : (
+                    <View style={s.stepper}>
+                      <Pressable onPress={() => adjustStock(-stockStep)} hitSlop={8}>
+                        <Icon name="minus-circle" size={30} color={colors.inkAlt} weight="fill" />
+                      </Pressable>
+                      <View style={s.stepValueWrap}>
+                        <TextInput
+                          value={stockAmount}
+                          onChangeText={(t) => setStockAmount(t.replace(/[^0-9.]/g, ''))}
+                          keyboardType="decimal-pad"
+                          placeholder="0"
+                          placeholderTextColor={colors.inkAsst}
+                          style={s.stepInput}
+                          textAlign="center"
+                        />
+                        <Text style={s.stepUnit}>{UNIT_SUFFIX[stockUnit]}</Text>
+                      </View>
+                      <Pressable onPress={() => adjustStock(stockStep)} hitSlop={8}>
+                        <Icon name="plus-circle" size={30} color={colors.inkAlt} weight="fill" />
+                      </Pressable>
+                    </View>
+                  )}
+
+                  <AppButton label="저장" onPress={saveStock} style={{ marginTop: 18 }} />
+                  <Text style={s.stockHint}>수량이 적으면 잔량이 자동으로 낮아지고 장보기 목록에 추가돼요.</Text>
+                </>
+              )}
+            </Pressable>
           </Pressable>
-        </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -357,4 +432,17 @@ const s = StyleSheet.create({
   stockOptOn: { backgroundColor: colors.primaryBg },
   stockOptText: { fontFamily: font.bold, fontSize: 16, color: colors.ink },
   stockHint: { fontFamily: font.medium, fontSize: 12.5, color: colors.inkAsst, marginTop: 8, paddingHorizontal: 6, lineHeight: 18 },
+  sheetFootDivider: { height: 1, backgroundColor: colors.line, marginTop: 6, marginBottom: 10 },
+
+  // 수량 변경 — 단위별 편집(스텝퍼/퍼센트 칩)
+  kav: { flex: 1 },
+  qtyWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingVertical: 6 },
+  qtyChip: { paddingVertical: 12, paddingHorizontal: 18, borderRadius: radius.pill, backgroundColor: colors.fill, borderWidth: 1.5, borderColor: colors.line },
+  qtyChipOn: { backgroundColor: colors.primary, borderColor: colors.primary },
+  qtyChipText: { fontFamily: font.bold, fontSize: 15, color: colors.ink },
+  qtyChipTextOn: { color: colors.white },
+  stepper: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 22, paddingVertical: 10 },
+  stepValueWrap: { flexDirection: 'row', alignItems: 'baseline', gap: 3, minWidth: 96, justifyContent: 'center' },
+  stepInput: { fontFamily: font.extrabold, fontSize: 30, color: colors.ink, minWidth: 56, padding: 0 },
+  stepUnit: { fontFamily: font.bold, fontSize: 17, color: colors.inkAlt },
 });
