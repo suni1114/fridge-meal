@@ -129,14 +129,19 @@ export function HomeScreen() {
         <View style={s.section}>
           <SectionTitle title="장보기 요약" compact count={shop.length} actionLabel="목록 보기" onAction={() => nav.setTab('shopping')} />
           <Pressable style={s.shopCard} onPress={() => nav.setTab('shopping')}>
-            <View style={s.shopNames}>
-              {shop.slice(0, 6).map((it) => (
-                <View key={it.id} style={s.shopName}>
-                  <View style={s.bullet} />
-                  <Text style={s.shopNameText}>{it.name}</Text>
-                </View>
-              ))}
-            </View>
+            {shop.length > 0 ? (
+              <View style={s.shopNames}>
+                {shop.slice(0, 6).map((it) => (
+                  <View key={it.id} style={s.shopName}>
+                    <View style={s.bullet} />
+                    <Text style={s.shopNameText}>{it.name}</Text>
+                  </View>
+                ))}
+                {shop.length > 6 && <Text style={s.shopMore}>+{shop.length - 6}개 더</Text>}
+              </View>
+            ) : (
+              <Text style={s.shopEmpty}>아직 살 거리가 없어요.</Text>
+            )}
           </Pressable>
         </View>
       </ScrollView>
@@ -178,4 +183,6 @@ const s = StyleSheet.create({
   shopName: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   bullet: { width: 5, height: 5, borderRadius: 3, backgroundColor: colors.inkAsst },
   shopNameText: { fontFamily: font.semibold, fontSize: 14, color: colors.inkAlt },
+  shopMore: { fontFamily: font.bold, fontSize: 13, color: colors.primary },
+  shopEmpty: { fontFamily: font.medium, fontSize: 13.5, color: colors.inkAsst, textAlign: 'center', paddingVertical: 4 },
 });

@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon, IconName } from '../components/Icon';
-import { AppButton, FoodTile } from '../components/ui';
+import { AppButton, FoodTile, SheetHandle } from '../components/ui';
 import { CategoryCode } from '../data/constants';
 import { useApp } from '../data/store';
 import { useNav } from '../navigation/nav';
@@ -225,7 +225,7 @@ function Sheet({ visible, onClose, pad, children }: { visible: boolean; onClose:
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={s.backdrop} onPress={onClose}>
-        <Pressable style={[s.sheet, { paddingBottom: pad }]}>{children}</Pressable>
+        <Pressable style={[s.sheet, { paddingBottom: pad }]}><SheetHandle />{children}</Pressable>
       </Pressable>
     </Modal>
   );

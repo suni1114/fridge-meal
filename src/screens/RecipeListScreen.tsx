@@ -46,7 +46,7 @@ export function RecipeListScreen() {
           <Text style={s.title}>오늘 뭐 먹지?</Text>
           <Text style={s.sub}>냉장고 재료로 만들 수 있는 요리예요</Text>
         </View>
-        <HeaderActions />
+        <HeaderActions showSearch={false} showBell={false} />
       </View>
 
       {/* 탭 — 냉장고 보관위치 탭과 동일한 스타일(아이콘 + 개수) */}

@@ -157,7 +157,8 @@ export function DdayBadge({ expiry }: { expiry: string | null }) {
     );
   }
   const tone = ddayTone(dday);
-  const label = dday < 0 ? `D+${-dday}` : dday === 0 ? 'D-day' : `D-${dday}`;
+  // 소비기한이 지나면 마이너스(-N일)로, 남았으면 D-N, 당일은 D-day.
+  const label = dday < 0 ? `-${-dday}일` : dday === 0 ? 'D-day' : `D-${dday}`;
   return (
     <View style={[s.badge, { backgroundColor: tone.bg }]}>
       <Text style={[s.badgeText, { color: tone.fg }]}>{label}</Text>
@@ -196,6 +197,11 @@ export function SectionTitle({ title, count, actionLabel, actionIcon, onAction, 
       )}
     </View>
   );
+}
+
+/** 바텀시트 상단 핸들(그랩 바). 모든 바텀시트 최상단에 둔다. */
+export function SheetHandle() {
+  return <View style={s.sheetHandle} />;
 }
 
 type PillTone = 'primary' | 'accent' | 'neutral';
@@ -268,6 +274,7 @@ export function ScreenHeader({ title, onBack, right }: { title: string; onBack?:
 }
 
 const s = StyleSheet.create({
+  sheetHandle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: colors.lineStrong, marginBottom: 14 },
   statBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingTop: 14, paddingBottom: 2 },
   statTime: { fontFamily: font.bold, fontSize: 14 },
   statRight: { flexDirection: 'row', gap: 7, alignItems: 'center' },
