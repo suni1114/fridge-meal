@@ -1,7 +1,7 @@
 // 장보기 (spec §9.11~9.12) — 자동 추천 / 직접 추가 / 구매 완료
 //  · 체크 = 구매 완료 토글  · 항목 탭 = 액션(냉장고에 추가 / 이름 수정 / 삭제)
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable, TextInput, Modal, StyleSheet, Platform } from 'react-native';
+import { View, Text, ScrollView, Pressable, TextInput, Modal, KeyboardAvoidingView, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
@@ -107,25 +107,27 @@ export function ShoppingScreen() {
 
       {/* 직접 추가 모달 */}
       <Modal visible={addOpen} transparent animationType="fade" onRequestClose={() => setAddOpen(false)}>
-        <Pressable style={s.backdrop} onPress={() => setAddOpen(false)}>
-          <Pressable style={[s.sheet, { paddingBottom: sheetPad }]}>
-            <Text style={s.sheetTitle}>장보기 항목 추가</Text>
-            <View style={s.inputRow}>
-              <TextInput
-                value={addName}
-                onChangeText={setAddName}
-                placeholder="식재료 이름"
-                placeholderTextColor={colors.inkAsst}
-                style={s.input}
-                autoFocus
-                onSubmitEditing={() => {
-                  if (addName.trim()) { addToShopping(addName.trim(), 'manual'); setAddName(''); setAddOpen(false); }
-                }}
-              />
-            </View>
-            <AppButton label="추가하기" onPress={() => { if (addName.trim()) { addToShopping(addName.trim(), 'manual'); setAddName(''); setAddOpen(false); } }} style={{ marginTop: 14 }} />
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={s.kav}>
+          <Pressable style={s.backdrop} onPress={() => setAddOpen(false)}>
+            <Pressable style={[s.sheet, { paddingBottom: sheetPad }]}>
+              <Text style={s.sheetTitle}>장보기 항목 추가</Text>
+              <View style={s.inputRow}>
+                <TextInput
+                  value={addName}
+                  onChangeText={setAddName}
+                  placeholder="식재료 이름"
+                  placeholderTextColor={colors.inkAsst}
+                  style={s.input}
+                  autoFocus
+                  onSubmitEditing={() => {
+                    if (addName.trim()) { addToShopping(addName.trim(), 'manual'); setAddName(''); setAddOpen(false); }
+                  }}
+                />
+              </View>
+              <AppButton label="추가하기" onPress={() => { if (addName.trim()) { addToShopping(addName.trim(), 'manual'); setAddName(''); setAddOpen(false); } }} style={{ marginTop: 14 }} />
+            </Pressable>
           </Pressable>
-        </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* 구매 완료 일괄 삭제 확인 */}
@@ -168,23 +170,25 @@ export function ShoppingScreen() {
 
       {/* 이름 수정 모달 */}
       <Modal visible={!!editItem} transparent animationType="fade" onRequestClose={() => setEditItem(null)}>
-        <Pressable style={s.backdrop} onPress={() => setEditItem(null)}>
-          <Pressable style={[s.sheet, { paddingBottom: sheetPad }]}>
-            <Text style={s.sheetTitle}>이름 수정</Text>
-            <View style={s.inputRow}>
-              <TextInput
-                value={editName}
-                onChangeText={setEditName}
-                placeholder="식재료 이름"
-                placeholderTextColor={colors.inkAsst}
-                style={s.input}
-                autoFocus
-                onSubmitEditing={saveEdit}
-              />
-            </View>
-            <AppButton label="저장" onPress={saveEdit} disabled={!editName.trim()} style={{ marginTop: 14 }} />
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={s.kav}>
+          <Pressable style={s.backdrop} onPress={() => setEditItem(null)}>
+            <Pressable style={[s.sheet, { paddingBottom: sheetPad }]}>
+              <Text style={s.sheetTitle}>이름 수정</Text>
+              <View style={s.inputRow}>
+                <TextInput
+                  value={editName}
+                  onChangeText={setEditName}
+                  placeholder="식재료 이름"
+                  placeholderTextColor={colors.inkAsst}
+                  style={s.input}
+                  autoFocus
+                  onSubmitEditing={saveEdit}
+                />
+              </View>
+              <AppButton label="저장" onPress={saveEdit} disabled={!editName.trim()} style={{ marginTop: 14 }} />
+            </Pressable>
           </Pressable>
-        </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* 냉장고 입고 다이얼로그 */}
@@ -269,6 +273,7 @@ const s = StyleSheet.create({
   inTagText: { fontFamily: font.bold, fontSize: 11, color: colors.primary },
   empty: { fontFamily: font.medium, fontSize: 13.5, color: colors.inkAsst, paddingVertical: 16, textAlign: 'center' },
 
+  kav: { flex: 1 },
   backdrop: { flex: 1, backgroundColor: 'rgba(20,24,18,0.4)', justifyContent: 'flex-end' },
   sheet: { backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 30 },
   sheetTitle: { fontFamily: font.extrabold, fontSize: 18, color: colors.ink, marginBottom: 8 },

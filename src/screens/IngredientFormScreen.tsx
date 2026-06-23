@@ -2,7 +2,7 @@
 //  0) 카테고리 선택(그리드) / 검색  →  1) 식재료 선택  →  2) 재료 상세 설정(등록일·소비기한·보관·수량·메모)
 //  + AI 등록(영수증·사진).
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, TextInput, Modal, Platform, StyleSheet, BackHandler } from 'react-native';
+import { View, Text, ScrollView, Pressable, TextInput, Modal, KeyboardAvoidingView, Platform, StyleSheet, BackHandler } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
@@ -211,7 +211,7 @@ export function IngredientFormScreen({ itemId, prefillName }: { itemId?: string;
   const headerTitle = editing ? '재료 상세 설정' : step === 2 ? '재료 상세 설정' : '식재료 추가';
 
   return (
-    <View style={s.root}>
+    <KeyboardAvoidingView style={s.root} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScreenHeader title={headerTitle} onBack={onBack} />
 
       {/* ── 0단계: 카테고리 선택 / 검색 ───────────────────────── */}
@@ -495,7 +495,7 @@ export function IngredientFormScreen({ itemId, prefillName }: { itemId?: string;
 
       {/* AI 인식 결과 확인·수정 시트 */}
       <Modal visible={!!aiItems} transparent animationType="slide" onRequestClose={() => setAiItems(null)}>
-        <View style={s.aiBackdrop}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={s.aiBackdrop}>
           <View style={[s.aiSheet, { paddingBottom: 16 + insets.bottom }]}>
             <View style={s.aiSheetHead}>
               <Text style={s.aiSheetTitle}>인식된 재료 확인</Text>
@@ -535,7 +535,7 @@ export function IngredientFormScreen({ itemId, prefillName }: { itemId?: string;
             </ScrollView>
             <AppButton label={`${aiItems?.length ?? 0}개 냉장고에 등록`} onPress={aiSave} disabled={!aiItems || aiItems.length === 0} style={{ marginTop: 14 }} />
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* 날짜 선택 달력 (등록일/소비기한 공용) */}
@@ -553,7 +553,7 @@ export function IngredientFormScreen({ itemId, prefillName }: { itemId?: string;
         onClose={() => setCal(null)}
         insetsBottom={insets.bottom}
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
