@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon } from '../components/Icon';
-import { ScreenHeader, AppButton } from '../components/ui';
+import { ScreenHeader, AppButton, DdayBadge, SheetHandle } from '../components/ui';
 import {
   STORAGE_LABEL,
   FINE_CATEGORIES,
@@ -18,6 +18,7 @@ import {
   UNIT_SUFFIX,
   stockFromQty,
   emojiFor,
+  QtyUnit,
 } from '../data/constants';
 import { useApp, infoFor } from '../data/store';
 import { uid } from '../data/id';
@@ -58,13 +59,20 @@ const AI_MOCK: Record<string, { name: string; amount: string }[]> = {
   ],
 };
 
+// 수량 단위 선택지 — 식재료에 맞게 자동 선택되지만 사용자가 바꿀 수 있다.
+const UNIT_OPTIONS: { code: QtyUnit; label: string }[] = [
+  { code: 'count', label: '개수' },
+  { code: 'gram', label: '그람(g)' },
+  { code: 'percent', label: '퍼센트(%)' },
+];
+
 type AiItem = { id: string; name: string; amount: string };
 
 // 모든 카테고리의 식재료 (검색용).
 const ALL_INGREDIENTS = Object.values(FINE_CATEGORY_ITEMS).flat();
 
-export function IngredientFormScreen({ itemId, prefillName }: { itemId?: string; prefillName?: string }) {
-  const { fridge, upsertFridge, removeFridge } = useApp();
+export function IngredientFormScreen({ itemId, prefillName, shoppingId }: { itemId?: string; prefillName?: string; shoppingId?: string }) {
+  const { fridge, upsertFridge, removeFridge, markShoppingDone } = useApp();
   const nav = useNav();
   const insets = useSafeAreaInsets();
   const editing = fridge.find((x) => x.id === itemId);
@@ -82,15 +90,21 @@ export function IngredientFormScreen({ itemId, prefillName }: { itemId?: string;
   const [expiry, setExpiry] = useState<string | null>(editing?.expiry ?? null);
   const [added, setAdded] = useState<string>(editing?.added ?? todayISO()); // 등록일 기본 오늘
   const [cal, setCal] = useState<null | 'expiry' | 'added'>(null);
+  const [catPickOpen, setCatPickOpen] = useState(false); // 수정 시 카테고리 변경 시트
   const [memo, setMemo] = useState(editing?.memo ?? '');
 
   const dleft = daysUntil(expiry); // null = 미설정
   const expiryDate = expiry ? fromISO(expiry) : null;
   const addedDate = fromISO(added);
 
-  // 재료에 따라 수량 단위(개/그람/퍼센트) 자동 결정. 커스텀명은 선택한 카테고리 기준으로 유지.
-  const unit = unitOf(name, fineCat);
-  const defaultAmount = (u: string) => (u === 'percent' ? '100' : '1');
+  // 수량 단위(개/그람/퍼센트) — 재료에 맞게 자동 선택하되, 사용자가 바꿀 수 있다.
+  const autoUnit = unitOf(name, fineCat);
+  const detectUnit = (qty?: string): QtyUnit | null =>
+    qty?.includes('%') ? 'percent' : qty?.includes('g') ? 'gram' : qty?.includes('개') ? 'count' : null;
+  const [unitOverride, setUnitOverride] = useState<QtyUnit | null>(editing ? detectUnit(editing.qty) : null);
+  const unit = unitOverride ?? autoUnit;
+  // 단위별 기본 수량: 개=1, 그람=100, 퍼센트=100.
+  const defaultAmount = (u: QtyUnit) => (u === 'count' ? '1' : '100');
   const [amount, setAmount] = useState<string>(() => {
     const f = editing?.qty ? parseFloat(editing.qty) : NaN;
     return !isNaN(f) ? String(f) : defaultAmount(unitOf(initialName, fineCat));
@@ -102,7 +116,7 @@ export function IngredientFormScreen({ itemId, prefillName }: { itemId?: string;
   }, [unit]);
 
   const catMeta = FINE_CATEGORIES.find((c) => c.code === fineCat);
-  const items = FINE_CATEGORY_ITEMS[fineCat] ?? [];
+  const items = [...(FINE_CATEGORY_ITEMS[fineCat] ?? [])].sort((a, b) => a.localeCompare(b, 'ko'));
 
   const pickCategory = (code: string) => {
     setFineCat(code);
@@ -152,6 +166,8 @@ export function IngredientFormScreen({ itemId, prefillName }: { itemId?: string;
       added,
       memo: memo.trim() || undefined,
     });
+    // 장보기에서 들어온 경우(shoppingId) 해당 장보기 항목을 구매 완료·입고됨으로 처리.
+    if (shoppingId) markShoppingDone(shoppingId);
     // 저장한 보관 위치(냉장/냉동/실온)에 맞는 냉장고 하위 탭으로 보낸다(어느 탭에서 열었든).
     nav.goToFridge(storage);
     nav.closeOverlay();
@@ -299,7 +315,6 @@ export function IngredientFormScreen({ itemId, prefillName }: { itemId?: string;
                 const on = name === n;
                 return (
                   <Pressable key={n} onPress={() => chooseIngredient(n)} style={[s.chip, on && s.chipOn]}>
-                    <Text style={s.chipEmoji}>{emojiFor(n, coarseFromFine(fineCat))}</Text>
                     <Text style={[s.chipText, on && s.chipTextOn]}>{n}</Text>
                   </Pressable>
                 );
@@ -356,10 +371,27 @@ export function IngredientFormScreen({ itemId, prefillName }: { itemId?: string;
             </View>
           </View>
 
+          {/* 소비기한 — 가장 중요하므로 별도 카드로 크게 강조 */}
+          <Pressable style={s.expiryCard} onPress={() => setCal('expiry')}>
+            <View style={{ flex: 1 }}>
+              <View style={s.expiryLabelRow}>
+                <Icon name="clock" size={15} color={colors.coral} weight="fill" />
+                <Text style={s.expiryLabel}>소비기한</Text>
+              </View>
+              <Text style={[s.expiryDate, !expiryDate && s.expiryDateMuted]}>
+                {expiryDate ? fmtFull(expiryDate) : '눌러서 설정하기'}
+              </Text>
+            </View>
+            <View style={s.expiryRight}>
+              <DdayBadge expiry={expiry} />
+              <Icon name="caret-right" size={16} color={colors.inkAsst} weight="bold" />
+            </View>
+          </Pressable>
+
           {/* 설정 리스트 카드 */}
           <View style={s.card}>
-            {/* 카테고리 */}
-            {!editing && !prefillName ? (
+            {/* 카테고리 — 신규/장보기 진입 시 변경 가능(수정 모드만 고정) */}
+            {!editing ? (
               <Pressable style={s.listRow} onPress={() => setStep(1)}>
                 <Text style={s.rowLabel}>카테고리</Text>
                 <View style={s.rowRight}>
@@ -368,10 +400,13 @@ export function IngredientFormScreen({ itemId, prefillName }: { itemId?: string;
                 </View>
               </Pressable>
             ) : (
-              <View style={s.listRow}>
+              <Pressable style={s.listRow} onPress={() => setCatPickOpen(true)}>
                 <Text style={s.rowLabel}>카테고리</Text>
-                <Text style={s.rowValue}>{catMeta?.label}</Text>
-              </View>
+                <View style={s.rowRight}>
+                  <Text style={s.rowValue}>{catMeta?.label}</Text>
+                  <Icon name="caret-right" size={16} color={colors.inkAsst} weight="bold" />
+                </View>
+              </Pressable>
             )}
             <View style={s.divider} />
 
@@ -380,22 +415,6 @@ export function IngredientFormScreen({ itemId, prefillName }: { itemId?: string;
               <Text style={s.rowLabel}>등록일</Text>
               <View style={s.rowRight}>
                 <Text style={s.rowValue}>{fmtDot(addedDate)}</Text>
-                <Icon name="caret-right" size={16} color={colors.inkAsst} weight="bold" />
-              </View>
-            </Pressable>
-            <View style={s.divider} />
-
-            {/* 소비기한 */}
-            <Pressable style={s.listRow} onPress={() => setCal('expiry')}>
-              <Text style={s.rowLabel}>소비기한</Text>
-              <View style={s.rowRight}>
-                {expiryDate && dleft != null ? (
-                  <Text style={s.rowValue}>
-                    {fmtDot(expiryDate)} · {dleft === 0 ? 'D-day' : dleft < 0 ? `D+${-dleft}` : `D-${dleft}`}
-                  </Text>
-                ) : (
-                  <Text style={s.rowValueMuted}>미설정</Text>
-                )}
                 <Icon name="caret-right" size={16} color={colors.inkAsst} weight="bold" />
               </View>
             </Pressable>
@@ -411,6 +430,22 @@ export function IngredientFormScreen({ itemId, prefillName }: { itemId?: string;
                     <Pressable key={st.code} onPress={() => setStorage(st.code)} style={[s.seg, on && s.segOn]}>
                       <Icon name={st.icon} size={15} color={on ? colors.white : colors.inkAlt} weight="bold" />
                       <Text style={[s.segText, on && s.segTextOn]}>{STORAGE_LABEL[st.code]}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+            <View style={s.divider} />
+
+            {/* 단위 — 자동 선택되며, 사용자가 직접 바꿀 수 있다 */}
+            <View style={s.listRowTop}>
+              <Text style={s.rowLabel}>단위</Text>
+              <View style={s.segRow}>
+                {UNIT_OPTIONS.map((u) => {
+                  const on = unit === u.code;
+                  return (
+                    <Pressable key={u.code} onPress={() => setUnitOverride(u.code)} style={[s.seg, on && s.segOn]}>
+                      <Text style={[s.segText, on && s.segTextOn]}>{u.label}</Text>
                     </Pressable>
                   );
                 })}
@@ -497,6 +532,7 @@ export function IngredientFormScreen({ itemId, prefillName }: { itemId?: string;
       <Modal visible={!!aiItems} transparent animationType="slide" onRequestClose={() => setAiItems(null)}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={s.aiBackdrop}>
           <View style={[s.aiSheet, { paddingBottom: 16 + insets.bottom }]}>
+            <SheetHandle />
             <View style={s.aiSheetHead}>
               <Text style={s.aiSheetTitle}>인식된 재료 확인</Text>
               <Pressable onPress={() => setAiItems(null)} hitSlop={8}>
@@ -553,13 +589,41 @@ export function IngredientFormScreen({ itemId, prefillName }: { itemId?: string;
         onClose={() => setCal(null)}
         insetsBottom={insets.bottom}
       />
+
+      {/* 카테고리 변경 시트 (수정 모드) */}
+      <Modal visible={catPickOpen} transparent animationType="slide" onRequestClose={() => setCatPickOpen(false)}>
+        <Pressable style={s.aiBackdrop} onPress={() => setCatPickOpen(false)}>
+          <Pressable style={[s.calSheet, { paddingBottom: 16 + insets.bottom }]} onPress={(e) => e.stopPropagation?.()}>
+            <SheetHandle />
+            <View style={s.aiSheetHead}>
+              <Text style={s.aiSheetTitle}>카테고리 선택</Text>
+              <Pressable onPress={() => setCatPickOpen(false)} hitSlop={8}>
+                <Icon name="x" size={20} color={colors.inkAlt} weight="bold" />
+              </Pressable>
+            </View>
+            <ScrollView style={{ maxHeight: 360, marginTop: 12 }} showsVerticalScrollIndicator={false}>
+              <View style={s.catGrid}>
+                {FINE_CATEGORIES.map((c) => {
+                  const on = c.code === fineCat;
+                  return (
+                    <Pressable key={c.code} style={[s.catGridItem, on && s.catGridItemOn]} onPress={() => { setFineCat(c.code); setCatPickOpen(false); }}>
+                      <Text style={s.catGridEmoji}>{c.emoji}</Text>
+                      <Text style={[s.catGridLabel, on && { color: colors.primary }]}>{c.label}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
 
 // 외부 라이브러리 없이 RN 기본 요소로 만든 달력 — 웹/실기기 동일하게 동작.
 // disableBefore / disableAfter 로 선택 범위 제한, presets 로 빠른 선택(소비기한) 제공.
-function DatePickerModal({
+export function DatePickerModal({
   visible,
   value,
   title,
@@ -599,6 +663,9 @@ function DatePickerModal({
   const cells: (number | null)[] = [];
   for (let i = 0; i < firstWeekday; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  // 항상 6주(42칸)로 고정 — 달을 이동해도 그리드 높이가 변하지 않아 상단(년월·화살표)이 고정되고,
+  // 주 수가 적은 달은 하단이 빈 칸으로 남는다.
+  while (cells.length < 42) cells.push(null);
 
   const ym = (d: Date) => d.getFullYear() * 12 + d.getMonth();
   const viewYm = year * 12 + month;
@@ -610,6 +677,7 @@ function DatePickerModal({
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={s.aiBackdrop} onPress={onClose}>
         <Pressable style={[s.calSheet, { paddingBottom: 16 + insetsBottom }]} onPress={(e) => e.stopPropagation?.()}>
+          <SheetHandle />
           <View style={s.aiSheetHead}>
             <Text style={s.aiSheetTitle}>{title}</Text>
             <Pressable onPress={onClose} hitSlop={8}>
@@ -654,7 +722,7 @@ function DatePickerModal({
 
           <View style={s.calGrid}>
             {cells.map((d, i) => {
-              if (d == null) return <View key={`e${i}`} style={s.calCell} />;
+              if (d == null) return <View key={`e${i}`} style={s.gridCell} />;
               const cellDate = new Date(year, month, d);
               const disabled =
                 (!!disableBefore && cellDate.getTime() < disableBefore.getTime()) ||
@@ -662,7 +730,7 @@ function DatePickerModal({
               const isToday = sameYMD(cellDate, today);
               const isSel = sameYMD(cellDate, value);
               return (
-                <Pressable key={d} style={s.calCell} disabled={disabled} onPress={() => onSelect(cellDate)}>
+                <Pressable key={d} style={s.gridCell} disabled={disabled} onPress={() => onSelect(cellDate)}>
                   <View style={[s.calDay, isSel && s.calDaySel, isToday && !isSel && s.calDayToday]}>
                     <Text style={[s.calDayText, disabled && s.calDayPast, isSel && s.calDayTextSel]}>{d}</Text>
                   </View>
@@ -702,6 +770,7 @@ const s = StyleSheet.create({
   // 카테고리 그리드
   catGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 10 },
   catGridItem: { width: '31%', backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.line, alignItems: 'center', justifyContent: 'center', paddingVertical: 16, gap: 6 },
+  catGridItemOn: { borderColor: colors.primary, backgroundColor: colors.primaryBg },
   catGridEmoji: { fontSize: 26, ...(EMOJI_FONT || {}) },
   catGridLabel: { fontFamily: font.bold, fontSize: 12, color: colors.ink, textAlign: 'center' },
 
@@ -723,12 +792,21 @@ const s = StyleSheet.create({
 
   // 설정 리스트 카드
   card: { backgroundColor: colors.surface, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.line, paddingHorizontal: 16, paddingVertical: 4, marginBottom: 14 },
+
+  // 소비기한 — 가장 중요한 정보라 별도 카드로 강조
+  expiryCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.surface, borderRadius: radius.xl, borderWidth: 1.5, borderColor: colors.coral, padding: 16, marginBottom: 14 },
+  expiryLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  expiryLabel: { fontFamily: font.extrabold, fontSize: 13.5, color: colors.coral, letterSpacing: -0.2 },
+  expiryDate: { fontFamily: font.extrabold, fontSize: 18, color: colors.ink, letterSpacing: -0.4, marginTop: 5 },
+  expiryDateMuted: { fontFamily: font.medium, fontSize: 12.5, color: colors.inkAsst, marginTop: 3 },
+  expiryRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+
   divider: { height: 1, backgroundColor: colors.line },
   listRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 56, paddingVertical: 12 },
   listRowTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 56, paddingVertical: 12, gap: 10 },
   rowLabel: { fontFamily: font.bold, fontSize: 15, color: colors.ink },
   rowRight: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  rowValue: { fontFamily: font.bold, fontSize: 15, color: colors.ink },
+  rowValue: { fontFamily: font.regular, fontSize: 15, color: colors.ink },
   rowValueMuted: { fontFamily: font.bold, fontSize: 15, color: colors.inkAsst },
 
   // 보관 위치 세그먼트
@@ -764,6 +842,8 @@ const s = StyleSheet.create({
   calRow: { flexDirection: 'row' },
   calGrid: { flexDirection: 'row', flexWrap: 'wrap' },
   calCell: { width: `${100 / 7}%`, alignItems: 'center', justifyContent: 'center', paddingVertical: 3 },
+  // 날짜 그리드 셀 — 고정 높이로 빈 칸도 한 줄을 온전히 차지(항상 6줄 → 높이 일정).
+  gridCell: { width: `${100 / 7}%`, height: 44, alignItems: 'center', justifyContent: 'center' },
   calWeekday: { fontFamily: font.bold, fontSize: 12, color: colors.inkAsst, paddingVertical: 6 },
   calDay: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
   calDaySel: { backgroundColor: colors.primary },
