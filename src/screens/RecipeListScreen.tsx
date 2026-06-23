@@ -55,7 +55,6 @@ export function RecipeListScreen() {
           const on = i === tab;
           return (
             <Pressable key={t.key} style={[s.tab, on && s.tabOn]} onPress={() => goTab(i)}>
-              <Icon name={t.icon} size={17} color={on ? colors.white : colors.inkAlt} weight={on ? 'fill' : 'regular'} />
               <Text style={[s.tabText, on && s.tabTextOn]}>{t.label}</Text>
               <Text style={[s.tabCount, on && s.tabCountOn]}>{listFor(i).length}</Text>
             </Pressable>
@@ -77,7 +76,7 @@ export function RecipeListScreen() {
             {TABS.map((t, i) => {
               const list = listFor(i);
               return (
-                <ScrollView key={t.key} style={{ width: w }} contentContainerStyle={{ padding: 20, paddingTop: 8, gap: 12, paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
+                <ScrollView key={t.key} style={{ width: w }} contentContainerStyle={{ padding: 16, paddingTop: 6, gap: 9, paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
                   {list.map((m) => (
                     <RecipeCard
                       key={m.recipe.id}
@@ -105,7 +104,7 @@ function RecipeCard({ m, onOpen, onAdd }: { m: RecipeMatch; onOpen: () => void; 
   return (
     <View style={s.card}>
       <View style={s.cardTop}>
-        <RecipeTile id={m.recipe.id} size={54} bg={m.usesNearExpiry ? colors.coralBg : hasMissing ? colors.accentBg : colors.primaryBg} />
+        <RecipeTile id={m.recipe.id} size={46} bg={m.usesNearExpiry ? colors.coralBg : hasMissing ? colors.accentBg : colors.primaryBg} />
         <View style={{ flex: 1 }}>
           <Text style={s.cardTitle}>{m.recipe.title}</Text>
           <View style={s.metaRow}>
@@ -172,15 +171,15 @@ const s = StyleSheet.create({
   tabCount: { fontFamily: font.bold, fontSize: 10.5, color: colors.inkAlt, backgroundColor: colors.fill, minWidth: 16, height: 16, lineHeight: 16, borderRadius: 8, paddingHorizontal: 4, textAlign: 'center', overflow: 'hidden' },
   tabCountOn: { color: colors.primary, backgroundColor: colors.white },
 
-  card: { backgroundColor: colors.surface, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.line, padding: 16 },
-  cardTop: { flexDirection: 'row', alignItems: 'center', gap: 13 },
-  cardTitle: { fontFamily: font.extrabold, fontSize: 17, color: colors.ink, letterSpacing: -0.3 },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
+  card: { backgroundColor: colors.surface, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.line, padding: 13 },
+  cardTop: { flexDirection: 'row', alignItems: 'center', gap: 11 },
+  cardTitle: { fontFamily: font.extrabold, fontSize: 16, color: colors.ink, letterSpacing: -0.3 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
   metaText: { fontFamily: font.medium, fontSize: 12.5, color: colors.inkAlt },
   flame: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: colors.coralBg, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill, marginLeft: 2 },
   flameText: { fontFamily: font.extrabold, fontSize: 10.5, color: colors.coral },
 
-  infoRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 14 },
+  infoRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 10 },
   infoHave: { fontFamily: font.bold, fontSize: 13, color: colors.ink },
   infoNone: { fontFamily: font.semibold, fontSize: 13, color: colors.inkAsst },
   missingWrap: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
@@ -192,10 +191,10 @@ const s = StyleSheet.create({
   addChipText: { fontFamily: font.bold, fontSize: 11.5, color: colors.ink },
 
   // 하단 액션 — 카드와 한 덩어리(구분선) + 차분한 버튼 2개
-  footer: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 14, paddingTop: 13, borderTopWidth: 1, borderTopColor: colors.line },
-  viewBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 12, borderRadius: radius.md, backgroundColor: colors.fill },
+  footer: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.line },
+  viewBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 9, borderRadius: radius.md, backgroundColor: colors.fill },
   viewBtnText: { fontFamily: font.medium, fontSize: 14, color: colors.inkAlt },
-  ytBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line },
+  ytBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line },
   ytPlay: { fontFamily: font.bold, fontSize: 9, color: colors.coral },
   ytText: { fontFamily: font.medium, fontSize: 14, color: colors.inkAlt },
 
