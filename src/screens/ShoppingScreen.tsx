@@ -1,5 +1,6 @@
-// 장보기 (spec §9.11~9.12) — 자동 추천 / 직접 추가 / 구매 완료
-//  · 체크 = 구매 완료 토글  · 항목 탭 = 액션(냉장고에 추가 / 이름 수정 / 삭제)
+// 장보기 — 식재료 / 생활용품 탭. 각 탭은 구매목록(미구매) + 구매 완료.
+//  · 식재료: 자동추천(위쪽) + 직접추가를 '구매목록'으로 묶음. 항목 탭 = 냉장고에 추가 / 이름 수정 / 삭제.
+//  · 생활용품: 함께 살 휴지·세제 등. 냉장고 이동 없이 이름 수정 / 삭제만.
 import React, { useState } from 'react';
 import { View, Text, ScrollView, Pressable, TextInput, Modal, KeyboardAvoidingView, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,11 +8,9 @@ import { colors, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon, IconName } from '../components/Icon';
 import { FoodTile, SectionTitle, AppButton, HeaderActions, SheetHandle } from '../components/ui';
-import { STORAGE_LABEL, FINE_CATEGORIES, FINE_CATEGORY_ITEMS, fineCategoryOf, coarseFromFine, unitOf, UNIT_SUFFIX, stockFromQty, QtyUnit } from '../data/constants';
-import { useApp, ShoppingItem, infoFor } from '../data/store';
-import { fromISO, toISO, todayISO, startOfToday, addDays, fmtDot } from '../data/date';
-import { uid } from '../data/id';
-import { DatePickerModal } from './IngredientFormScreen';
+import { FINE_CATEGORIES, FINE_CATEGORY_ITEMS } from '../data/constants';
+import { useApp, ShoppingItem, ShoppingKind } from '../data/store';
+import { useNav } from '../navigation/nav';
 
 const SOURCE_LABEL: Record<string, string> = {
   manual: '직접 추가',
@@ -20,124 +19,104 @@ const SOURCE_LABEL: Record<string, string> = {
   expired: '소비기한 지남',
   near_expiry: '소비기한 임박',
 };
-const STORAGE_PICKS = ['refrigerated', 'frozen', 'room_temp'];
-const STORAGE_ICONS: Record<string, IconName> = { refrigerated: 'thermometer-cold', frozen: 'snowflake', room_temp: 'sun-horizon' };
-const UNIT_PICKS: { code: QtyUnit; label: string }[] = [
-  { code: 'count', label: '개수' },
-  { code: 'gram', label: '그람(g)' },
-  { code: 'percent', label: '퍼센트(%)' },
+
+const TABS: { key: ShoppingKind; label: string }[] = [
+  { key: 'food', label: '식재료' },
+  { key: 'household', label: '생활용품' },
 ];
+
+const recent = (a: ShoppingItem, b: ShoppingItem) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '');
+const isAuto = (x: ShoppingItem) => x.source !== 'manual' && (x.kind ?? 'food') === 'food';
 
 export function ShoppingScreen() {
   const insets = useSafeAreaInsets();
   // 바텀시트는 화면 하단에 붙으므로 실기기 제스처 바만큼 더 띄워 마지막 버튼(삭제)이 바닥에 붙지 않게 한다.
   const sheetPad = Platform.OS === 'web' ? 30 : insets.bottom + 30;
-  const { shopping, toggleShoppingChecked, addToShopping, renameShopping, removeShopping, clearCheckedShopping, upsertFridge, markShoppingDone } = useApp();
+  const { shopping, toggleShoppingChecked, addToShopping, renameShopping, removeShopping, clearCheckedShopping } = useApp();
+  const nav = useNav();
+  const [tab, setTab] = useState<ShoppingKind>('food');
   const [addOpen, setAddOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false); // 장보기 사용법 안내
-  const [pickCat, setPickCat] = useState<string | null>(null); // 펼친 카테고리
+  const [pickCat, setPickCat] = useState<string | null>(null); // 펼친 카테고리 (식재료 전용)
   const [selected, setSelected] = useState<string[]>([]); // 카테고리에서 고른(아직 담기 전) 재료들
   const [clearOpen, setClearOpen] = useState(false);
   const [addName, setAddName] = useState('');
   const [actionItem, setActionItem] = useState<ShoppingItem | null>(null); // 액션 시트
   const [editItem, setEditItem] = useState<ShoppingItem | null>(null); // 이름 수정
   const [editName, setEditName] = useState('');
-  // 냉장고 입고 바텀시트
-  const [restock, setRestock] = useState<ShoppingItem | null>(null);
-  const [rFineCat, setRFineCat] = useState('etc');
-  const [rStorage, setRStorage] = useState('refrigerated');
-  const [rUnit, setRUnit] = useState<QtyUnit>('count');
-  const [rAmount, setRAmount] = useState('1');
-  const [rExpiry, setRExpiry] = useState<string | null>(null);
-  const [rCalOpen, setRCalOpen] = useState(false);
-  const [rUnitOpen, setRUnitOpen] = useState(false); // 단위 풀다운 열림
 
-  // 자동 추천 — 최근 추가된 것이 가장 위로.
-  const auto = shopping.filter((x) => x.source !== 'manual' && !x.checked).sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? ''));
-  // 직접 추가 — 최근 추가한 것이 가장 위로.
-  const manual = shopping.filter((x) => x.source === 'manual' && !x.checked).sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? ''));
+  // 현재 탭(식재료/생활용품)에 속한 항목.
+  const inTab = (x: ShoppingItem) => (tab === 'food' ? (x.kind ?? 'food') === 'food' : x.kind === 'household');
+  const unchecked = shopping.filter((x) => inTab(x) && !x.checked);
+  // 구매목록 — 자동추천을 위쪽으로, 그 다음 직접추가. 각각 최근 추가가 위로. (생활용품은 자동추천이 없어 그대로)
+  const buyList = [...unchecked.filter(isAuto).sort(recent), ...unchecked.filter((x) => !isAuto(x)).sort(recent)];
   // 구매완료 — 최근 변경(체크)된 것이 가장 위로.
-  const done = shopping.filter((x) => x.checked).sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? ''));
+  const done = shopping.filter((x) => inTab(x) && x.checked).sort(recent);
 
-  // 카테고리 모드: 이미 목록(미구매)에 담긴 이름들 — 칩 토글/체크 표시에 사용.
-  const inListNames = new Set(shopping.filter((x) => !x.checked).map((x) => x.name));
   const openAdd = () => { setPickCat(null); setAddName(''); setSelected([]); setAddOpen(true); };
   const closeAdd = () => { setAddOpen(false); setPickCat(null); setAddName(''); setSelected([]); };
   const openCat = (code: string) => { setSelected([]); setPickCat(code); };
   const backToCats = () => { setSelected([]); setPickCat(null); };
+  // 직접 입력 한 줄 추가 (식재료/생활용품 공용) — 현재 탭 kind로 담고 목록으로.
   const submitText = () => {
-    if (addName.trim()) { addToShopping(addName.trim(), 'manual'); setAddName(''); }
+    if (addName.trim()) { addToShopping(addName.trim(), 'manual', undefined, tab); closeAdd(); }
   };
   // 카테고리 칩: 탭하면 선택만(하이라이트), 하단 '추가' 버튼으로 한 번에 담는다.
   const togglePick = (name: string) => setSelected((p) => (p.includes(name) ? p.filter((x) => x !== name) : [...p, name]));
-  const commitPicks = () => { selected.forEach((n) => addToShopping(n, 'manual')); setSelected([]); };
+  const addCount = selected.length + (addName.trim() ? 1 : 0);
+  const commitAll = () => {
+    if (!addCount) return;
+    selected.forEach((n) => addToShopping(n, 'manual', undefined, 'food'));
+    if (addName.trim()) addToShopping(addName.trim(), 'manual', undefined, 'food');
+    closeAdd();
+  };
 
   const saveEdit = () => {
     if (editItem && editName.trim()) renameShopping(editItem.id, editName.trim());
     setEditItem(null);
   };
 
-  // 냉장고 입고 — 카테고리/보관/단위/수량/소비기한을 정해 냉장고에 등록(장보기는 완료 처리, 화면 이동 없음)
-  const normStorage = (sgg: string) => (STORAGE_PICKS.includes(sgg) ? sgg : 'room_temp');
-  const openRestock = (item: ShoppingItem) => {
-    const fc = fineCategoryOf(item.name, item.category);
-    const u = unitOf(item.name, fc);
-    setRFineCat(fc);
-    setRStorage(normStorage(infoFor(item.name).storage));
-    setRUnit(u);
-    setRAmount(u === 'count' ? '1' : '100');
-    setRExpiry(null);
-    setRUnitOpen(false);
-    setRestock(item);
-  };
-  const rStep = rUnit === 'gram' ? 50 : rUnit === 'percent' ? 25 : 1;
-  const adjustR = (d: number) => setRAmount((a) => String(Math.max(0, Math.round(((parseFloat(a) || 0) + d) * 10) / 10)));
-  const pickRUnit = (u: QtyUnit) => { setRUnit(u); setRAmount(u === 'count' ? '1' : '100'); };
-  const saveRestock = () => {
-    if (!restock) return;
-    const amt = parseFloat(rAmount) || 0;
-    if (amt <= 0) return;
-    upsertFridge({
-      id: uid(),
-      name: restock.name,
-      category: coarseFromFine(rFineCat),
-      storage: rStorage,
-      stock: stockFromQty(rUnit, amt),
-      qty: `${amt}${UNIT_SUFFIX[rUnit]}`,
-      expiry: rExpiry,
-      added: todayISO(),
-    });
-    markShoppingDone(restock.id);
-    setRestock(null); // 냉장고로 이동하지 않고 장보기에 머문다
+  // 냉장고에 추가 — 식재료 추가 상세화면(IngredientForm)을 그대로 재사용한다. (식재료 전용)
+  const openRestock = (item: ShoppingItem) => nav.openIngredientForm({ prefillName: item.name, shoppingId: item.id });
+
+  // 항목 앞 타일 — 식재료만 이모지 타일. 생활용품은 아이콘 없이 이름만.
+  const Lead = ({ item, size }: { item: ShoppingItem; size: number }) =>
+    item.kind === 'household' ? null : item.category ? <FoodTile name={item.name} category={item.category} size={size} /> : null;
+
+  const Row = ({ item, checkSize = 22 }: { item: ShoppingItem; checkSize?: number }) => {
+    const auto = isAuto(item);
+    return (
+      <View style={s.row}>
+        <Pressable hitSlop={8} onPress={() => toggleShoppingChecked(item.id)}>
+          {item.checked ? (
+            <Icon name="check-circle" size={checkSize} color={colors.primary} weight="fill" />
+          ) : (
+            <View style={[s.ring, { width: checkSize, height: checkSize, borderRadius: checkSize / 2 }]} />
+          )}
+        </Pressable>
+        <Pressable style={s.rowMain} onPress={() => setActionItem(item)}>
+          <Lead item={item} size={34} />
+          <View style={{ flex: 1 }}>
+            <View style={s.nameLine}>
+              <Text style={[s.name, item.checked && s.nameDone]} numberOfLines={1}>{item.name}</Text>
+              {auto && <View style={s.autoBadge}><Text style={s.autoBadgeText}>자동추천</Text></View>}
+            </View>
+            {item.note ? <Text style={s.note}>{item.note}</Text> : auto ? <Text style={s.note}>{SOURCE_LABEL[item.source]}</Text> : null}
+          </View>
+          {item.checked && item.addedToFridge ? (
+            <View style={s.inTag}>
+              <Icon name="snowflake" size={12} color={colors.primary} weight="fill" />
+              <Text style={s.inTagText}>입고됨</Text>
+            </View>
+          ) : (
+            <Icon name="caret-right" size={16} color={colors.inkAsst} weight="bold" />
+          )}
+        </Pressable>
+      </View>
+    );
   };
 
-  const Row = ({ item }: { item: ShoppingItem }) => (
-    <View style={s.row}>
-      <Pressable hitSlop={8} onPress={() => toggleShoppingChecked(item.id)}>
-        {item.checked ? <Icon name="check-circle" size={22} color={colors.primary} weight="fill" /> : <View style={s.ring} />}
-      </Pressable>
-      <Pressable style={s.rowMain} onPress={() => setActionItem(item)}>
-        {item.category && <FoodTile name={item.name} category={item.category} size={34} />}
-        <View style={{ flex: 1 }}>
-          <Text style={[s.name, item.checked && s.nameDone]}>{item.name}</Text>
-          {/* 직접 추가 항목엔 보조문구를 숨기고, 자동 추천/메모가 있을 때만 표시 */}
-          {item.note ? (
-            <Text style={s.note}>{item.note}</Text>
-          ) : item.source !== 'manual' ? (
-            <Text style={s.note}>{SOURCE_LABEL[item.source]}</Text>
-          ) : null}
-        </View>
-        {item.checked && item.addedToFridge ? (
-          <View style={s.inTag}>
-            <Icon name="snowflake" size={12} color={colors.primary} weight="fill" />
-            <Text style={s.inTagText}>입고됨</Text>
-          </View>
-        ) : (
-          <Icon name="caret-right" size={16} color={colors.inkAsst} weight="bold" />
-        )}
-      </Pressable>
-    </View>
-  );
+  const emptyMsg = tab === 'food' ? '담은 재료가 없어요.' : '담을 생활용품을 추가해 보세요.';
 
   return (
     <View style={s.root}>
@@ -151,15 +130,23 @@ export function ShoppingScreen() {
         <HeaderActions showSearch={false} showBell={false} />
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 4, paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
-        <SectionTitle title="자동 추천" count={auto.length} compact style={s.secTitle} />
-        <View style={s.group}>
-          {auto.length ? auto.map((it) => <Row key={it.id} item={it} />) : <Text style={s.empty}>자동으로 모인 재료가 없어요.</Text>}
-        </View>
+      {/* 탭 — 식재료 / 생활용품 (냉장고 보기방식 탭과 동일한 밑줄 스타일) */}
+      <View style={s.tabs}>
+        {TABS.map((t) => {
+          const on = tab === t.key;
+          return (
+            <Pressable key={t.key} style={s.tab} onPress={() => setTab(t.key)}>
+              <Text style={[s.tabText, on && s.tabTextOn]}>{t.label}</Text>
+              <View style={[s.tabUnderline, on && s.tabUnderlineOn]} />
+            </Pressable>
+          );
+        })}
+      </View>
 
-        <SectionTitle title="직접 추가" count={manual.length} actionLabel="추가" onAction={openAdd} compact style={s.secTitleGap} />
+      <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 22, paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
+        <SectionTitle title="구매목록" count={buyList.length} actionLabel="추가" onAction={openAdd} compact style={s.secTitle} />
         <View style={s.group}>
-          {manual.length ? manual.map((it) => <Row key={it.id} item={it} />) : <Text style={s.empty}>직접 추가한 재료가 없어요.</Text>}
+          {buyList.length ? buyList.map((it) => <Row key={it.id} item={it} checkSize={18} />) : <Text style={s.empty}>{emptyMsg}</Text>}
         </View>
 
         {done.length > 0 && (
@@ -170,39 +157,59 @@ export function ShoppingScreen() {
         )}
       </ScrollView>
 
-      {/* 직접 추가 모달 — 상단 입력칸 + 하단 카테고리 (긴 시트) */}
+      {/* 추가 모달 — 식재료는 카테고리+직접입력(긴 시트), 생활용품은 이름 입력만(짧은 시트) */}
       <Modal visible={addOpen} transparent animationType="slide" onRequestClose={closeAdd}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={s.kav}>
           <Pressable style={s.backdrop} onPress={closeAdd}>
-            <Pressable style={[s.addSheet, { paddingBottom: sheetPad }]}>
+            <Pressable style={[tab === 'household' ? s.sheet : s.addSheet, { paddingBottom: sheetPad }]}>
               <SheetHandle />
               <View style={s.addHead}>
-                <Text style={s.sheetTitle}>장보기 항목 추가</Text>
+                <Text style={s.sheetTitle}>{tab === 'food' ? '장보기 항목 추가' : '생활용품 추가'}</Text>
                 <Pressable onPress={closeAdd} hitSlop={8}>
                   <Icon name="x" size={20} color={colors.inkAlt} weight="bold" />
                 </Pressable>
               </View>
 
-              {/* 상단: 식재료 직접 입력 */}
-              <View style={s.addInputRow}>
-                <Icon name="plus" size={18} color={colors.inkAsst} weight="bold" />
-                <TextInput
-                  value={addName}
-                  onChangeText={setAddName}
-                  placeholder="식재료 이름 입력"
-                  placeholderTextColor={colors.inkAsst}
-                  style={s.addInput}
-                  onSubmitEditing={submitText}
-                  returnKeyType="done"
-                />
-                <Pressable onPress={submitText} disabled={!addName.trim()} style={[s.addBtn, !addName.trim() && s.addBtnOff]}>
-                  <Text style={s.addBtnText}>추가</Text>
-                </Pressable>
-              </View>
-
-              {/* 하단: 카테고리에서 고르기 */}
-              {pickCat === null ? (
+              {tab === 'household' ? (
+                /* 생활용품 — 이름 입력만 단순하게 */
                 <>
+                  <View style={[s.addInputRow, { marginTop: 4 }]}>
+                    <Icon name="plus" size={18} color={colors.inkAsst} weight="bold" />
+                    <TextInput
+                      value={addName}
+                      onChangeText={setAddName}
+                      placeholder="생활용품 이름 입력"
+                      placeholderTextColor={colors.inkAsst}
+                      style={s.addInput}
+                      onSubmitEditing={submitText}
+                      returnKeyType="done"
+                      autoFocus
+                    />
+                    <Pressable onPress={submitText} disabled={!addName.trim()} style={[s.addBtn, !addName.trim() && s.addBtnOff]}>
+                      <Text style={s.addBtnText}>추가</Text>
+                    </Pressable>
+                  </View>
+                  <Text style={s.householdHint}>휴지·세제·물티슈처럼 장 보면서 함께 살 것들을 적어두세요.</Text>
+                </>
+              ) : pickCat === null ? (
+                <>
+                  {/* 카테고리 고르기 전: 상단 식재료 직접 입력(+추가 버튼) */}
+                  <View style={s.addInputRow}>
+                    <Icon name="plus" size={18} color={colors.inkAsst} weight="bold" />
+                    <TextInput
+                      value={addName}
+                      onChangeText={setAddName}
+                      placeholder="식재료 이름 입력"
+                      placeholderTextColor={colors.inkAsst}
+                      style={s.addInput}
+                      onSubmitEditing={submitText}
+                      returnKeyType="done"
+                    />
+                    <Pressable onPress={submitText} disabled={!addName.trim()} style={[s.addBtn, !addName.trim() && s.addBtnOff]}>
+                      <Text style={s.addBtnText}>추가</Text>
+                    </Pressable>
+                  </View>
+
                   <Text style={s.pickHint}>카테고리에서 고르기</Text>
                   <ScrollView style={s.pickScroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                     <View style={s.catGrid}>
@@ -225,18 +232,30 @@ export function ShoppingScreen() {
                   <ScrollView style={s.pickScroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                     <View style={s.chipWrap}>
                       {[...(FINE_CATEGORY_ITEMS[pickCat] ?? [])].sort((a, b) => a.localeCompare(b, 'ko')).map((n) => {
-                        const added = inListNames.has(n); // 이미 목록에 담긴 재료
                         const picked = selected.includes(n); // 이번에 선택(아직 담기 전)
                         return (
-                          <Pressable key={n} disabled={added} style={[s.chip, picked && s.chipOn, added && s.chipAdded]} onPress={() => togglePick(n)}>
-                            <Text style={[s.chipText, picked && s.chipTextOn, added && s.chipTextAdded]}>{n}</Text>
-                            {added ? <Icon name="check" size={13} color={colors.primary} weight="bold" /> : picked ? <Icon name="check" size={13} color={colors.white} weight="bold" /> : null}
+                          <Pressable key={n} style={[s.chip, picked && s.chipOn]} onPress={() => togglePick(n)}>
+                            <Text style={[s.chipText, picked && s.chipTextOn]}>{n}</Text>
                           </Pressable>
                         );
                       })}
                     </View>
+
+                    {/* 목록에 없으면 직접 입력 — 추가 버튼 없이 하단 배치 */}
+                    <Text style={s.orLabel}>목록에 없으면 직접 입력</Text>
+                    <View style={s.directRow}>
+                      <TextInput
+                        value={addName}
+                        onChangeText={setAddName}
+                        placeholder="식재료 이름"
+                        placeholderTextColor={colors.inkAsst}
+                        style={s.directInput}
+                        onSubmitEditing={submitText}
+                        returnKeyType="done"
+                      />
+                    </View>
                   </ScrollView>
-                  <AppButton label={selected.length ? `${selected.length}개 추가` : '추가'} onPress={commitPicks} disabled={!selected.length} style={{ marginTop: 12 }} />
+                  <AppButton label={addCount ? `${addCount}개 추가` : '추가'} onPress={commitAll} disabled={!addCount} style={{ marginTop: 12 }} />
                 </>
               )}
             </Pressable>
@@ -253,7 +272,7 @@ export function ShoppingScreen() {
             <Text style={s.confirmSub}>장보기 목록에서만 지워져요. 이미 냉장고에 넣은 재료는 그대로 남아요.</Text>
             <View style={s.dialogBtns}>
               <AppButton label="취소" variant="ghost" onPress={() => setClearOpen(false)} style={{ flex: 1 }} />
-              <AppButton label="전체 삭제" onPress={() => { clearCheckedShopping(); setClearOpen(false); }} style={{ flex: 1.4 }} />
+              <AppButton label="전체 삭제" onPress={() => { clearCheckedShopping(tab); setClearOpen(false); }} style={{ flex: 1.4 }} />
             </View>
           </Pressable>
         </Pressable>
@@ -267,13 +286,14 @@ export function ShoppingScreen() {
             {actionItem && (
               <>
                 <View style={s.sheetHead}>
-                  {actionItem.category && <FoodTile name={actionItem.name} category={actionItem.category} size={40} />}
+                  <Lead item={actionItem} size={40} />
                   <View style={{ flex: 1 }}>
                     <Text style={s.sheetName}>{actionItem.name}</Text>
-                    <Text style={s.note}>{actionItem.note ?? SOURCE_LABEL[actionItem.source]}</Text>
+                    <Text style={s.note}>{actionItem.note ?? (isAuto(actionItem) ? SOURCE_LABEL[actionItem.source] : actionItem.kind === 'household' ? '생활용품' : '직접 추가')}</Text>
                   </View>
                 </View>
-                {!actionItem.addedToFridge && (
+                {/* 냉장고에 추가 — 식재료만, 아직 입고 전인 경우 */}
+                {actionItem.kind !== 'household' && !actionItem.addedToFridge && (
                   <SheetAction icon="snowflake" label="냉장고에 추가" onPress={() => { const it = actionItem; setActionItem(null); openRestock(it); }} />
                 )}
                 <SheetAction icon="pencil" label="이름 수정" onPress={() => { setEditName(actionItem.name); setEditItem(actionItem); setActionItem(null); }} />
@@ -295,7 +315,7 @@ export function ShoppingScreen() {
                 <TextInput
                   value={editName}
                   onChangeText={setEditName}
-                  placeholder="식재료 이름"
+                  placeholder="이름"
                   placeholderTextColor={colors.inkAsst}
                   style={s.input}
                   autoFocus
@@ -308,117 +328,6 @@ export function ShoppingScreen() {
         </KeyboardAvoidingView>
       </Modal>
 
-
-      {/* 냉장고 입고 바텀시트 — 카테고리/보관/단위/수량/소비기한 */}
-      <Modal visible={!!restock} transparent animationType="slide" onRequestClose={() => setRestock(null)}>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={s.kav}>
-          <Pressable style={s.backdrop} onPress={() => setRestock(null)}>
-            <Pressable style={[s.restockSheet, { paddingBottom: sheetPad }]}>
-              <SheetHandle />
-              {restock && (
-                <>
-                  <View style={s.addHead}>
-                    <Text style={s.sheetTitle}>냉장고에 추가 / {restock.name}</Text>
-                    <Pressable onPress={() => setRestock(null)} hitSlop={8}>
-                      <Icon name="x" size={20} color={colors.inkAlt} weight="bold" />
-                    </Pressable>
-                  </View>
-
-                  <Text style={s.rLabel}>카테고리</Text>
-                  <View style={s.rCatGrid}>
-                    {FINE_CATEGORIES.map((c) => {
-                      const on = c.code === rFineCat;
-                      return (
-                        <Pressable key={c.code} onPress={() => setRFineCat(c.code)} style={[s.rCatChip, on && s.rCatChipOn]}>
-                          <Text style={s.rCatEmoji}>{c.emoji}</Text>
-                          <Text style={[s.rCatLabel, on && s.rCatLabelOn]}>{c.label}</Text>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-
-                  <Text style={s.rLabel}>보관 위치</Text>
-                  <View style={s.rSegRow}>
-                    {STORAGE_PICKS.map((st) => {
-                      const on = st === rStorage;
-                      return (
-                        <Pressable key={st} onPress={() => setRStorage(st)} style={[s.rSeg, on && s.rSegOn]}>
-                          <Icon name={STORAGE_ICONS[st]} size={15} color={on ? colors.white : colors.inkAlt} weight="bold" />
-                          <Text style={[s.rSegText, on && s.rSegTextOn]}>{STORAGE_LABEL[st]}</Text>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-
-                  <Text style={s.rLabel}>수량</Text>
-                  <View style={s.rQtyRow}>
-                    {/* 단위 풀다운 (왼쪽) */}
-                    <View style={s.rUnitWrap}>
-                      <Pressable style={s.rUnitBtn} onPress={() => setRUnitOpen((o) => !o)}>
-                        <Text style={s.rUnitBtnText}>{UNIT_PICKS.find((u) => u.code === rUnit)?.label}</Text>
-                        <Icon name="caret-down" size={14} color={colors.inkAlt} weight="bold" />
-                      </Pressable>
-                      {rUnitOpen && (
-                        <View style={s.rUnitMenu}>
-                          {UNIT_PICKS.map((u) => (
-                            <Pressable key={u.code} style={s.rUnitOpt} onPress={() => { pickRUnit(u.code); setRUnitOpen(false); }}>
-                              <Text style={[s.rUnitOptText, u.code === rUnit && { color: colors.primary }]}>{u.label}</Text>
-                              {u.code === rUnit && <Icon name="check" size={14} color={colors.primary} weight="bold" />}
-                            </Pressable>
-                          ))}
-                        </View>
-                      )}
-                    </View>
-                    {/* 수량 — 퍼센트는 칩 선택, 그 외는 스텝퍼(남는 폭 꽉 차게) */}
-                    {rUnit === 'percent' ? (
-                      <View style={s.rPctRow}>
-                        {['100', '75', '50', '25'].map((p) => (
-                          <Pressable key={p} onPress={() => setRAmount(p)} style={[s.rPctChip, rAmount === p && s.rPctChipOn]}>
-                            <Text style={[s.rPctText, rAmount === p && s.rPctTextOn]}>{p}%</Text>
-                          </Pressable>
-                        ))}
-                      </View>
-                    ) : (
-                      <>
-                        <View style={s.rStepper}>
-                          <Pressable onPress={() => adjustR(-rStep)} hitSlop={8}><Icon name="minus-circle" size={26} color={colors.inkAlt} weight="fill" /></Pressable>
-                          <TextInput value={rAmount} onChangeText={(t) => setRAmount(t.replace(/[^0-9.]/g, ''))} keyboardType="decimal-pad" style={s.rStepInput} textAlign="center" />
-                          <Pressable onPress={() => adjustR(rStep)} hitSlop={8}><Icon name="plus-circle" size={26} color={colors.inkAlt} weight="fill" /></Pressable>
-                        </View>
-                        <Text style={s.rUnitSuffix}>{UNIT_SUFFIX[rUnit]}</Text>
-                      </>
-                    )}
-                  </View>
-
-                  <Text style={s.rLabel}>소비기한</Text>
-                  <Pressable style={s.rDateRow} onPress={() => setRCalOpen(true)}>
-                    <Text style={[s.rDateText, !rExpiry && s.rDateMuted]}>{rExpiry ? fmtDot(fromISO(rExpiry)) : '날짜 선택 (선택)'}</Text>
-                    <Icon name="caret-right" size={16} color={colors.inkAsst} weight="bold" />
-                  </Pressable>
-
-                  <AppButton label="냉장고에 추가" onPress={saveRestock} style={{ marginTop: 16 }} />
-                </>
-              )}
-            </Pressable>
-          </Pressable>
-        </KeyboardAvoidingView>
-      </Modal>
-
-      {/* 소비기한 달력 (등록 폼과 동일) */}
-      <DatePickerModal
-        visible={rCalOpen}
-        value={rExpiry ? fromISO(rExpiry) : addDays(startOfToday(), 7)}
-        title="소비기한 선택"
-        hint="날짜를 고르면 남은 일수가 자동 계산돼요."
-        disableBefore={startOfToday()}
-        presets={[{ label: '미설정', days: null }, { label: '3일', days: 3 }, { label: '7일', days: 7 }, { label: '14일', days: 14 }, { label: '30일', days: 30 }]}
-        presetSel={rExpiry === null ? 'none' : null}
-        onClear={() => { setRExpiry(null); setRCalOpen(false); }}
-        onSelect={(d) => { setRExpiry(toISO(d)); setRCalOpen(false); }}
-        onClose={() => setRCalOpen(false)}
-        insetsBottom={insets.bottom}
-      />
-
       {/* 장보기 사용법 안내 */}
       <Modal visible={helpOpen} transparent animationType="fade" onRequestClose={() => setHelpOpen(false)}>
         <Pressable style={s.backdrop} onPress={() => setHelpOpen(false)}>
@@ -426,9 +335,9 @@ export function ShoppingScreen() {
             <SheetHandle />
             <Text style={s.sheetTitle}>장보기 이렇게 써요</Text>
             <View style={s.helpList}>
-              <HelpStep icon="check-circle" title="담은 재료를 체크" desc="장 보면서 담은 재료를 체크하면 ‘구매 완료’로 내려가요." />
-              <HelpStep icon="snowflake" title="구매 완료 → 냉장고에 추가" desc="구매 완료 항목을 누르면 바로 냉장고에 넣을 수 있어요." />
-              <HelpStep icon="arrows-clockwise" title="체크를 풀면 다시 장바구니로" desc="구매 완료에서 체크를 해제하면 ‘직접 추가’ 목록으로 되돌아가요. 깜빡하고 못 산 재료에 편해요." />
+              <HelpStep icon="list-checks" title="식재료 · 생활용품 탭" desc="식재료와 함께 살 생활용품(휴지·세제 등)을 따로 적어두고 한 번에 장 볼 수 있어요." />
+              <HelpStep icon="check-circle" title="담은 항목을 체크" desc="장 보면서 담은 항목을 체크하면 ‘구매 완료’로 내려가요." />
+              <HelpStep icon="snowflake" title="구매 완료 → 냉장고에 추가" desc="식재료는 구매 완료 후 눌러서 바로 냉장고에 넣을 수 있어요." />
             </View>
             <AppButton label="알겠어요" onPress={() => setHelpOpen(false)} style={{ marginTop: 16 }} />
           </Pressable>
@@ -464,6 +373,15 @@ const s = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 10 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   title: { fontFamily: font.extrabold, fontSize: 24, color: colors.ink, letterSpacing: -0.5 },
+
+  // 탭 (식재료 / 생활용품) — 냉장고 viewTabs와 동일한 밑줄 스타일
+  tabs: { flexDirection: 'row', marginHorizontal: 16, borderBottomWidth: 1, borderBottomColor: colors.line },
+  tab: { flex: 1, alignItems: 'center' },
+  tabText: { fontFamily: font.bold, fontSize: 15, color: colors.inkAsst, paddingVertical: 9 },
+  tabTextOn: { color: colors.ink },
+  tabUnderline: { height: 2.5, width: '100%', backgroundColor: 'transparent', marginBottom: -1 },
+  tabUnderlineOn: { backgroundColor: colors.ink },
+
   secTitle: { marginBottom: 8 },
   secTitleGap: { marginTop: 14, marginBottom: 8 },
 
@@ -471,9 +389,12 @@ const s = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8 },
   rowMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 11 },
   ring: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: colors.lineStrong },
-  name: { fontFamily: font.bold, fontSize: 15, color: colors.ink },
+  nameLine: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  name: { fontFamily: font.bold, fontSize: 15, color: colors.ink, flexShrink: 1 },
   nameDone: { color: colors.inkAsst, textDecorationLine: 'line-through' },
   note: { fontFamily: font.medium, fontSize: 11.5, color: colors.inkAlt, marginTop: 2 },
+  autoBadge: { backgroundColor: colors.primaryBg, paddingHorizontal: 7, paddingVertical: 2, borderRadius: radius.pill },
+  autoBadgeText: { fontFamily: font.bold, fontSize: 10, color: colors.primary },
   inTag: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.primaryBg, paddingHorizontal: 9, paddingVertical: 5, borderRadius: radius.pill },
   inTagText: { fontFamily: font.bold, fontSize: 11, color: colors.primary },
   empty: { fontFamily: font.medium, fontSize: 13.5, color: colors.inkAsst, paddingVertical: 16, textAlign: 'center' },
@@ -481,13 +402,14 @@ const s = StyleSheet.create({
   kav: { flex: 1 },
   backdrop: { flex: 1, backgroundColor: 'rgba(20,24,18,0.4)', justifyContent: 'flex-end' },
   sheet: { backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 30 },
-  // 추가 시트 — 길게(상단 입력 + 하단 카테고리)
+  // 식재료 추가 시트 — 길게(상단 입력 + 하단 카테고리)
   addSheet: { backgroundColor: colors.cream, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 30, height: '82%' },
   addInputRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, borderRadius: radius.lg, paddingHorizontal: 14, marginTop: 4 },
   addInput: { flex: 1, fontFamily: font.medium, fontSize: 16, color: colors.ink, paddingVertical: 14 },
   addBtn: { backgroundColor: colors.primary, paddingHorizontal: 16, paddingVertical: 8, borderRadius: radius.pill },
   addBtnOff: { backgroundColor: colors.lineStrong },
   addBtnText: { fontFamily: font.bold, fontSize: 14, color: colors.white },
+  householdHint: { fontFamily: font.medium, fontSize: 12.5, color: colors.inkAsst, marginTop: 12, lineHeight: 18 },
   sheetTitle: { fontFamily: font.extrabold, fontSize: 18, color: colors.ink, marginBottom: 8 },
   confirmSub: { fontFamily: font.medium, fontSize: 13.5, color: colors.inkAlt, marginTop: 2, lineHeight: 20 },
   sheetHead: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingBottom: 12, marginBottom: 6, borderBottomWidth: 1, borderBottomColor: colors.line },
@@ -497,24 +419,15 @@ const s = StyleSheet.create({
 
   action: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 15 },
   actionText: { fontFamily: font.bold, fontSize: 15.5, color: colors.ink },
-
-  fieldLabel: { fontFamily: font.bold, fontSize: 13, color: colors.inkAlt, marginTop: 16, marginBottom: 8 },
-  pickRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  pick: { paddingVertical: 9, paddingHorizontal: 14, borderRadius: radius.pill, backgroundColor: colors.fill },
-  pickOn: { backgroundColor: colors.primary },
-  pickText: { fontFamily: font.bold, fontSize: 13, color: colors.inkAlt },
-  pickTextOn: { color: colors.white },
   dialogBtns: { flexDirection: 'row', gap: 10, marginTop: 24 },
 
-  // 추가 모달 — 헤더 + 방식 토글 + 카테고리 선택
   addHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  segRow: { flexDirection: 'row', gap: 8, marginTop: 12, marginBottom: 4 },
-  seg: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderRadius: radius.pill, backgroundColor: colors.fill },
-  segOn: { backgroundColor: colors.primary },
-  segText: { fontFamily: font.bold, fontSize: 13.5, color: colors.inkAlt },
-  segTextOn: { color: colors.white },
   pickScroll: { flex: 1, marginTop: 6 },
   pickHint: { fontFamily: font.bold, fontSize: 12.5, color: colors.inkAlt, marginTop: 16, marginBottom: 8 },
+  // 카테고리 선택 후 하단 직접 입력 (식재료 추가 화면과 동일)
+  orLabel: { fontFamily: font.semibold, fontSize: 12.5, color: colors.inkAsst, marginTop: 20, marginBottom: 10 },
+  directRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, borderRadius: radius.lg, paddingHorizontal: 14, marginBottom: 4 },
+  directInput: { flex: 1, fontFamily: font.medium, fontSize: 15, color: colors.ink, paddingVertical: 12 },
   catGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingBottom: 4 },
   catTile: { width: '31.5%', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: radius.lg, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, gap: 5 },
   catEmoji: { fontSize: 24 },
@@ -522,50 +435,11 @@ const s = StyleSheet.create({
   catBadge: { flexDirection: 'row', alignItems: 'center', gap: 7, alignSelf: 'flex-start', backgroundColor: colors.primaryBg, paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.pill, marginTop: 12 },
   catBadgeEmoji: { fontSize: 16 },
   catBadgeLabel: { fontFamily: font.bold, fontSize: 13.5, color: colors.ink },
-  catBadgeChange: { fontFamily: font.bold, fontSize: 12, color: colors.primary, marginLeft: 2 },
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingBottom: 4 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 8, paddingHorizontal: 12, borderRadius: radius.pill, backgroundColor: colors.fill, borderWidth: 1.5, borderColor: colors.line },
   chipOn: { backgroundColor: colors.primary, borderColor: colors.primary },
-  chipEmoji: { fontSize: 15 },
   chipText: { fontFamily: font.bold, fontSize: 13.5, color: colors.ink },
   chipTextOn: { color: colors.white },
-  chipAdded: { backgroundColor: colors.primaryBg, borderColor: colors.primaryBg },
-  chipTextAdded: { color: colors.primary },
-
-  // 냉장고 입고 바텀시트
-  restockSheet: { backgroundColor: colors.cream, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 30 },
-  restockScroll: { maxHeight: 400 },
-  rLabel: { fontFamily: font.bold, fontSize: 13, color: colors.inkAlt, marginTop: 16, marginBottom: 8 },
-  rCatRow: { gap: 8, paddingRight: 8 },
-  rCatGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  rCatChip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 8, paddingHorizontal: 12, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line },
-  rCatChipOn: { backgroundColor: colors.primary, borderColor: colors.primary },
-  rCatEmoji: { fontSize: 15 },
-  rCatLabel: { fontFamily: font.bold, fontSize: 13, color: colors.ink },
-  rCatLabelOn: { color: colors.white },
-  rSegRow: { flexDirection: 'row', gap: 8 },
-  rSeg: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 11, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line },
-  rSegOn: { backgroundColor: colors.primary, borderColor: colors.primary },
-  rSegText: { fontFamily: font.bold, fontSize: 13.5, color: colors.inkAlt },
-  rSegTextOn: { color: colors.white },
-  rPctRow: { flex: 1, flexDirection: 'row', gap: 6 },
-  rPctChip: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 11, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line },
-  rPctChipOn: { backgroundColor: colors.primary, borderColor: colors.primary },
-  rPctText: { fontFamily: font.bold, fontSize: 13.5, color: colors.ink },
-  rPctTextOn: { color: colors.white },
-  rQtyRow: { flexDirection: 'row', alignItems: 'center', gap: 10, zIndex: 10 },
-  rUnitWrap: { position: 'relative', zIndex: 20 },
-  rUnitBtn: { width: 144, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, paddingHorizontal: 14, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line },
-  rUnitBtnText: { fontFamily: font.bold, fontSize: 13.5, color: colors.ink },
-  rUnitMenu: { position: 'absolute', top: '100%', left: 0, marginTop: 4, width: 144, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, borderRadius: radius.md, paddingVertical: 4, zIndex: 30, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 8 },
-  rUnitOpt: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, paddingVertical: 10, paddingHorizontal: 14 },
-  rUnitOptText: { fontFamily: font.bold, fontSize: 14, color: colors.ink },
-  rStepper: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 5, paddingHorizontal: 10, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, borderRadius: radius.md },
-  rStepInput: { flex: 1, fontFamily: font.extrabold, fontSize: 18, color: colors.ink, minWidth: 30, padding: 0, textAlign: 'center' },
-  rUnitSuffix: { fontFamily: font.bold, fontSize: 15, color: colors.inkAlt, marginLeft: 2 },
-  rDateRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 13 },
-  rDateText: { fontFamily: font.bold, fontSize: 15, color: colors.ink },
-  rDateMuted: { fontFamily: font.medium, color: colors.inkAsst },
 
   // 사용법 안내
   helpList: { gap: 14, marginTop: 8 },

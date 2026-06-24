@@ -18,7 +18,7 @@ import { colors, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon, IconName } from '../components/Icon';
 import { FoodTile, DdayBadge, StockTag, HeaderActions, AppButton, SheetHandle } from '../components/ui';
-import { STORAGE_LABEL, CATEGORY, STOCK, STOCK_ORDER, StockLevel, FINE_CATEGORIES, fineCategoryOf, unitOf, UNIT_SUFFIX, stockFromQty, QtyUnit } from '../data/constants';
+import { STORAGE_LABEL, CATEGORY, STOCK, STOCK_ORDER, StockLevel, FINE_CATEGORIES, fineCategoryOf, unitOf, UNIT_SUFFIX, stockFromQty, QtyUnit, baseName } from '../data/constants';
 import { useApp, FridgeItem } from '../data/store';
 import { daysUntil } from '../data/date';
 import { useNav } from '../navigation/nav';
@@ -57,14 +57,29 @@ export function FridgeScreen() {
   const pagerRef = useRef<ScrollView>(null);
 
   const sortKey = SORTS[sortIdx].key;
+  // 같은 재료를 또 산 경우(우유·우유2)는 정렬과 무관하게 위아래로 붙여 보여준다.
+  // 정렬 결과에서 같은 이름(번호 뗀 기준)이 처음 나온 자리에 같은 묶음을 모은다.
+  const groupSameName = (arr: FridgeItem[]) => {
+    const groups = new Map<string, FridgeItem[]>();
+    const order: string[] = [];
+    for (const it of arr) {
+      const key = baseName(it.name);
+      if (!groups.has(key)) { groups.set(key, []); order.push(key); }
+      groups.get(key)!.push(it);
+    }
+    return order.flatMap((k) => groups.get(k)!);
+  };
   const sortList = (arr: FridgeItem[]) => {
-    if (sortKey === 'recent') return [...arr].reverse(); // 나중에 추가된 재료가 위로
-    return [...arr].sort((a, b) => {
-      if (sortKey === 'expiry') return (daysUntil(a.expiry) ?? 9999) - (daysUntil(b.expiry) ?? 9999);
-      if (sortKey === 'name') return a.name.localeCompare(b.name, 'ko');
-      if (sortKey === 'stock') return STOCK_ORDER.indexOf(b.stock) - STOCK_ORDER.indexOf(a.stock);
-      return 0;
-    });
+    const sorted =
+      sortKey === 'recent'
+        ? [...arr].reverse() // 나중에 추가된 재료가 위로
+        : [...arr].sort((a, b) => {
+            if (sortKey === 'expiry') return (daysUntil(a.expiry) ?? 9999) - (daysUntil(b.expiry) ?? 9999);
+            if (sortKey === 'name') return a.name.localeCompare(b.name, 'ko');
+            if (sortKey === 'stock') return STOCK_ORDER.indexOf(b.stock) - STOCK_ORDER.indexOf(a.stock);
+            return 0;
+          });
+    return groupSameName(sorted);
   };
   const q = query.trim();
   const listFor = (i: number) => sortList(fridge.filter((x) => TABS[i].match(x.storage) && x.name.includes(q)));
