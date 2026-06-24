@@ -121,8 +121,15 @@ export const CATEGORY_EMOJI: Record<string, string> = {
   sauce: '🧂', processed: '🥫', drink: '🥤', etc: '🍽️',
 };
 
+// 같은 식재료를 또 사서 "우유2","우유3"처럼 꼬리 번호가 붙은 경우, 이모지·카테고리·단위 등은
+// 원래 이름("우유")으로 찾도록 꼬리 번호를 떼어낸다. (앞에 글자가 있을 때만 — "2" 같은 건 그대로)
+export const baseName = (name: string): string => {
+  const m = name.match(/^(.*\D)\d+$/);
+  return m ? m[1] : name;
+};
+
 export function emojiFor(name: string, category?: string): string {
-  return FOOD_EMOJI[name] ?? (category ? CATEGORY_EMOJI[category] : undefined) ?? '🍽️';
+  return FOOD_EMOJI[name] ?? FOOD_EMOJI[baseName(name)] ?? (category ? CATEGORY_EMOJI[category] : undefined) ?? '🍽️';
 }
 
 // ── 세분화 카테고리 (냉장고 '카테고리별 보기' 전용) ──────────────────────────
@@ -226,7 +233,7 @@ const COARSE_TO_FINE: Record<string, string> = {
 };
 
 export function fineCategoryOf(name: string, category?: string): string {
-  return FINE_BY_NAME[name] ?? (category ? COARSE_TO_FINE[category] : undefined) ?? 'etc';
+  return FINE_BY_NAME[name] ?? FINE_BY_NAME[baseName(name)] ?? (category ? COARSE_TO_FINE[category] : undefined) ?? 'etc';
 }
 
 // 세분화 카테고리 → 소속 식재료 목록 (재료 추가 화면: 카테고리 선택 → 식재료 선택).
@@ -266,7 +273,7 @@ const UNIT_BY_NAME: Record<string, QtyUnit> = {
 
 // 단위 결정: 알려진 재료명이 우선, 없으면 (직접 입력한 커스텀명 대비) 선택한 세분류 기준.
 export function unitOf(name: string, fineCat?: string): QtyUnit {
-  return UNIT_BY_NAME[name] ?? UNIT_BY_FINE[fineCat ?? fineCategoryOf(name)] ?? 'percent';
+  return UNIT_BY_NAME[name] ?? UNIT_BY_NAME[baseName(name)] ?? UNIT_BY_FINE[fineCat ?? fineCategoryOf(name)] ?? 'percent';
 }
 
 export const UNIT_SUFFIX: Record<QtyUnit, string> = { count: '개', gram: 'g', percent: '%' };
