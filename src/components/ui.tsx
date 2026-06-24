@@ -4,9 +4,8 @@ import { View, Text, StyleSheet, Pressable, ViewStyle, Platform, Image } from 'r
 import { colors, cat, urgency, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon, IconName } from './Icon';
-import { CATEGORY, CategoryCode, STOCK, StockLevel, emojiFor, recipeEmojiFor } from '../data/constants';
+import { CATEGORY, CategoryCode, STOCK, StockLevel, emojiFor } from '../data/constants';
 import { daysUntil } from '../data/date';
-import { RECIPE_ART } from './RecipeArt';
 import { useNav } from '../navigation/nav';
 
 // 웹에서 이모지가 흑백 외곽선(text-presentation)으로 폴백되지 않도록 컬러 이모지 폰트를 명시한다.
@@ -81,46 +80,6 @@ export function FoodTile({ name, category, size = 46 }: { name?: string; categor
   );
 }
 
-// 레시피 실제 사진. assets/recipes/<id>.jpg 파일을 넣고 아래 require 주석을 해제하면
-// 일러스트 대신 실제 사진이 표시된다. (파일이 없으면 require가 번들 에러를 내므로 반드시 파일을 먼저 넣을 것)
-const RECIPE_PHOTO: Record<string, any> = {
-  'kimchi-fried-rice': require('../../assets/recipes/kimchi-fried-rice.jpg'),
-  'tofu-kimchi': require('../../assets/recipes/tofu-kimchi.jpg'),
-  'egg-roll': require('../../assets/recipes/egg-roll.jpg'),
-  'kimchi-stew': require('../../assets/recipes/kimchi-stew.jpg'),
-  'doenjang-stew': require('../../assets/recipes/doenjang-stew.jpg'),
-  'bean-sprout-soup': require('../../assets/recipes/bean-sprout-soup.jpg'),
-  // 밥·덮밥류 (14)
-  'bibimbap': require('../../assets/recipes/bibimbap.jpg'),
-  'soy-egg-rice': require('../../assets/recipes/soy-egg-rice.jpg'),
-  'spam-fried-rice': require('../../assets/recipes/spam-fried-rice.jpg'),
-  'bacon-fried-rice': require('../../assets/recipes/bacon-fried-rice.jpg'),
-  'shrimp-fried-rice': require('../../assets/recipes/shrimp-fried-rice.jpg'),
-  'bulgogi-rice': require('../../assets/recipes/bulgogi-rice.jpg'),
-  'pork-rice-bowl': require('../../assets/recipes/pork-rice-bowl.jpg'),
-  'chicken-mayo-rice': require('../../assets/recipes/chicken-mayo-rice.jpg'),
-  'tuna-mayo-rice': require('../../assets/recipes/tuna-mayo-rice.jpg'),
-  'curry-rice': require('../../assets/recipes/curry-rice.jpg'),
-  'omurice': require('../../assets/recipes/omurice.jpg'),
-  'tofu-rice-bowl': require('../../assets/recipes/tofu-rice-bowl.jpg'),
-  'mushroom-rice': require('../../assets/recipes/mushroom-rice.jpg'),
-  'egg-fried-rice': require('../../assets/recipes/egg-fried-rice.jpg'),
-  // 찌개·국·탕 (14)
-  'soft-tofu-stew': require('../../assets/recipes/soft-tofu-stew.jpg'),
-  'beef-radish-soup': require('../../assets/recipes/beef-radish-soup.jpg'),
-  'egg-drop-soup': require('../../assets/recipes/egg-drop-soup.jpg'),
-  'mushroom-soup': require('../../assets/recipes/mushroom-soup.jpg'),
-  'potato-soup': require('../../assets/recipes/potato-soup.jpg'),
-  'fish-cake-soup': require('../../assets/recipes/fish-cake-soup.jpg'),
-  'army-stew': require('../../assets/recipes/army-stew.jpg'),
-  'yukgaejang': require('../../assets/recipes/yukgaejang.jpg'),
-  'rice-cake-soup': require('../../assets/recipes/rice-cake-soup.jpg'),
-  'napa-doenjang-soup': require('../../assets/recipes/napa-doenjang-soup.jpg'),
-  'kimchi-soup': require('../../assets/recipes/kimchi-soup.jpg'),
-  'spicy-pork-stew': require('../../assets/recipes/spicy-pork-stew.jpg'),
-  'chicken-soup': require('../../assets/recipes/chicken-soup.jpg'),
-  'spinach-soup': require('../../assets/recipes/spinach-soup.jpg'),
-};
 
 /** 레시피 타일 — 공공 레시피 완성 사진(URL). 없으면 색 배경 + 기본 이모지. */
 export function RecipeTile({ image, size = 52, bg }: { image?: string; size?: number; bg: string }) {
