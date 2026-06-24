@@ -20,7 +20,7 @@ export function HomeScreen() {
     .sort((a, b) => a.d! - b.d!)
     .map((e) => e.item);
   const matches = matchAll(fridge);
-  const ready = matches.filter((m) => m.missing.length === 0).slice(0, 3);
+  const ready = matches.filter((m) => m.missing.length === 0 && m.haveCount > 0).slice(0, 3);
   const almost = matches.filter((m) => m.missing.length >= 1 && m.missing.length <= 2).slice(0, 2);
   const shop = shopping.filter((x) => !x.checked);
 
@@ -90,10 +90,10 @@ export function HomeScreen() {
           <View style={{ gap: 8 }}>
             {ready.map((m) => (
               <Pressable key={m.recipe.id} style={s.recipeCard} onPress={() => nav.openRecipe(m.recipe.id)}>
-                <RecipeTile id={m.recipe.id} size={42} bg={colors.primaryBg} />
+                <RecipeTile image={m.recipe.image} size={42} bg={colors.primaryBg} />
                 <View style={{ flex: 1 }}>
-                  <Text style={s.recipeTitle}>{m.recipe.title}</Text>
-                  <Text style={s.recipeMeta}>가진 재료 {m.haveCount}개 · {m.recipe.cookTime}분</Text>
+                  <Text style={s.recipeTitle} numberOfLines={1}>{m.recipe.title}</Text>
+                  <Text style={s.recipeMeta}>가진 재료 {m.haveCount}개{m.recipe.nutri.kcal != null ? ` · ${m.recipe.nutri.kcal}kcal` : ''}</Text>
                 </View>
                 <Icon name="caret-right" size={18} color={colors.inkAsst} weight="bold" />
               </Pressable>
@@ -107,9 +107,9 @@ export function HomeScreen() {
           <View style={{ gap: 8 }}>
             {almost.map((m) => (
               <Pressable key={m.recipe.id} style={s.recipeCard} onPress={() => nav.openRecipe(m.recipe.id)}>
-                <RecipeTile id={m.recipe.id} size={42} bg={colors.accentBg} />
+                <RecipeTile image={m.recipe.image} size={42} bg={colors.accentBg} />
                 <View style={{ flex: 1 }}>
-                  <Text style={s.recipeTitle}>{m.recipe.title}</Text>
+                  <Text style={s.recipeTitle} numberOfLines={1}>{m.recipe.title}</Text>
                   <View style={s.missingRow}>
                     <Text style={s.missingLabel}>부족 재료</Text>
                     {m.missing.map((n) => (

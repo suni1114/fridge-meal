@@ -122,20 +122,15 @@ const RECIPE_PHOTO: Record<string, any> = {
   'spinach-soup': require('../../assets/recipes/spinach-soup.jpg'),
 };
 
-/** 레시피 타일 — 실제 사진(있으면) > 커스텀 SVG 일러스트 > 이모지 순. */
-export function RecipeTile({ id, size = 52, bg }: { id: string; size?: number; bg: string }) {
-  const photo = RECIPE_PHOTO[id];
-  if (photo) {
-    return <Image source={photo} style={{ width: size, height: size, borderRadius: size * 0.28 }} resizeMode="cover" />;
+/** 레시피 타일 — 공공 레시피 완성 사진(URL). 없으면 색 배경 + 기본 이모지. */
+export function RecipeTile({ image, size = 52, bg }: { image?: string; size?: number; bg: string }) {
+  const r = size * 0.28;
+  if (image) {
+    return <Image source={{ uri: image }} style={{ width: size, height: size, borderRadius: r, backgroundColor: bg }} resizeMode="cover" />;
   }
-  const Art = RECIPE_ART[id];
   return (
-    <View style={{ width: size, height: size, borderRadius: size * 0.28, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }}>
-      {Art ? (
-        <Art size={size * 0.78} />
-      ) : (
-        <Text style={[{ fontSize: size * 0.5, lineHeight: size * 0.62, textAlign: 'center' }, emojiFont]}>{recipeEmojiFor(id)}</Text>
-      )}
+    <View style={{ width: size, height: size, borderRadius: r, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={[{ fontSize: size * 0.5, lineHeight: size * 0.62, textAlign: 'center' }, emojiFont]}>🍽️</Text>
     </View>
   );
 }

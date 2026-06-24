@@ -1,11 +1,11 @@
 // 요리추천 (spec §9.9) — 바로 가능 / 조금만 사면 / 임박 재료로
 //  · 냉장고와 동일한 탭(아이콘+개수) · 좌우 스와이프 전환 · 레시피 보기 / 유튜브 레시피
 import React, { useRef, useState } from 'react';
-import { View, Text, ScrollView, Pressable, Linking, StyleSheet, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+import { View, Text, ScrollView, Pressable, TextInput, Linking, StyleSheet, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { colors, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon, IconName } from '../components/Icon';
-import { useApp, matchAll, RecipeMatch } from '../data/store';
+import { useApp, matchAll, matchRecipe, RECIPES, RecipeMatch } from '../data/store';
 import { RecipeTile, HeaderActions } from '../components/ui';
 import { useNav } from '../navigation/nav';
 
@@ -16,17 +16,22 @@ const TABS: { key: string; label: string; icon: IconName }[] = [
 ];
 
 const matchesTab = (m: RecipeMatch, i: number) =>
-  i === 0 ? m.missing.length === 0 : i === 1 ? m.missing.length >= 1 && m.missing.length <= 2 : m.usesNearExpiry;
+  i === 0 ? m.missing.length === 0 && m.haveCount > 0 : i === 1 ? m.missing.length >= 1 && m.missing.length <= 2 : m.usesNearExpiry;
 
 export function RecipeListScreen() {
   const { fridge, addToShopping } = useApp();
   const nav = useNav();
   const [tab, setTab] = useState(0);
   const [w, setW] = useState(0);
+  const [query, setQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
   const pagerRef = useRef<ScrollView>(null);
 
   const all = matchAll(fridge);
   const listFor = (i: number) => all.filter((m) => matchesTab(m, i));
+  // 검색 — 냉장고 매칭과 무관하게 이름으로 전체 레시피에서 찾는다.
+  const q = query.trim();
+  const results = q ? RECIPES.filter((r) => r.title.includes(q)).slice(0, 60).map((r) => matchRecipe(r, fridge)) : [];
 
   const goTab = (i: number) => {
     setTab(i);
@@ -46,9 +51,28 @@ export function RecipeListScreen() {
           <Text style={s.title}>오늘 뭐 먹지?</Text>
           <Text style={s.sub}>냉장고 재료로 만들 수 있는 요리예요</Text>
         </View>
-        <HeaderActions showSearch={false} showBell={false} />
+        <HeaderActions showBell={false} searchActive={searchOpen} onSearch={() => setSearchOpen((o) => { if (o) setQuery(''); return !o; })} />
       </View>
 
+      {searchOpen && (
+        <View style={s.searchRow}>
+          <Icon name="search" size={18} color={colors.inkAsst} />
+          <TextInput value={query} onChangeText={setQuery} placeholder="레시피 이름 검색" placeholderTextColor={colors.inkAsst} style={s.search} autoFocus />
+          {query.length > 0 && (
+            <Pressable onPress={() => setQuery('')} hitSlop={8}><Icon name="x" size={16} color={colors.inkAsst} weight="bold" /></Pressable>
+          )}
+        </View>
+      )}
+
+      {q ? (
+        /* 검색 결과 — 전체 레시피에서 이름 일치 */
+        <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 6, gap: 9, paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
+          {results.map((m) => (
+            <RecipeCard key={m.recipe.id} m={m} onOpen={() => nav.openRecipe(m.recipe.id)} onAdd={() => m.missing.forEach((n) => addToShopping(n, 'recipe_missing', `${m.recipe.title}에 필요해요`))} />
+          ))}
+          {results.length === 0 && <Text style={s.empty}>'{q}' 검색 결과가 없어요.</Text>}
+        </ScrollView>
+      ) : (<>
       {/* 탭 — 냉장고 보관위치 탭과 동일한 스타일(아이콘 + 개수) */}
       <View style={s.tabs}>
         {TABS.map((t, i) => {
@@ -77,7 +101,7 @@ export function RecipeListScreen() {
               const list = listFor(i);
               return (
                 <ScrollView key={t.key} style={{ width: w }} contentContainerStyle={{ padding: 16, paddingTop: 6, gap: 9, paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
-                  {list.map((m) => (
+                  {list.slice(0, 40).map((m) => (
                     <RecipeCard
                       key={m.recipe.id}
                       m={m}
@@ -92,6 +116,7 @@ export function RecipeListScreen() {
           </ScrollView>
         )}
       </View>
+      </>)}
     </View>
   );
 }
@@ -104,12 +129,11 @@ function RecipeCard({ m, onOpen, onAdd }: { m: RecipeMatch; onOpen: () => void; 
   return (
     <View style={s.card}>
       <View style={s.cardTop}>
-        <RecipeTile id={m.recipe.id} size={46} bg={m.usesNearExpiry ? colors.coralBg : hasMissing ? colors.accentBg : colors.primaryBg} />
+        <RecipeTile image={m.recipe.image} size={46} bg={m.usesNearExpiry ? colors.coralBg : hasMissing ? colors.accentBg : colors.primaryBg} />
         <View style={{ flex: 1 }}>
-          <Text style={s.cardTitle}>{m.recipe.title}</Text>
+          <Text style={s.cardTitle} numberOfLines={1}>{m.recipe.title}</Text>
           <View style={s.metaRow}>
-            <Icon name="clock" size={12} color={colors.inkAsst} />
-            <Text style={s.metaText}>{m.recipe.cookTime}분 · {m.recipe.difficulty}</Text>
+            <Text style={s.metaText}>{[m.recipe.category, m.recipe.method].filter(Boolean).join(' · ') || '레시피'}</Text>
             {m.usesNearExpiry && (
               <View style={s.flame}>
                 <Icon name="flame" size={11} color={colors.coral} weight="fill" />
@@ -161,6 +185,8 @@ const s = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 10 },
   title: { fontFamily: font.extrabold, fontSize: 24, color: colors.ink, letterSpacing: -0.5 },
   sub: { fontFamily: font.medium, fontSize: 13.5, color: colors.inkAlt, marginTop: 5 },
+  searchRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, borderRadius: radius.lg, marginHorizontal: 20, marginBottom: 8, paddingHorizontal: 14 },
+  search: { flex: 1, fontFamily: font.medium, fontSize: 15, color: colors.ink, paddingVertical: 11 },
 
   // 탭 — 냉장고 보관위치 탭과 동일
   tabs: { flexDirection: 'row', gap: 7, marginHorizontal: 20, marginTop: 4, marginBottom: 6 },
