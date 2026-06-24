@@ -27,7 +27,14 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "영수증을 촬영해 식재료를 자동 등록하기 위해 카메라를 사용합니다.",
+          "photosPermission": "갤러리의 영수증 사진으로 식재료를 자동 등록하기 위해 사진 접근을 사용합니다."
+        }
+      ]
     ],
     "extra": {
       "eas": {

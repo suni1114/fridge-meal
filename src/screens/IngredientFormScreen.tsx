@@ -2,7 +2,7 @@
 //  0) 카테고리 선택(그리드) / 검색  →  1) 식재료 선택  →  2) 재료 상세 설정(등록일·소비기한·보관·수량·메모)
 //  + AI 등록(영수증·사진).
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, TextInput, Modal, KeyboardAvoidingView, Platform, StyleSheet, BackHandler } from 'react-native';
+import { View, Text, ScrollView, Pressable, TextInput, Modal, KeyboardAvoidingView, Platform, StyleSheet, BackHandler, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
@@ -24,6 +24,7 @@ import { useApp, infoFor } from '../data/store';
 import { uid } from '../data/id';
 import { startOfToday, addDays, toISO, fromISO, daysUntil, todayISO, sameYMD, fmtFull, fmtDot, WEEKDAYS } from '../data/date';
 import { useNav } from '../navigation/nav';
+import { scanReceipt } from '../ai/receiptScan';
 
 // 보관 위치는 냉장·냉동·실온 3가지만.
 const STORAGE_PICKS: { code: string; icon: 'thermometer-cold' | 'snowflake' | 'sun-horizon' }[] = [
@@ -42,22 +43,6 @@ const DDAY_PRESETS: { label: string; days: number | null }[] = [
   { label: '14일', days: 14 },
   { label: '30일', days: 30 },
 ];
-
-// 데모용 AI 인식 결과 (실제 영수증/사진 인식 대신 샘플 — 사용자가 확인·수정 후 등록).
-const AI_MOCK: Record<string, { name: string; amount: string }[]> = {
-  receipt: [
-    { name: '계란', amount: '10' },
-    { name: '우유', amount: '100' },
-    { name: '돼지고기', amount: '500' },
-    { name: '대파', amount: '2' },
-    { name: '두부', amount: '2' },
-  ],
-  photo: [
-    { name: '사과', amount: '5' },
-    { name: '당근', amount: '3' },
-    { name: '브로콜리', amount: '1' },
-  ],
-};
 
 // 수량 단위 선택지 — 식재료에 맞게 자동 선택되지만 사용자가 바꿀 수 있다.
 const UNIT_OPTIONS: { code: QtyUnit; label: string }[] = [
@@ -166,17 +151,44 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId }: { item
       added,
       memo: memo.trim() || undefined,
     });
-    // 장보기에서 들어온 경우(shoppingId) 해당 장보기 항목을 구매 완료·입고됨으로 처리.
-    if (shoppingId) markShoppingDone(shoppingId);
-    // 저장한 보관 위치(냉장/냉동/실온)에 맞는 냉장고 하위 탭으로 보낸다(어느 탭에서 열었든).
-    nav.goToFridge(storage);
+    if (shoppingId) {
+      // 장보기에서 들어온 경우: 해당 항목을 구매완료·입고됨 처리하고 장보기 목록으로 돌아간다.
+      markShoppingDone(shoppingId);
+      nav.setTab('shopping');
+    } else {
+      // 일반 식재료 추가: 저장한 보관 위치(냉장/냉동/실온) 하위 탭으로 냉장고로 이동.
+      nav.goToFridge(storage);
+    }
     nav.closeOverlay();
   };
 
   // ── AI 등록 ───────────────────────────────────────────────
   const [aiItems, setAiItems] = useState<AiItem[] | null>(null);
-  const runAi = (kind: 'receipt' | 'photo') =>
-    setAiItems(AI_MOCK[kind].map((r, i) => ({ id: `ai-${i}-${Date.now()}`, ...r })));
+  const [aiBusy, setAiBusy] = useState(false);
+  // 영수증 스캔 — 설치 앱에선 ML Kit 온디바이스 OCR, 웹에선 데모 폴백(receiptScan).
+  const scanReceiptFlow = async () => {
+    if (aiBusy) return;
+    setAiBusy(true);
+    try {
+      const res = await scanReceipt();
+      if (!res) return; // 사용자 취소 / 권한 거부
+      // 인식 결과를 확인 시트로 — 0개여도 시트를 열어 직접 추가할 수 있게 한다.
+      setAiItems(res.items.map((r, i) => ({ id: `ai-${i}-${Date.now()}`, ...r })));
+      // 아무것도 못 찾으면 실제로 읽은 글자를 보여줘 진단을 돕는다.
+      if (res.items.length === 0) {
+        Alert.alert(
+          '식재료를 못 찾았어요',
+          res.text?.trim()
+            ? `읽은 글자(앞부분):\n\n${res.text.slice(0, 400)}`
+            : '영수증 글자를 인식하지 못했어요. 더 밝은 곳에서 평평하게 펴서 다시 찍어보세요.'
+        );
+      }
+    } catch {
+      setAiItems([]); // OCR 실패 시 빈 시트로 직접 추가
+    } finally {
+      setAiBusy(false);
+    }
+  };
   const setAiField = (id: string, field: 'name' | 'amount', val: string) =>
     setAiItems((arr) => (arr ? arr.map((x) => (x.id === id ? { ...x, [field]: val } : x)) : arr));
   const removeAi = (id: string) => setAiItems((arr) => (arr ? arr.filter((x) => x.id !== id) : arr));
@@ -227,7 +239,8 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId }: { item
   const headerTitle = editing ? '재료 상세 설정' : step === 2 ? '재료 상세 설정' : '식재료 추가';
 
   return (
-    <KeyboardAvoidingView style={s.root} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    // 안드로이드는 OS adjustResize가 키보드를 처리 — height KAV와 충돌(리사이즈 떨림) 방지로 iOS만 padding.
+    <KeyboardAvoidingView style={s.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScreenHeader title={headerTitle} onBack={onBack} />
 
       {/* ── 0단계: 카테고리 선택 / 검색 ───────────────────────── */}
@@ -268,21 +281,19 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId }: { item
           ) : (
             <>
               <View style={s.aiCard}>
-                <View style={s.aiCardTop}>
-                  <Text style={s.aiSparkle}>✨</Text>
-                  <Text style={s.aiTitle}>AI로 빠르게 등록</Text>
-                </View>
-                <View style={s.aiBtnRow}>
-                  <Pressable style={s.aiOpt} onPress={() => runAi('receipt')}>
-                    <Text style={s.aiOptEmoji}>🧾</Text>
-                    <Text style={s.aiOptText}>영수증 스캔</Text>
+                <Text style={s.aiTitle}>✨ AI로 빠르게 등록</Text>
+                <View style={s.aiBtns}>
+                  <Pressable style={[s.aiChip, aiBusy && s.aiChipOff]} onPress={scanReceiptFlow} disabled={aiBusy}>
+                    <Text style={s.aiChipEmoji}>🧾</Text>
+                    <Text style={s.aiChipText}>{aiBusy ? '스캔중…' : '영수증 스캔'}</Text>
                   </Pressable>
-                  <Pressable style={s.aiOpt} onPress={() => runAi('photo')}>
-                    <Text style={s.aiOptEmoji}>📷</Text>
-                    <Text style={s.aiOptText}>식재료 사진</Text>
-                  </Pressable>
+                  {/* 식재료 사진 인식은 준비중 — 비활성 */}
+                  <View style={[s.aiChip, s.aiChipOff]}>
+                    <Text style={s.aiChipEmoji}>📷</Text>
+                    <Text style={s.aiChipTextOff}>식재료 사진</Text>
+                    <View style={s.aiSoonTag}><Text style={s.aiSoonText}>준비중</Text></View>
+                  </View>
                 </View>
-                <Text style={s.aiHint}>인식한 재료를 확인·수정한 뒤 등록해요</Text>
               </View>
 
               <Text style={s.stepLabel}>어떤 종류인가요?</Text>
@@ -390,24 +401,14 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId }: { item
 
           {/* 설정 리스트 카드 */}
           <View style={s.card}>
-            {/* 카테고리 — 신규/장보기 진입 시 변경 가능(수정 모드만 고정) */}
-            {!editing ? (
-              <Pressable style={s.listRow} onPress={() => setStep(1)}>
-                <Text style={s.rowLabel}>카테고리</Text>
-                <View style={s.rowRight}>
-                  <Text style={s.rowValue}>{catMeta?.label}</Text>
-                  <Icon name="caret-right" size={16} color={colors.inkAsst} weight="bold" />
-                </View>
-              </Pressable>
-            ) : (
-              <Pressable style={s.listRow} onPress={() => setCatPickOpen(true)}>
-                <Text style={s.rowLabel}>카테고리</Text>
-                <View style={s.rowRight}>
-                  <Text style={s.rowValue}>{catMeta?.label}</Text>
-                  <Icon name="caret-right" size={16} color={colors.inkAsst} weight="bold" />
-                </View>
-              </Pressable>
-            )}
+            {/* 카테고리 — 탭하면 카테고리 선택 바텀시트(식재료 추가 페이지로 넘어가지 않음) */}
+            <Pressable style={s.listRow} onPress={() => setCatPickOpen(true)}>
+              <Text style={s.rowLabel}>카테고리</Text>
+              <View style={s.rowRight}>
+                <Text style={s.rowValue}>{catMeta?.label}</Text>
+                <Icon name="caret-right" size={16} color={colors.inkAsst} weight="bold" />
+              </View>
+            </Pressable>
             <View style={s.divider} />
 
             {/* 등록일 */}
@@ -530,7 +531,9 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId }: { item
 
       {/* AI 인식 결과 확인·수정 시트 */}
       <Modal visible={!!aiItems} transparent animationType="slide" onRequestClose={() => setAiItems(null)}>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={s.aiBackdrop}>
+        {/* padding 방식: 키보드 높이만큼 하단 여백을 줘 시트를 키보드 위로 올린다(떨렸던 height 방식 대신).
+            항목이 많으면 내부 ScrollView(maxHeight)가 스크롤. */}
+        <KeyboardAvoidingView behavior="padding" style={s.aiBackdrop}>
           <View style={[s.aiSheet, { paddingBottom: 16 + insets.bottom }]}>
             <SheetHandle />
             <View style={s.aiSheetHead}>
@@ -540,7 +543,7 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId }: { item
               </Pressable>
             </View>
             <Text style={s.aiSheetSub}>잘못된 항목은 수정·삭제하고, 빠진 건 추가하세요.</Text>
-            <ScrollView style={{ maxHeight: 340 }} showsVerticalScrollIndicator={false}>
+            <ScrollView style={{ maxHeight: 340 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
               {aiItems?.map((it) => (
                 <View key={it.id} style={s.aiItemRow}>
                   <Text style={s.aiItemEmoji}>{emojiFor(it.name)}</Text>
@@ -853,16 +856,17 @@ const s = StyleSheet.create({
   calDayPast: { color: colors.line },
   calHint: { fontFamily: font.medium, fontSize: 12, color: colors.inkAlt, marginTop: 12, textAlign: 'center' },
 
-  // AI 등록 카드
-  aiCard: { backgroundColor: colors.primaryBg, borderRadius: radius.xl, padding: 16, marginBottom: 20 },
-  aiCardTop: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },
-  aiSparkle: { fontSize: 16, ...(EMOJI_FONT || {}) },
-  aiTitle: { fontFamily: font.extrabold, fontSize: 15, color: colors.primaryDark },
-  aiBtnRow: { flexDirection: 'row', gap: 10 },
-  aiOpt: { flex: 1, alignItems: 'center', gap: 6, backgroundColor: colors.surface, borderRadius: radius.lg, paddingVertical: 14 },
-  aiOptEmoji: { fontSize: 24, ...(EMOJI_FONT || {}) },
-  aiOptText: { fontFamily: font.bold, fontSize: 13.5, color: colors.ink },
-  aiHint: { fontFamily: font.medium, fontSize: 12, color: colors.primaryDark, marginTop: 10, textAlign: 'center' },
+  // AI 등록 카드 — 컴팩트(작은 가로 버튼 한 줄)
+  aiCard: { backgroundColor: colors.primaryBg, borderRadius: radius.lg, padding: 12, marginBottom: 16 },
+  aiTitle: { fontFamily: font.bold, fontSize: 12.5, color: colors.primaryDark, marginBottom: 8 },
+  aiBtns: { flexDirection: 'row', gap: 8 },
+  aiChip: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: colors.surface, borderRadius: radius.md, paddingVertical: 10 },
+  aiChipEmoji: { fontSize: 16, ...(EMOJI_FONT || {}) },
+  aiChipText: { fontFamily: font.bold, fontSize: 13, color: colors.ink },
+  aiChipOff: { backgroundColor: colors.fill },
+  aiChipTextOff: { fontFamily: font.bold, fontSize: 13, color: colors.inkAsst },
+  aiSoonTag: { backgroundColor: colors.line, borderRadius: radius.pill, paddingHorizontal: 6, paddingVertical: 1 },
+  aiSoonText: { fontFamily: font.bold, fontSize: 9, color: colors.inkAlt },
 
   // AI 확인 시트
   aiBackdrop: { flex: 1, backgroundColor: 'rgba(20,24,18,0.4)', justifyContent: 'flex-end' },
