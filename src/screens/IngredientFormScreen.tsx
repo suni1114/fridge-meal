@@ -245,7 +245,7 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId }: { item
 
       {/* ── 0단계: 카테고리 선택 / 검색 ───────────────────────── */}
       {step === 0 && (
-        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 24 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: 24 + insets.bottom }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <View style={s.searchRow}>
             <Icon name="search" size={18} color={colors.inkAsst} />
             <TextInput
@@ -312,7 +312,7 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId }: { item
 
       {/* ── 1단계: 식재료 선택 ────────────────────────────────── */}
       {step === 1 && (
-        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 24 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: 24 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <Pressable style={s.catBadge} onPress={() => setStep(0)}>
             <Text style={s.catBadgeEmoji}>{catMeta?.emoji}</Text>
             <Text style={s.catBadgeLabel}>{catMeta?.label}</Text>
@@ -349,7 +349,7 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId }: { item
 
       {/* ── 2단계: 재료 상세 설정 ─────────────────────────────── */}
       {step === 2 && (
-        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
           {/* 선택한 재료 히어로 (이름 직접 수정 가능) */}
           <View style={s.hero}>
             <View style={s.heroTile}>

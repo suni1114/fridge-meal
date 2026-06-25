@@ -99,7 +99,7 @@ export function ShoppingScreen() {
           <View style={{ flex: 1 }}>
             <View style={s.nameLine}>
               <Text style={[s.name, item.checked && s.nameDone]} numberOfLines={1}>{item.name}</Text>
-              {auto && <View style={s.autoBadge}><Text style={s.autoBadgeText}>자동추천</Text></View>}
+              {auto && <View style={s.autoBadge}><Text style={s.autoBadgeText}>비서추천</Text></View>}
             </View>
             {item.note ? <Text style={s.note}>{item.note}</Text> : auto ? <Text style={s.note}>{SOURCE_LABEL[item.source]}</Text> : null}
           </View>
