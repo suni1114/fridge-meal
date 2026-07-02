@@ -6,11 +6,12 @@ import { font } from '../theme/fonts';
 import { Icon } from '../components/Icon';
 import { FoodTile, DdayBadge, SectionTitle, RecipeTile, HeaderActions } from '../components/ui';
 import { useApp, matchAll } from '../data/store';
+import { isReady, needsSub } from '../data/recommend';
 import { daysUntil } from '../data/date';
 import { useNav } from '../navigation/nav';
 
 export function HomeScreen() {
-  const { fridge, shopping } = useApp();
+  const { fridge, shopping, recipes } = useApp();
   const nav = useNav();
 
   // 임박(5일 이내, D-0/지난 것 포함) 재료를 개수 제한 없이 임박순으로 모두 노출.
@@ -19,9 +20,9 @@ export function HomeScreen() {
     .filter((e) => e.d != null && e.d <= 5)
     .sort((a, b) => a.d! - b.d!)
     .map((e) => e.item);
-  const matches = matchAll(fridge);
-  const ready = matches.filter((m) => m.missing.length === 0 && m.haveCount > 0).slice(0, 3);
-  const almost = matches.filter((m) => m.missing.length >= 1 && m.missing.length <= 2).slice(0, 2);
+  const matches = matchAll(recipes, fridge);
+  const ready = matches.filter(isReady).slice(0, 3);
+  const almost = matches.filter(needsSub).slice(0, 2);
   const shop = shopping.filter((x) => !x.checked);
 
   // 웹: 임박 재료 가로 카드를 마우스로 끌어서 넘길 수 있게 한다(스크롤바 없이).
@@ -89,11 +90,11 @@ export function HomeScreen() {
           <SectionTitle title="지금 만들 수 있어요" compact actionLabel="더보기" onAction={() => nav.setTab('recipe')} />
           <View style={{ gap: 8 }}>
             {ready.map((m) => (
-              <Pressable key={m.recipe.id} style={s.recipeCard} onPress={() => nav.openRecipe(m.recipe.id)}>
-                <RecipeTile image={m.recipe.image} size={42} bg={colors.primaryBg} />
+              <Pressable key={m.recipe.menuId} style={s.recipeCard} onPress={() => nav.openRecipe(m.recipe.menuId)}>
+                <RecipeTile image={m.recipe.image} category={m.recipe.category} size={42} bg={colors.primaryBg} />
                 <View style={{ flex: 1 }}>
-                  <Text style={s.recipeTitle} numberOfLines={1}>{m.recipe.title}</Text>
-                  <Text style={s.recipeMeta}>가진 재료 {m.haveCount}개{m.recipe.nutri.kcal != null ? ` · ${m.recipe.nutri.kcal}kcal` : ''}</Text>
+                  <Text style={s.recipeTitle} numberOfLines={1}>{m.recipe.name}</Text>
+                  <Text style={s.recipeMeta}>{m.recipe.category}{m.recipe.cookTimeMinutes ? ` · ${m.recipe.cookTimeMinutes}분` : ''}</Text>
                 </View>
                 <Icon name="caret-right" size={18} color={colors.inkAsst} weight="bold" />
               </Pressable>
@@ -106,13 +107,13 @@ export function HomeScreen() {
           <SectionTitle title="조금만 사면 가능해요" compact />
           <View style={{ gap: 8 }}>
             {almost.map((m) => (
-              <Pressable key={m.recipe.id} style={s.recipeCard} onPress={() => nav.openRecipe(m.recipe.id)}>
-                <RecipeTile image={m.recipe.image} size={42} bg={colors.accentBg} />
+              <Pressable key={m.recipe.menuId} style={s.recipeCard} onPress={() => nav.openRecipe(m.recipe.menuId)}>
+                <RecipeTile image={m.recipe.image} category={m.recipe.category} size={42} bg={colors.accentBg} />
                 <View style={{ flex: 1 }}>
-                  <Text style={s.recipeTitle} numberOfLines={1}>{m.recipe.title}</Text>
+                  <Text style={s.recipeTitle} numberOfLines={1}>{m.recipe.name}</Text>
                   <View style={s.missingRow}>
                     <Text style={s.missingLabel}>부족 재료</Text>
-                    {m.missing.map((n) => (
+                    {m.missingSub.map((n) => (
                       <View key={n} style={s.missingChip}>
                         <Text style={s.missingChipText}>{n}</Text>
                       </View>
