@@ -129,7 +129,9 @@ export const baseName = (name: string): string => {
 };
 
 export function emojiFor(name: string, category?: string): string {
-  return FOOD_EMOJI[name] ?? FOOD_EMOJI[baseName(name)] ?? (category ? CATEGORY_EMOJI[category] : undefined) ?? '🍽️';
+  return USER_EMOJI[name] ?? USER_EMOJI[baseName(name)]
+    ?? FOOD_EMOJI[name] ?? FOOD_EMOJI[baseName(name)]
+    ?? (category ? CATEGORY_EMOJI[category] : undefined) ?? '🍽️';
 }
 
 // ── 세분화 카테고리 (냉장고 '카테고리별 보기' 전용) ──────────────────────────
@@ -324,3 +326,15 @@ export const RECIPE_EMOJI: Record<string, string> = {
 export function recipeEmojiFor(id: string): string {
   return RECIPE_EMOJI[id] ?? '🍲';
 }
+
+// 요리 카테고리 → 대표 이모지 (재료기반 요리 타일용).
+export const RECIPE_CATEGORY_EMOJI: Record<string, string> = {
+  '국·찌개': '🍲', '반찬': '🥗', '메인': '🍖', '간편': '🍚',
+};
+export function recipeCategoryEmoji(category: string): string {
+  return RECIPE_CATEGORY_EMOJI[category] ?? '🍽️';
+}
+
+// 관리자가 추가한 식재료 아이콘(런타임). AppProvider가 로드/갱신.
+let USER_EMOJI: Record<string, string> = {};
+export function setUserEmoji(map: Record<string, string>) { USER_EMOJI = map; }

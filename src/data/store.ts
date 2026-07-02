@@ -2,12 +2,16 @@
 // per the spec (§11), but for the 시안 we keep state in React so every screen
 // reacts to the same fridge / shopping data.
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { CategoryCode, StockLevel, baseName, fineCategoryOf } from './constants';
+import { CategoryCode, StockLevel, baseName, setUserEmoji } from './constants';
 import { loadJSON, saveJSON, STORAGE_KEYS } from './persist';
 import { daysUntil, todayISO } from './date';
 import { uid, nowISO } from './id';
 import { parseReceipt } from '../ai/receiptParser';
-import recipesData from './recipes.json'; // 식품안전나라 공공 레시피(1145) 번들
+import recipesData from './recipes.json'; // 재료기반 요리 시드(200)
+import { Recipe, RecipeMatch, matchAll, matchRecipe } from './recommend';
+export type { Recipe, RecipeMatch };
+export { matchAll, matchRecipe };
+export const SEED_RECIPES: Recipe[] = recipesData as unknown as Recipe[];
 
 // ---- types ---------------------------------------------------------------
 export interface FridgeItem {
@@ -21,30 +25,6 @@ export interface FridgeItem {
   added?: string; // 등록일 'YYYY-MM-DD' (냉장고에 넣은 날). 기본 오늘.
   memo?: string;
   updatedAt?: string; // 마지막 변경 시각(ISO) — 동기화 충돌 해결용.
-}
-
-// 공공 레시피(식품안전나라) 모델 — recipes.json 구조와 일치.
-export interface RecipeStep {
-  text: string;
-  img?: string; // 단계별 사진 URL (https)
-}
-export interface RecipeNutri {
-  kcal: number | null;
-  carb: number | null;
-  protein: number | null;
-  fat: number | null;
-  sodium: number | null;
-}
-export interface Recipe {
-  id: string;
-  title: string;
-  category: string; // 요리종류: 반찬/국·찌개/밥/후식 ...
-  method: string; // 조리방법: 찌기/끓이기/볶기 ...
-  image?: string; // 완성 사진 URL
-  parts: string; // 재료 원문(수량 포함)
-  steps: RecipeStep[];
-  nutri: RecipeNutri;
-  tip?: string; // 나트륨 저감 등 팁
 }
 
 export type ShoppingSource = 'manual' | 'low_stock' | 'recipe_missing' | 'expired' | 'near_expiry';
@@ -124,8 +104,15 @@ export const INGREDIENT_INFO: Record<string, Info> = {
   카레가루: { category: 'sauce', storage: 'room_temp' },
 };
 
+export interface UserIngredient { name: string; category: CategoryCode; storage: string; emoji?: string }
+// 관리자 추가 식재료 마스터(런타임). AppProvider가 로드/갱신.
+let USER_INFO: Record<string, Info> = {};
+export function setUserInfo(map: Record<string, Info>) { USER_INFO = map; }
+
 export function infoFor(name: string): Info {
-  return INGREDIENT_INFO[name] ?? INGREDIENT_INFO[baseName(name)] ?? { category: 'etc', storage: 'refrigerated' };
+  return INGREDIENT_INFO[name] ?? USER_INFO[name]
+    ?? INGREDIENT_INFO[baseName(name)] ?? USER_INFO[baseName(name)]
+    ?? { category: 'etc', storage: 'refrigerated' };
 }
 
 // 같은 이름이 이미 냉장고에 있으면 "우유" → "우유2" → "우유3" 처럼 다음 번호를 붙여
@@ -191,83 +178,11 @@ export const PRESET_PACKS: PresetPack[] = [
   },
 ];
 
-// ---- seed recipes (subset for the demo) ----------------------------------
-export const RECIPES: Recipe[] = recipesData as unknown as Recipe[];
-
 // ---- initial state -------------------------------------------------------
 // 실사용 앱: 신규 사용자는 빈 냉장고에서 시작하고, 온보딩(QuickSetup)에서 채운다.
 // 저장된 데이터가 있으면 AppProvider 복원 단계에서 이 기본값을 덮어쓴다.
 const INITIAL_FRIDGE: FridgeItem[] = [];
 const INITIAL_SHOPPING: ShoppingItem[] = [];
-
-// ---- selectors (rule-based matching, spec §13) ---------------------------
-export interface RecipeMatch {
-  recipe: Recipe;
-  haveCount: number;
-  missing: string[]; // 부족한 필수 재료명
-  usesNearExpiry: boolean;
-  score: number;
-}
-
-// 레시피 재료원문(parts)을 항목으로 분해 — 아는/모르는 재료 모두 포함(아는 것만 보면 부족 재료가 누락돼 오탐).
-const recipeItemsCache = new Map<string, string[]>();
-const SECTION_WORDS = ['양념', '고명', '육수', '소스', '재료', '주재료', '부재료', '양념장', '데코', '장식', '곁들임', '밑국물'];
-// 양념·조미료·국물거리 — 집에 있다고 보고 '부족'에서 제외.
-const PANTRY_WORDS = [
-  '소금', '설탕', '황설탕', '흑설탕', '간장', '진간장', '국간장', '양조간장', '된장', '고추장', '쌈장', '춘장',
-  '참기름', '들기름', '식용유', '올리브유', '포도씨유', '카놀라유', '후추', '후춧가루', '통후추', '참깨', '들깨', '깨소금',
-  '식초', '물엿', '올리고당', '조청', '꿀', '맛술', '미림', '청주', '케첩', '케찹', '마요네즈', '머스타드', '굴소스',
-  '액젓', '멸치액젓', '새우젓', '고춧가루', '전분', '녹말', '밀가루', '부침가루', '튀김가루', '빵가루', '매실액', '매실청',
-  '다시마', '건다시마', '멸치', '국멸치', '카레가루', '조림소스', '데리야끼소스', '두반장', '참치액', '다시다', '베이킹파우더',
-];
-function cleanItemName(chunk: string): string {
-  let s = chunk.split('(')[0]; // 괄호 수량 제거
-  s = s.replace(/\d.*$/, ''); // 첫 숫자(수량/단위) 이후 제거
-  return s.replace(/\s+/g, '').trim();
-}
-function recipeItems(recipe: Recipe): string[] {
-  let v = recipeItemsCache.get(recipe.id);
-  if (v) return v;
-  const titleKey = recipe.title.replace(/\s+/g, '');
-  const names = (recipe.parts || '')
-    .replace(/\n/g, ',')
-    .split(',')
-    .map(cleanItemName)
-    .filter((n) => n.length >= 2 && n !== titleKey && !SECTION_WORDS.includes(n));
-  v = Array.from(new Set(names));
-  recipeItemsCache.set(recipe.id, v);
-  return v;
-}
-const isPantry = (item: string) =>
-  item === '물' || PANTRY_WORDS.some((w) => item === w || item.endsWith(w)) || fineCategoryOf(item) === 'sauce';
-
-export function matchRecipe(recipe: Recipe, fridge: FridgeItem[]): RecipeMatch {
-  const fnames = fridge.filter((x) => x.stock !== 'empty').map((x) => baseName(x.name));
-  const nearNames = fridge
-    .filter((x) => { const d = daysUntil(x.expiry); return d != null && d <= 2; })
-    .map((x) => baseName(x.name));
-  // 레시피 재료명 ↔ 냉장고 재료명 양방향 부분일치(예: '다진돼지고기' ↔ '돼지고기').
-  const hit = (item: string, pool: string[]) =>
-    pool.some((fn) => fn.length >= 2 && (item.includes(fn) || fn.includes(item)));
-  let have = 0;
-  const missing: string[] = [];
-  let usesNear = false;
-  for (const item of recipeItems(recipe)) {
-    if (isPantry(item)) continue; // 양념·조미료는 보유 가정
-    if (hit(item, fnames)) {
-      have++;
-      if (hit(item, nearNames)) usesNear = true;
-    } else {
-      missing.push(item);
-    }
-  }
-  const score = have * 10 - missing.length * 8 + (usesNear ? 25 : 0);
-  return { recipe, haveCount: have, missing, usesNearExpiry: usesNear, score };
-}
-
-export function matchAll(fridge: FridgeItem[]): RecipeMatch[] {
-  return RECIPES.map((r) => matchRecipe(r, fridge)).sort((a, b) => b.score - a.score);
-}
 
 // ---- context -------------------------------------------------------------
 // 식재료 등록 1건 = 사용 로그 1건. 기간별 '자주 쓰는 식재료' 집계에 쓴다.
@@ -295,6 +210,12 @@ interface AppState {
   removeShopping: (id: string) => void;
   clearCheckedShopping: (kind?: ShoppingKind) => void;
   resetAll: () => void; // 데이터 초기화 — 냉장고/장보기 전부 비운다.
+  recipes: Recipe[];
+  addRecipe: (r: Recipe) => void;
+  removeRecipe: (menuId: string) => void;
+  ingredientMaster: UserIngredient[];
+  addIngredient: (x: UserIngredient) => void;
+  removeIngredient: (name: string) => void;
 }
 
 const Ctx = createContext<AppState | null>(null);
@@ -303,20 +224,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [fridge, setFridge] = useState<FridgeItem[]>(INITIAL_FRIDGE);
   const [shopping, setShopping] = useState<ShoppingItem[]>(INITIAL_SHOPPING);
   const [usageLog, setUsageLog] = useState<UsageEntry[]>([]);
+  const [userRecipes, setUserRecipes] = useState<Recipe[]>([]);
+  const [userIngredients, setUserIngredients] = useState<UserIngredient[]>([]);
   const [hydrated, setHydrated] = useState(false);
+
+  // 사용자 마스터(식재료) 변경 시 constants/store의 런타임 레지스트리에 반영.
+  const syncMasters = (list: UserIngredient[]) => {
+    setUserInfo(Object.fromEntries(list.map((x) => [x.name, { category: x.category, storage: x.storage }])));
+    setUserEmoji(Object.fromEntries(list.filter((x) => x.emoji).map((x) => [x.name, x.emoji as string])));
+  };
 
   // 앱 시작 시 저장된 냉장고/장보기/사용로그를 한 번 복원한다.
   useEffect(() => {
     let alive = true;
     (async () => {
-      const [savedFridge, savedShopping, savedUsage] = await Promise.all([
+      const [savedFridge, savedShopping, savedUsage, savedRecipes, savedIngredients] = await Promise.all([
         loadJSON<FridgeItem[]>(STORAGE_KEYS.fridge),
         loadJSON<ShoppingItem[]>(STORAGE_KEYS.shopping),
         loadJSON<UsageEntry[]>(STORAGE_KEYS.usage),
+        loadJSON<Recipe[]>(STORAGE_KEYS.recipes),
+        loadJSON<UserIngredient[]>(STORAGE_KEYS.ingredients),
       ]);
       if (!alive) return;
       if (savedFridge) setFridge(savedFridge);
       if (savedShopping) setShopping(savedShopping);
+      if (savedRecipes) setUserRecipes(savedRecipes);
+      if (savedIngredients) { setUserIngredients(savedIngredients); syncMasters(savedIngredients); }
       // 사용 로그가 없으면(최초) 현재 냉장고 재료의 등록일로 시드한다 — 적재 시작점을 만든다.
       if (savedUsage) setUsageLog(savedUsage);
       else setUsageLog((savedFridge ?? INITIAL_FRIDGE).map((f) => ({ id: uid(), name: f.name, category: f.category, date: f.added ?? todayISO() })));
@@ -337,6 +270,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (hydrated) saveJSON(STORAGE_KEYS.usage, usageLog);
   }, [usageLog, hydrated]);
+  useEffect(() => { if (hydrated) saveJSON(STORAGE_KEYS.recipes, userRecipes); }, [userRecipes, hydrated]);
+  useEffect(() => { if (hydrated) saveJSON(STORAGE_KEYS.ingredients, userIngredients); }, [userIngredients, hydrated]);
 
   // 소비기한이 지났거나(D+) 1일 이내로 임박한(D-1·D-day) 냉장고 재료를
   // 장보기 '자동 추천'에 자동으로 올린다. (이미 미구매 목록에 있으면 건너뜀)
@@ -406,8 +341,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setShopping((p) => p.filter((x) => !(x.checked && (kind ? (x.kind ?? 'food') === kind : true)))),
       // 데이터 초기화 — 냉장고/장보기/사용로그를 모두 비운다(빈 배열도 hydrated 이후 저장소에 반영됨).
       resetAll: () => { setFridge([]); setShopping([]); setUsageLog([]); },
+      recipes: [...SEED_RECIPES, ...userRecipes],
+      addRecipe: (r) => setUserRecipes((p) => [r, ...p.filter((x) => x.menuId !== r.menuId)]),
+      removeRecipe: (menuId) => setUserRecipes((p) => p.filter((x) => x.menuId !== menuId)),
+      ingredientMaster: userIngredients,
+      addIngredient: (x) => setUserIngredients((p) => { const next = [x, ...p.filter((y) => y.name !== x.name)]; syncMasters(next); return next; }),
+      removeIngredient: (name) => setUserIngredients((p) => { const next = p.filter((y) => y.name !== name); syncMasters(next); return next; }),
     }),
-    [fridge, shopping, usageLog]
+    [fridge, shopping, usageLog, userRecipes, userIngredients]
   );
 
   // 복원 전에는 렌더하지 않아 초기 데이터로 저장본을 덮어쓰는 일을 막는다.

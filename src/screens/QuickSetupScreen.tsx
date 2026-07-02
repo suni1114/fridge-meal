@@ -8,6 +8,7 @@ import { Icon } from '../components/Icon';
 import { AppButton } from '../components/ui';
 import { CATEGORY } from '../data/constants';
 import { PRESET_PACKS, useApp, matchAll, infoFor, FridgeItem } from '../data/store';
+import { isReady, needsSub } from '../data/recommend';
 import { todayISO } from '../data/date';
 import { uid, nowISO } from '../data/id';
 import { useNav } from '../navigation/nav';
@@ -20,7 +21,7 @@ export function QuickSetupScreen({ onDone }: { onDone: () => void }) {
   const append = nav.setupMode === 'append'; // 설정에서 '기존 냉장고에 추가하기'로 들어온 경우
   // 실기기 하단 제스처 바에 하단 CTA 버튼이 가리지 않도록 안전영역만큼 띄운다.
   const bottomPad = Platform.OS === 'web' ? 0 : insets.bottom;
-  const { fridge, setFridge, logUsage } = useApp();
+  const { fridge, setFridge, logUsage, recipes } = useApp();
   const [step, setStep] = useState(0);
   const [packCode, setPackCode] = useState('home_basic');
   const [checked, setChecked] = useState<Record<string, boolean>>({});
@@ -49,9 +50,9 @@ export function QuickSetupScreen({ onDone }: { onDone: () => void }) {
     setAdded((a) => (a.includes(name) ? a : [...a, name]));
   };
 
-  const matches = matchAll(fridge);
-  const readyCount = matches.filter((m) => m.missing.length === 0).length;
-  const almostCount = matches.filter((m) => m.missing.length >= 1 && m.missing.length <= 2).length;
+  const matches = matchAll(recipes, fridge);
+  const readyCount = matches.filter(isReady).length;
+  const almostCount = matches.filter(needsSub).length;
   const total = pack.items.filter(isChecked).length + added.length;
 
   // 선택한 프리셋 재료 + 직접 추가한 재료로 냉장고를 채운다.
