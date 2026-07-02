@@ -20,6 +20,7 @@ import { RecipeDetailScreen } from './src/screens/RecipeDetailScreen';
 import { ShoppingScreen } from './src/screens/ShoppingScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { IngredientFormScreen } from './src/screens/IngredientFormScreen';
+import { AdminScreen } from './src/screens/AdminScreen';
 
 function Root() {
   const nav = useNav();
@@ -65,6 +66,7 @@ function Root() {
           {nav.overlay.name === 'ingredientForm' && (
             <IngredientFormScreen itemId={nav.overlay.itemId} prefillName={nav.overlay.prefillName} shoppingId={nav.overlay.shoppingId} />
           )}
+          {nav.overlay.name === 'admin' && <AdminScreen />}
         </View>
       )}
     </View>

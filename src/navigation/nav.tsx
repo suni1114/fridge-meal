@@ -12,6 +12,7 @@ export type SetupMode = 'fresh' | 'append' | 'replace';
 export type Overlay =
   | { name: 'recipeDetail'; recipeId: string }
   | { name: 'ingredientForm'; itemId?: string; prefillName?: string; shoppingId?: string }
+  | { name: 'admin' }
   | null;
 
 interface Nav {
@@ -27,6 +28,7 @@ interface Nav {
   clearFridgeFocus: () => void;
   openRecipe: (recipeId: string) => void;
   openIngredientForm: (opts?: { itemId?: string; prefillName?: string; shoppingId?: string }) => void;
+  openAdmin: () => void;
   closeOverlay: () => void;
 }
 
@@ -73,6 +75,7 @@ export function NavProvider({ children }: { children: React.ReactNode }) {
       clearFridgeFocus: () => setFridgeFocus(null),
       openRecipe: (recipeId) => setOverlay({ name: 'recipeDetail', recipeId }),
       openIngredientForm: (opts) => setOverlay({ name: 'ingredientForm', itemId: opts?.itemId, prefillName: opts?.prefillName, shoppingId: opts?.shoppingId }),
+      openAdmin: () => setOverlay({ name: 'admin' }),
       closeOverlay: () => setOverlay(null),
     }),
     [phase, tab, overlay, fridgeFocus, setupMode]

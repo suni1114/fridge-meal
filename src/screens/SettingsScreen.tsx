@@ -83,6 +83,7 @@ export function SettingsScreen() {
     {
       title: '정보',
       items: [
+        { icon: 'gear', label: '관리자 (요리·식재료 관리)', onPress: () => nav.openAdmin() },
         { icon: 'info', label: '앱 정보', onPress: () => setSheet('appInfo') },
         { icon: 'heart', label: '문의하기', onPress: () => setSheet('contact') },
         { icon: 'trash', label: '데이터 초기화', danger: true, onPress: () => setSheet('reset') },
