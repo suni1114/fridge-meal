@@ -1,25 +1,18 @@
-// 요리추천 (spec §9.9) — 바로 가능 / 조금만 사면 / 임박 재료로
-//  · 냉장고와 동일한 탭(아이콘+개수) · 좌우 스와이프 전환 · 레시피 보기 / 유튜브 레시피
+// 요리추천 — 전체 / 국·찌개 / 반찬 / 메인 / 간편. 메인 전부 보유가 추천 상단.
 import React, { useRef, useState } from 'react';
-import { View, Text, ScrollView, Pressable, TextInput, Linking, StyleSheet, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+import { View, Text, ScrollView, Pressable, TextInput, StyleSheet, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { colors, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
-import { Icon, IconName } from '../components/Icon';
-import { useApp, matchAll, matchRecipe, RECIPES, RecipeMatch } from '../data/store';
+import { Icon } from '../components/Icon';
+import { useApp, matchAll, matchRecipe } from '../data/store';
+import { RECIPE_CATEGORIES, RecipeMatch, isReady } from '../data/recommend';
 import { RecipeTile, HeaderActions } from '../components/ui';
 import { useNav } from '../navigation/nav';
 
-const TABS: { key: string; label: string; icon: IconName }[] = [
-  { key: 'ready', label: '바로 가능', icon: 'check-circle' },
-  { key: 'almost', label: '조금만 사면', icon: 'basket' },
-  { key: 'near', label: '임박 재료로', icon: 'flame' },
-];
-
-const matchesTab = (m: RecipeMatch, i: number) =>
-  i === 0 ? m.missing.length === 0 && m.haveCount > 0 : i === 1 ? m.missing.length >= 1 && m.missing.length <= 2 : m.usesNearExpiry;
+const TABS = ['전체', ...RECIPE_CATEGORIES]; // 전체 | 국·찌개 | 반찬 | 메인 | 간편
 
 export function RecipeListScreen() {
-  const { fridge, addToShopping } = useApp();
+  const { fridge, recipes } = useApp();
   const nav = useNav();
   const [tab, setTab] = useState(0);
   const [w, setW] = useState(0);
@@ -27,11 +20,11 @@ export function RecipeListScreen() {
   const [searchOpen, setSearchOpen] = useState(false);
   const pagerRef = useRef<ScrollView>(null);
 
-  const all = matchAll(fridge);
-  const listFor = (i: number) => all.filter((m) => matchesTab(m, i));
+  const all = matchAll(recipes, fridge);
+  const listFor = (i: number) => (i === 0 ? all : all.filter((m) => m.recipe.category === TABS[i]));
   // 검색 — 냉장고 매칭과 무관하게 이름으로 전체 레시피에서 찾는다.
   const q = query.trim();
-  const results = q ? RECIPES.filter((r) => r.title.includes(q)).slice(0, 60).map((r) => matchRecipe(r, fridge)) : [];
+  const results = q ? recipes.filter((r) => r.name.includes(q)).slice(0, 60).map((r) => matchRecipe(r, fridge)) : [];
 
   const goTab = (i: number) => {
     setTab(i);
@@ -68,23 +61,23 @@ export function RecipeListScreen() {
         /* 검색 결과 — 전체 레시피에서 이름 일치 */
         <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 6, gap: 9, paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
           {results.map((m) => (
-            <RecipeCard key={m.recipe.id} m={m} onOpen={() => nav.openRecipe(m.recipe.id)} onAdd={() => m.missing.forEach((n) => addToShopping(n, 'recipe_missing', `${m.recipe.title}에 필요해요`))} />
+            <RecipeCard key={m.recipe.menuId} m={m} onOpen={() => nav.openRecipe(m.recipe.menuId)} />
           ))}
           {results.length === 0 && <Text style={s.empty}>'{q}' 검색 결과가 없어요.</Text>}
         </ScrollView>
       ) : (<>
-      {/* 탭 — 냉장고 보관위치 탭과 동일한 스타일(아이콘 + 개수) */}
-      <View style={s.tabs}>
-        {TABS.map((t, i) => {
+      {/* 탭 — 전체 / 국·찌개 / 반찬 / 메인 / 간편 (5개, 가로 스크롤) */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.tabsScroll} contentContainerStyle={s.tabs}>
+        {TABS.map((label, i) => {
           const on = i === tab;
           return (
-            <Pressable key={t.key} style={[s.tab, on && s.tabOn]} onPress={() => goTab(i)}>
-              <Text style={[s.tabText, on && s.tabTextOn]}>{t.label}</Text>
+            <Pressable key={label} style={[s.tab, on && s.tabOn]} onPress={() => goTab(i)}>
+              <Text style={[s.tabText, on && s.tabTextOn]}>{label}</Text>
               <Text style={[s.tabCount, on && s.tabCountOn]}>{listFor(i).length}</Text>
             </Pressable>
           );
         })}
-      </View>
+      </ScrollView>
 
       {/* 좌우 스와이프 페이지 */}
       <View style={{ flex: 1 }} onLayout={(e) => setW(e.nativeEvent.layout.width)}>
@@ -97,16 +90,15 @@ export function RecipeListScreen() {
             onScroll={onScroll}
             scrollEventThrottle={16}
           >
-            {TABS.map((t, i) => {
+            {TABS.map((label, i) => {
               const list = listFor(i);
               return (
-                <ScrollView key={t.key} style={{ width: w }} contentContainerStyle={{ padding: 16, paddingTop: 6, gap: 9, paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
-                  {list.slice(0, 40).map((m) => (
+                <ScrollView key={label} style={{ width: w }} contentContainerStyle={{ padding: 16, paddingTop: 6, gap: 9, paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
+                  {list.map((m) => (
                     <RecipeCard
-                      key={m.recipe.id}
+                      key={m.recipe.menuId}
                       m={m}
-                      onOpen={() => nav.openRecipe(m.recipe.id)}
-                      onAdd={() => m.missing.forEach((n) => addToShopping(n, 'recipe_missing', `${m.recipe.title}에 필요해요`))}
+                      onOpen={() => nav.openRecipe(m.recipe.menuId)}
                     />
                   ))}
                   {list.length === 0 && <Text style={s.empty}>해당하는 요리가 아직 없어요.</Text>}
@@ -121,62 +113,42 @@ export function RecipeListScreen() {
   );
 }
 
-function RecipeCard({ m, onOpen, onAdd }: { m: RecipeMatch; onOpen: () => void; onAdd: () => void }) {
-  const hasMissing = m.missing.length > 0;
-  const onYoutube = () =>
-    Linking.openURL(`https://www.youtube.com/results?search_query=${encodeURIComponent(m.recipe.title + ' 레시피')}`);
+function RecipeCard({ m, onOpen }: { m: RecipeMatch; onOpen: () => void }) {
+  const ready = isReady(m);
+  const statusBg = m.usesNearExpiry ? colors.coralBg : ready ? colors.primaryBg : m.recommendable ? colors.accentBg : colors.fill;
+  // 상태 텍스트: 바로 가능 / 재료 N개 더 / 메인 부족
+  const missing = m.recommendable ? m.missingSub : m.missingMain;
+  const statusLabel = ready ? '바로 가능' : m.recommendable ? `재료 ${m.missingSub.length}개 더 있으면 완성` : '메인 재료 부족';
 
   return (
-    <View style={s.card}>
+    <Pressable style={s.card} onPress={onOpen}>
       <View style={s.cardTop}>
-        <RecipeTile image={m.recipe.image} size={46} bg={m.usesNearExpiry ? colors.coralBg : hasMissing ? colors.accentBg : colors.primaryBg} />
+        <RecipeTile image={m.recipe.image} category={m.recipe.category} size={46} bg={statusBg} />
         <View style={{ flex: 1 }}>
-          <Text style={s.cardTitle} numberOfLines={1}>{m.recipe.title}</Text>
+          <Text style={s.cardTitle} numberOfLines={1}>{m.recipe.name}</Text>
           <View style={s.metaRow}>
-            <Text style={s.metaText}>{[m.recipe.category, m.recipe.method].filter(Boolean).join(' · ') || '레시피'}</Text>
+            <Text style={s.metaText}>{m.recipe.category}{m.recipe.cookTimeMinutes ? ` · ${m.recipe.cookTimeMinutes}분` : ''}</Text>
             {m.usesNearExpiry && (
-              <View style={s.flame}>
-                <Icon name="flame" size={11} color={colors.coral} weight="fill" />
-                <Text style={s.flameText}>임박</Text>
-              </View>
+              <View style={s.flame}><Icon name="flame" size={11} color={colors.coral} weight="fill" /><Text style={s.flameText}>임박</Text></View>
             )}
           </View>
         </View>
       </View>
 
       <View style={s.infoRow}>
-        <Text style={s.infoHave}>가진 재료 {m.haveCount}개</Text>
-        {hasMissing ? (
+        <Text style={[s.status, ready ? s.statusReady : m.recommendable ? s.statusAlmost : s.statusNo]}>{statusLabel}</Text>
+        {missing.length > 0 && (
           <View style={s.missingWrap}>
-            <Text style={s.infoMissingLabel}>부족 {m.missing.length}개</Text>
-            {m.missing.map((n) => (
-              <View key={n} style={s.missChip}><Text style={s.missChipText}>{n}</Text></View>
-            ))}
+            {missing.slice(0, 4).map((n) => (<View key={n} style={s.missChip}><Text style={s.missChipText}>{n}</Text></View>))}
+            {missing.length > 4 && <Text style={s.missMore}>+{missing.length - 4}</Text>}
           </View>
-        ) : (
-          <Text style={s.infoNone}>부족 재료 없음</Text>
         )}
       </View>
 
-      {/* 하단 액션 — 차분한 버튼 2개 */}
       <View style={s.footer}>
-        <Pressable style={s.viewBtn} onPress={onOpen}>
-          <Text style={s.viewBtnText}>레시피 보기</Text>
-        </Pressable>
-        <Pressable style={s.ytBtn} onPress={onYoutube}>
-          <Text style={s.ytPlay}>▶</Text>
-          <Text style={s.ytText}>유튜브 레시피</Text>
-        </Pressable>
+        <View style={s.viewBtn}><Text style={s.viewBtnText}>상세보기</Text><Icon name="caret-right" size={15} color={colors.inkAlt} weight="bold" /></View>
       </View>
-
-      {/* 부족 재료 담기 — 카드 우측 상단 */}
-      {hasMissing && (
-        <Pressable style={s.addChip} onPress={onAdd}>
-          <Icon name="basket" size={12} color={colors.inkAlt} weight="bold" />
-          <Text style={s.addChipText}>담기</Text>
-        </Pressable>
-      )}
-    </View>
+    </Pressable>
   );
 }
 
@@ -188,9 +160,10 @@ const s = StyleSheet.create({
   searchRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, borderRadius: radius.lg, marginHorizontal: 20, marginBottom: 8, paddingHorizontal: 14 },
   search: { flex: 1, fontFamily: font.medium, fontSize: 15, color: colors.ink, paddingVertical: 11 },
 
-  // 탭 — 냉장고 보관위치 탭과 동일
-  tabs: { flexDirection: 'row', gap: 7, marginHorizontal: 20, marginTop: 4, marginBottom: 6 },
-  tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 8, paddingHorizontal: 4, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.line },
+  // 탭 — 전체 / 국·찌개 / 반찬 / 메인 / 간편 (5개, 가로 스크롤)
+  tabsScroll: { flexGrow: 0, marginTop: 4, marginBottom: 6 },
+  tabs: { flexDirection: 'row', gap: 7, paddingHorizontal: 20 },
+  tab: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 8, paddingHorizontal: 14, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.line },
   tabOn: { backgroundColor: colors.primary, borderColor: colors.primary },
   tabText: { fontFamily: font.bold, fontSize: 12, color: colors.inkAlt },
   tabTextOn: { color: colors.white },
@@ -206,19 +179,24 @@ const s = StyleSheet.create({
   flameText: { fontFamily: font.extrabold, fontSize: 10.5, color: colors.coral },
 
   infoRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 10 },
+  status: { fontFamily: font.bold, fontSize: 13 },
+  statusReady: { color: colors.primary },
+  statusAlmost: { color: colors.accentDark },
+  statusNo: { color: colors.inkAsst },
   infoHave: { fontFamily: font.bold, fontSize: 13, color: colors.ink },
   infoNone: { fontFamily: font.semibold, fontSize: 13, color: colors.inkAsst },
   missingWrap: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
   infoMissingLabel: { fontFamily: font.bold, fontSize: 13, color: colors.accentDark },
   missChip: { backgroundColor: colors.accentBg, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill },
   missChipText: { fontFamily: font.bold, fontSize: 11.5, color: colors.accentDark },
+  missMore: { fontFamily: font.bold, fontSize: 11.5, color: colors.inkAsst },
   // 부족 재료 담기 — 카드 우측 상단 고정
   addChip: { position: 'absolute', top: 12, right: 12, flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.fill, paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.pill },
   addChipText: { fontFamily: font.bold, fontSize: 11.5, color: colors.ink },
 
-  // 하단 액션 — 카드와 한 덩어리(구분선) + 차분한 버튼 2개
+  // 하단 액션 — 카드와 한 덩어리(구분선) + 상세보기 버튼
   footer: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.line },
-  viewBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 9, borderRadius: radius.md, backgroundColor: colors.fill },
+  viewBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 9, borderRadius: radius.md, backgroundColor: colors.fill },
   viewBtnText: { fontFamily: font.medium, fontSize: 14, color: colors.inkAlt },
   ytBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line },
   ytPlay: { fontFamily: font.bold, fontSize: 9, color: colors.coral },
