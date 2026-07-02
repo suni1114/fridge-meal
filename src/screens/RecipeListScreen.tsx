@@ -184,23 +184,15 @@ const s = StyleSheet.create({
   statusAlmost: { color: colors.accentDark },
   statusNo: { color: colors.inkAsst },
   infoHave: { fontFamily: font.bold, fontSize: 13, color: colors.ink },
-  infoNone: { fontFamily: font.semibold, fontSize: 13, color: colors.inkAsst },
   missingWrap: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
-  infoMissingLabel: { fontFamily: font.bold, fontSize: 13, color: colors.accentDark },
   missChip: { backgroundColor: colors.accentBg, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill },
   missChipText: { fontFamily: font.bold, fontSize: 11.5, color: colors.accentDark },
   missMore: { fontFamily: font.bold, fontSize: 11.5, color: colors.inkAsst },
-  // 부족 재료 담기 — 카드 우측 상단 고정
-  addChip: { position: 'absolute', top: 12, right: 12, flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.fill, paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.pill },
-  addChipText: { fontFamily: font.bold, fontSize: 11.5, color: colors.ink },
 
   // 하단 액션 — 카드와 한 덩어리(구분선) + 상세보기 버튼
   footer: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.line },
   viewBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 9, borderRadius: radius.md, backgroundColor: colors.fill },
   viewBtnText: { fontFamily: font.medium, fontSize: 14, color: colors.inkAlt },
-  ytBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line },
-  ytPlay: { fontFamily: font.bold, fontSize: 9, color: colors.coral },
-  ytText: { fontFamily: font.medium, fontSize: 14, color: colors.inkAlt },
 
   empty: { fontFamily: font.medium, fontSize: 14, color: colors.inkAsst, textAlign: 'center', marginTop: 40 },
 });

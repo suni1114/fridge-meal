@@ -20,7 +20,7 @@ export function RecipeDetailScreen({ recipeId }: { recipeId: string }) {
   const missingAll = [...m.missingMain, ...m.missingSub];
 
   const have = fridge.filter((x) => x.stock !== 'empty').map((x) => baseName(x.name));
-  const has = (name: string) => have.some((fn) => fn.length >= 2 && (name.includes(fn) || fn.includes(name)));
+  const has = (name: string) => name.length >= 2 && have.some((fn) => fn.length >= 2 && (name.includes(fn) || fn.includes(name)));
 
   const onYoutube = () => Linking.openURL(`https://www.youtube.com/results?search_query=${encodeURIComponent(recipe.name + ' 레시피')}`);
   const onRecommend = () => recipe.recommendUrl && Linking.openURL(recipe.recommendUrl);

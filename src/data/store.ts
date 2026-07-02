@@ -110,8 +110,8 @@ let USER_INFO: Record<string, Info> = {};
 export function setUserInfo(map: Record<string, Info>) { USER_INFO = map; }
 
 export function infoFor(name: string): Info {
-  return INGREDIENT_INFO[name] ?? USER_INFO[name]
-    ?? INGREDIENT_INFO[baseName(name)] ?? USER_INFO[baseName(name)]
+  return USER_INFO[name] ?? INGREDIENT_INFO[name]
+    ?? USER_INFO[baseName(name)] ?? INGREDIENT_INFO[baseName(name)]
     ?? { category: 'etc', storage: 'refrigerated' };
 }
 

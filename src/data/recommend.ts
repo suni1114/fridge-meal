@@ -36,7 +36,7 @@ export interface RecipeMatch {
 
 // 레시피 재료명 ↔ 냉장고 재료명 양방향 부분일치(예: '다진돼지고기' ↔ '돼지고기').
 const hit = (item: string, pool: string[]) =>
-  pool.some((fn) => fn.length >= 2 && (item.includes(fn) || fn.includes(item)));
+  item.length >= 2 && pool.some((fn) => fn.length >= 2 && (item.includes(fn) || fn.includes(item)));
 
 export function matchRecipe(recipe: Recipe, fridge: FridgeItem[]): RecipeMatch {
   const have = fridge.filter((x) => x.stock !== 'empty').map((x) => baseName(x.name));

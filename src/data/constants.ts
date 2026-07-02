@@ -287,46 +287,6 @@ export function stockFromQty(unit: QtyUnit, amount: number): StockLevel {
   return amount >= 300 ? 'enough' : amount >= 100 ? 'low' : 'very_low'; // gram
 }
 
-// 레시피 → 이모지 일러스트. 식재료 타일과 같은 스타일로 카드/상세에 렌더.
-// 한식은 전용 이모지가 없어 가장 가까운 그림으로 매핑 (추후 전용 일러스트 교체 가능).
-export const RECIPE_EMOJI: Record<string, string> = {
-  'kimchi-fried-rice': '🍚', // 김치볶음밥
-  'tofu-kimchi': '🥘', // 두부김치
-  'egg-roll': '🍳', // 계란말이
-  'kimchi-stew': '🍲', // 김치찌개
-  'doenjang-stew': '🫕', // 된장찌개
-  'bean-sprout-soup': '🥣', // 콩나물국
-  // ── 확장 레시피 (94종) ──
-  'bibimbap': '🍚', 'soy-egg-rice': '🍚', 'spam-fried-rice': '🍚', 'bacon-fried-rice': '🍚',
-  'shrimp-fried-rice': '🍤', 'bulgogi-rice': '🍚', 'pork-rice-bowl': '🍚', 'chicken-mayo-rice': '🍚',
-  'tuna-mayo-rice': '🍚', 'curry-rice': '🍛', 'omurice': '🍳', 'tofu-rice-bowl': '🍚',
-  'mushroom-rice': '🍚', 'egg-fried-rice': '🍚', 'soft-tofu-stew': '🍲', 'beef-radish-soup': '🍲',
-  'egg-drop-soup': '🍲', 'mushroom-soup': '🍲', 'potato-soup': '🍲', 'fish-cake-soup': '🍲',
-  'army-stew': '🍲', 'yukgaejang': '🍲', 'rice-cake-soup': '🍲', 'napa-doenjang-soup': '🍲',
-  'kimchi-soup': '🍲', 'spicy-pork-stew': '🍲', 'chicken-soup': '🍲', 'spinach-soup': '🍲',
-  'stir-fried-pork': '🍖', 'dak-galbi': '🍗', 'squid-stir-fry': '🦑', 'fish-cake-stir-fry': '🍢',
-  'sausage-stir-fry': '🌭', 'spam-kimchi-stir-fry': '🥫', 'mushroom-stir-fry': '🍄', 'zucchini-stir-fry': '🥒',
-  'potato-stir-fry': '🥔', 'anchovy-stir-fry': '🐟', 'bean-sprout-stir-fry': '🌱', 'bacon-cabbage-stir-fry': '🥬',
-  'eggplant-stir-fry': '🍆', 'broccoli-stir-fry': '🥦', 'japchae': '🍜', 'beef-mushroom-stir-fry': '🍖',
-  'shrimp-garlic-stir-fry': '🍤', 'grilled-mackerel': '🐟', 'braised-mackerel': '🐟', 'grilled-salmon': '🐟',
-  'braised-tofu': '🍲', 'braised-potato': '🥔', 'braised-quail-egg': '🥚', 'braised-beef': '🍖',
-  'grilled-pork-belly': '🥓', 'jjimdak': '🍗', 'grilled-chicken-thigh': '🍗', 'grilled-cutlassfish': '🐟',
-  'braised-cutlassfish': '🐟', 'teriyaki-chicken': '🍗', 'pork-bulgogi': '🍖', 'kimchi-pancake': '🥞',
-  'green-onion-pancake': '🥞', 'zucchini-pancake': '🥞', 'potato-pancake': '🥞', 'tofu-pan-fry': '🍳',
-  'egg-pancake': '🍳', 'ham-pancake': '🥞', 'seafood-pancake': '🥞', 'meatball-pancake': '🥞',
-  'perilla-pancake': '🥞', 'pumpkin-pancake': '🥞', 'seasoned-spinach': '🥗', 'seasoned-bean-sprout': '🥗',
-  'seasoned-cucumber': '🥗', 'seasoned-chive': '🥗', 'seasoned-radish': '🥗', 'cucumber-pickle': '🥒',
-  'green-onion-salad': '🥗', 'egg-soy-braise': '🥚', 'seasoned-cabbage': '🥗', 'kalguksu': '🍜',
-  'janchi-noodle': '🍜', 'bibim-noodle': '🍜', 'kimchi-noodle': '🍜', 'udon': '🍜',
-  'tomato-spaghetti': '🍝', 'cream-pasta': '🍝', 'aglio-olio': '🍝', 'stir-fried-udon': '🍜',
-  'egg-ramen': '🍜', 'tteokbokki': '🌶️', 'rabokki': '🌶️', 'gimbap': '🍙',
-  'cheese-toast': '🍞', 'chicken-salad': '🥗',
-};
-
-export function recipeEmojiFor(id: string): string {
-  return RECIPE_EMOJI[id] ?? '🍲';
-}
-
 // 요리 카테고리 → 대표 이모지 (재료기반 요리 타일용).
 export const RECIPE_CATEGORY_EMOJI: Record<string, string> = {
   '국·찌개': '🍲', '반찬': '🥗', '메인': '🍖', '간편': '🍚',
