@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, Pressable, ViewStyle, Platform, Image } from 'r
 import { colors, cat, urgency, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon, IconName } from './Icon';
-import { CATEGORY, CategoryCode, STOCK, StockLevel, emojiFor } from '../data/constants';
+import { CATEGORY, CategoryCode, STOCK, StockLevel, emojiFor, recipeCategoryEmoji } from '../data/constants';
 import { daysUntil } from '../data/date';
 import { useNav } from '../navigation/nav';
 
@@ -81,15 +81,14 @@ export function FoodTile({ name, category, size = 46 }: { name?: string; categor
 }
 
 
-/** 레시피 타일 — 공공 레시피 완성 사진(URL). 없으면 색 배경 + 기본 이모지. */
-export function RecipeTile({ image, size = 52, bg }: { image?: string; size?: number; bg: string }) {
+/** 레시피 타일 — 요리 이미지(URL) 우선, 없으면 카테고리 대표 이모지 + 색 배경. */
+export function RecipeTile({ image, category, size = 52, bg }: { image?: string; category?: string; size?: number; bg: string }) {
   const r = size * 0.28;
-  if (image) {
-    return <Image source={{ uri: image }} style={{ width: size, height: size, borderRadius: r, backgroundColor: bg }} resizeMode="cover" />;
-  }
+  if (image) return <Image source={{ uri: image }} style={{ width: size, height: size, borderRadius: r, backgroundColor: bg }} resizeMode="cover" />;
+  const glyph = category ? recipeCategoryEmoji(category) : '🍽️';
   return (
     <View style={{ width: size, height: size, borderRadius: r, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={[{ fontSize: size * 0.5, lineHeight: size * 0.62, textAlign: 'center' }, emojiFont]}>🍽️</Text>
+      <Text style={[{ fontSize: size * 0.5, lineHeight: size * 0.62, textAlign: 'center' }, emojiFont]}>{glyph}</Text>
     </View>
   );
 }
