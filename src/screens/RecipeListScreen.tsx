@@ -5,7 +5,7 @@ import { colors, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon } from '../components/Icon';
 import { useApp, matchAll, matchRecipe } from '../data/store';
-import { RECIPE_CATEGORIES, RecipeMatch, isReady } from '../data/recommend';
+import { RECIPE_CATEGORIES, RecipeMatch, isReady, needsOneMain } from '../data/recommend';
 import { RecipeTile, HeaderActions } from '../components/ui';
 import { useNav } from '../navigation/nav';
 
@@ -115,10 +115,18 @@ export function RecipeListScreen() {
 
 function RecipeCard({ m, onOpen }: { m: RecipeMatch; onOpen: () => void }) {
   const ready = isReady(m);
-  const statusBg = m.usesNearExpiry ? colors.coralBg : ready ? colors.primaryBg : m.recommendable ? colors.accentBg : colors.fill;
-  // 상태 텍스트: 바로 가능 / 재료 N개 더 / 메인 부족
+  const oneMain = needsOneMain(m);
+  const almost = m.recommendable || oneMain; // 거의 가능(강조색)
+  const statusBg = m.usesNearExpiry ? colors.coralBg : ready ? colors.primaryBg : almost ? colors.accentBg : colors.fill;
+  // 상태 텍스트: 바로 가능 / 재료 N개 더 / 재료 1개만 더 / 메인 부족
   const missing = m.recommendable ? m.missingSub : m.missingMain;
-  const statusLabel = ready ? '바로 가능' : m.recommendable ? `재료 ${m.missingSub.length}개 더 있으면 완성` : '메인 재료 부족';
+  const statusLabel = ready
+    ? '바로 가능'
+    : m.recommendable
+    ? `재료 ${m.missingSub.length}개 더 있으면 완성`
+    : oneMain
+    ? '재료 1개만 더 있으면 가능'
+    : '메인 재료 부족';
 
   return (
     <Pressable style={s.card} onPress={onOpen}>
@@ -136,7 +144,7 @@ function RecipeCard({ m, onOpen }: { m: RecipeMatch; onOpen: () => void }) {
       </View>
 
       <View style={s.infoRow}>
-        <Text style={[s.status, ready ? s.statusReady : m.recommendable ? s.statusAlmost : s.statusNo]}>{statusLabel}</Text>
+        <Text style={[s.status, ready ? s.statusReady : almost ? s.statusAlmost : s.statusNo]}>{statusLabel}</Text>
         {missing.length > 0 && (
           <View style={s.missingWrap}>
             {missing.slice(0, 4).map((n) => (<View key={n} style={s.missChip}><Text style={s.missChipText}>{n}</Text></View>))}

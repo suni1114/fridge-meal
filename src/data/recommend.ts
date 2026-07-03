@@ -64,8 +64,9 @@ export function matchRecipe(recipe: Recipe, fridge: FridgeItem[]): RecipeMatch {
   const mainCov = totalMain ? matchedMain / totalMain : 0;
   const subCov = totalSub ? matchedSub / totalSub : 1; // 서브 없으면 완비로 간주
 
-  // 메인 전부 보유(recommendable)가 항상 메인 부족보다 위에 오도록 큰 기저값 부여.
-  const score = Math.round((recommendable ? 1000 : 0) + subCov * 100 + mainCov * 50 + (usesNear ? 10 : 0));
+  // 메인 전부(1000) > 메인 1개 부족(400) > 메인 2개+ 부족(0). 세부 정렬 최댓값(160)보다 구간이 넓어 등급이 섞이지 않는다.
+  const base = recommendable ? 1000 : missingMain.length === 1 ? 400 : 0;
+  const score = Math.round(base + subCov * 100 + mainCov * 50 + (usesNear ? 10 : 0));
   return { recipe, matchedMain, totalMain, missingMain, matchedSub, totalSub, missingSub, recommendable, usesNearExpiry: usesNear, score };
 }
 
@@ -78,3 +79,5 @@ export function matchAll(recipes: Recipe[], fridge: FridgeItem[]): RecipeMatch[]
 // 바로 가능 = 메인 전부 + 서브 전부. 재료 조금 더 = 메인 전부 + 서브 부족.
 export const isReady = (m: RecipeMatch) => m.recommendable && m.missingSub.length === 0;
 export const needsSub = (m: RecipeMatch) => m.recommendable && m.missingSub.length > 0;
+// 재료 1개만 더 있으면 가능 = 메인 딱 1개 부족.
+export const needsOneMain = (m: RecipeMatch) => !m.recommendable && m.missingMain.length === 1;
