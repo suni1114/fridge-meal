@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>냉장고 한끼 · V1.0 디자인 시안</title>
+<style>
+  :root{
+    --green:#5B8C5A;        /* 메인: 따뜻한 그린 */
+    --green-deep:#436B42;
+    --green-soft:#EAF1E8;   /* 그린 옅은 배경 */
+    --cream:#FBF8F1;        /* 보조: 크림 화이트 */
+    --card:#FFFFFF;
+    --accent:#F2A93B;       /* 강조: 오렌지/옐로우 */
+    --accent-soft:#FDF0D9;
+    --danger:#E8694A;       /* 위험/임박: 코랄 레드 */
+    --danger-soft:#FBE5DF;
+    --ink:#33352F;          /* 텍스트: 진한 회색 */
+    --muted:#8A8D84;
+    --line:#ECEAE2;
+    --radius:18px;
+    --shadow:0 6px 20px rgba(70,80,60,.08);
+    --shadow-sm:0 2px 8px rgba(70,80,60,.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;}
+  body{
+    font-family:'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',system-ui,sans-serif;
+    background:#E9E5DB;
+    color:var(--ink);
+    padding:40px 24px 80px;
+  }
+  .page-head{max-width:1700px;margin:0 auto 36px;text-align:center;}
+  .page-head h1{font-size:30px;letter-spacing:-.5px;}
+  .page-head h1 .leaf{color:var(--green);}
+  .page-head p{color:#6f7268;margin-top:10px;font-size:15px;}
+  .palette{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap;}
+  .sw{display:flex;align-items:center;gap:7px;background:#fff;padding:6px 12px;border-radius:30px;font-size:12px;color:#5c5f56;box-shadow:var(--shadow-sm);}
+  .sw i{width:14px;height:14px;border-radius:50%;display:inline-block;}
+
+  .frames{display:flex;gap:34px;justify-content:center;flex-wrap:wrap;max-width:1760px;margin:0 auto;align-items:flex-start;}
+  .frame-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;}
+  .frame-label{font-size:13px;font-weight:700;color:#54574e;background:#fff;padding:6px 14px;border-radius:20px;box-shadow:var(--shadow-sm);}
+  .frame-label .star{color:var(--accent);}
+
+  /* phone */
+  .phone{
+    width:380px;height:812px;background:var(--cream);
+    border-radius:42px;box-shadow:0 24px 60px rgba(40,50,35,.22);
+    border:9px solid #2c2e29;overflow:hidden;position:relative;display:flex;flex-direction:column;
+  }
+  .statusbar{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 26px;font-size:13px;font-weight:600;flex:0 0 auto;color:var(--ink);}
+  .statusbar .dots{display:flex;gap:5px;align-items:center;}
+  .statusbar .dots span{font-size:11px;}
+  .screen{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+  .scroll{flex:1;overflow:hidden;padding:6px 20px 20px;}
+
+  /* generic */
+  .eyebrow{color:var(--green);font-weight:700;font-size:13px;letter-spacing:.2px;}
+  .h-title{font-size:23px;font-weight:800;letter-spacing:-.4px;line-height:1.35;margin-top:6px;}
+  .h-sub{color:var(--muted);font-size:13.5px;margin-top:8px;line-height:1.5;}
+  .topbar{padding:8px 20px 4px;display:flex;align-items:center;justify-content:space-between;}
+  .topbar h2{font-size:20px;font-weight:800;}
+  .step-dots{display:flex;gap:6px;}
+  .step-dots i{width:7px;height:7px;border-radius:50%;background:#d8d4c7;display:inline-block;}
+  .step-dots i.on{background:var(--green);width:20px;border-radius:5px;}
+
+  /* CTA */
+  .cta-wrap{padding:14px 20px 22px;background:linear-gradient(to top,var(--cream) 70%,transparent);flex:0 0 auto;}
+  .cta{display:block;width:100%;background:var(--green);color:#fff;border:none;border-radius:16px;padding:16px;font-size:16px;font-weight:800;box-shadow:0 8px 18px rgba(91,140,90,.32);font-family:inherit;}
+  .cta.alt{background:#fff;color:var(--green);border:1.5px solid #d6e0d2;box-shadow:none;}
+
+  /* ===== Screen 1: type select ===== */
+  .type-card{
+    background:var(--card);border-radius:var(--radius);padding:18px;margin-bottom:14px;
+    box-shadow:var(--shadow-sm);border:2px solid transparent;display:flex;gap:14px;align-items:center;
+  }
+  .type-card .emoji{width:54px;height:54px;border-radius:15px;background:var(--green-soft);display:flex;align-items:center;justify-content:center;font-size:27px;flex:0 0 auto;}
+  .type-card h3{font-size:16.5px;font-weight:800;}
+  .type-card p{color:var(--muted);font-size:13px;margin-top:4px;line-height:1.45;}
+  .type-card.sel{border-color:var(--green);background:#fff;box-shadow:0 8px 22px rgba(91,140,90,.18);}
+  .type-card.sel .emoji{background:var(--green);}
+  .type-card .check{margin-left:auto;width:24px;height:24px;border-radius:50%;border:2px solid #dcd8cc;flex:0 0 auto;}
+  .type-card.sel .check{background:var(--green);border-color:var(--green);position:relative;}
+  .type-card.sel .check::after{content:"";position:absolute;left:7px;top:3.5px;width:6px;height:11px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg);}
+
+  /* ===== Screen 2: quick setting check ===== */
+  .selbar{display:flex;gap:8px;margin:4px 0 16px;}
+  .selbar button{flex:1;background:#fff;border:1px solid var(--line);border-radius:11px;padding:9px;font-size:12.5px;font-weight:700;color:#5c5f56;font-family:inherit;}
+  .selbar button.active{background:var(--green-soft);color:var(--green-deep);border-color:#cfe0cb;}
+  .cat{margin-bottom:18px;}
+  .cat-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .cat-head .name{font-size:14.5px;font-weight:800;}
+  .cat-head .name b{color:var(--green);font-weight:800;}
+  .cat-head .fold{color:var(--muted);font-size:18px;}
+  .chips{display:flex;flex-wrap:wrap;gap:9px;}
+  .chip{
+    display:inline-flex;align-items:center;gap:7px;background:#fff;border:1.5px solid var(--line);
+    border-radius:30px;padding:9px 14px 9px 11px;font-size:14px;font-weight:600;color:#5e6157;
+  }
+  .chip .box{width:19px;height:19px;border-radius:6px;border:2px solid #d3cfc3;flex:0 0 auto;}
+  .chip.on{background:var(--green-soft);border-color:var(--green);color:var(--green-deep);}
+  .chip.on .box{background:var(--green);border-color:var(--green);position:relative;}
+  .chip.on .box::after{content:"";position:absolute;left:5px;top:1.5px;width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg);}
+
+  /* ===== bottom tab ===== */
+  .tabbar{flex:0 0 auto;display:flex;background:#fff;border-top:1px solid var(--line);padding:9px 6px 14px;}
+  .tabbar .tab{flex:1;text-align:center;font-size:10.5px;color:var(--muted);font-weight:600;}
+  .tabbar .tab .ic{font-size:20px;display:block;margin-bottom:3px;filter:grayscale(1) opacity(.55);}
+  .tabbar .tab.on{color:var(--green);}
+  .tabbar .tab.on .ic{filter:none;}
+
+  /* ===== Screen 3: fridge list ===== */
+  .search{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:13px;padding:11px 14px;margin:6px 0 14px;color:var(--muted);font-size:14px;}
+  .stor-tabs{display:flex;gap:8px;overflow:hidden;margin-bottom:6px;}
+  .stor-tabs .st{background:#fff;border:1px solid var(--line);border-radius:30px;padding:8px 15px;font-size:13px;font-weight:700;color:#6b6e64;white-space:nowrap;}
+  .stor-tabs .st.on{background:var(--green);color:#fff;border-color:var(--green);}
+  .sortline{display:flex;align-items:center;justify-content:space-between;margin:14px 2px 12px;}
+  .sortline .cnt{font-size:13px;color:var(--muted);}
+  .sortline .cnt b{color:var(--ink);}
+  .sortline .sort{font-size:13px;font-weight:700;color:var(--green-deep);}
+  .item{background:#fff;border-radius:15px;padding:14px;margin-bottom:11px;box-shadow:var(--shadow-sm);display:flex;align-items:center;gap:13px;}
+  .item .ic{width:46px;height:46px;border-radius:13px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:24px;flex:0 0 auto;}
+  .item .mid{flex:1;min-width:0;}
+  .item .nm{font-size:15.5px;font-weight:800;}
+  .item .meta{font-size:12px;color:var(--muted);margin-top:4px;display:flex;gap:8px;align-items:center;}
+  .stock{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:20px;}
+  .stock.enough{background:var(--green-soft);color:var(--green-deep);}
+  .stock.low{background:var(--accent-soft);color:#B97A12;}
+  .stock.vlow{background:var(--danger-soft);color:#C2452A;}
+  .dday{font-size:13px;font-weight:800;padding:6px 11px;border-radius:11px;flex:0 0 auto;text-align:center;min-width:52px;}
+  .dday.safe{background:var(--green-soft);color:var(--green-deep);}
+  .dday.warn{background:var(--accent-soft);color:#B97A12;}
+  .dday.urgent{background:var(--danger);color:#fff;}
+  .dday small{display:block;font-size:9px;font-weight:600;opacity:.85;margin-top:1px;}
+  .fab{position:absolute;right:20px;bottom:96px;width:56px;height:56px;border-radius:50%;background:var(--accent);color:#fff;font-size:28px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 22px rgba(242,169,59,.45);}
+
+  /* ===== Screen 4: recipe recommend ===== */
+  .filters{display:flex;gap:8px;margin:6px 0 16px;overflow:hidden;}
+  .fchip{background:#fff;border:1px solid var(--line);border-radius:30px;padding:9px 14px;font-size:13px;font-weight:700;color:#6b6e64;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;}
+  .fchip.on{background:var(--green);color:#fff;border-color:var(--green);}
+  .fchip .n{background:rgba(255,255,255,.28);border-radius:20px;padding:1px 7px;font-size:11px;}
+  .fchip:not(.on) .n{background:var(--green-soft);color:var(--green-deep);}
+  .rcard{background:#fff;border-radius:18px;margin-bottom:15px;box-shadow:var(--shadow-sm);overflow:hidden;}
+  .rcard .thumb{height:118px;background:linear-gradient(135deg,#cfe0cb,#eaf1e8);display:flex;align-items:center;justify-content:center;font-size:48px;position:relative;}
+  .rcard .badge{position:absolute;left:12px;top:12px;background:var(--danger);color:#fff;font-size:11px;font-weight:800;padding:5px 10px;border-radius:20px;display:flex;align-items:center;gap:4px;}
+  .rcard .body{padding:14px 16px 16px;}
+  .rcard h3{font-size:17px;font-weight:800;}
+  .rcard .rmeta{display:flex;gap:14px;color:var(--muted);font-size:12.5px;margin-top:7px;}
+  .rcard .rmeta span{display:inline-flex;align-items:center;gap:4px;}
+  .matchbar{display:flex;align-items:center;gap:10px;margin-top:13px;}
+  .matchbar .have{font-size:13px;font-weight:700;color:var(--green-deep);}
+  .matchbar .need{font-size:13px;font-weight:700;color:var(--danger);}
+  .missing{margin-top:11px;background:var(--danger-soft);border-radius:11px;padding:9px 12px;font-size:12.5px;color:#9c3a23;}
+  .missing b{font-weight:800;}
+  .ready{margin-top:11px;background:var(--green-soft);border-radius:11px;padding:9px 12px;font-size:12.5px;color:var(--green-deep);font-weight:700;display:flex;align-items:center;gap:6px;}
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <h1><span class="leaf">🌿 냉장고 한끼</span> · V1.0 디자인 시안</h1>
+  <p>우리집 냉장고 속 식재료로 만들 수 있는 요리와 장볼 재료를 알려주는 생활 관리 앱 — 핵심 3영역 화면</p>
+  <div class="palette">
+    <div class="sw"><i style="background:#5B8C5A"></i>메인 그린</div>
+    <div class="sw"><i style="background:#FBF8F1;border:1px solid #ddd"></i>크림 화이트</div>
+    <div class="sw"><i style="background:#F2A93B"></i>오렌지 강조</div>
+    <div class="sw"><i style="background:#E8694A"></i>코랄 임박</div>
+    <div class="sw"><i style="background:#33352F"></i>진회색 텍스트</div>
+  </div>
+</div>
+
+<div class="frames">
+
+  <!-- ============ SCREEN 1 ============ -->
+  <div class="frame-wrap">
+    <div class="frame-label">1 · 식생활 유형 선택</div>
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span class="dots">🔋 📶</span></div>
+      <div class="screen">
+        <div style="padding:14px 20px 2px;">
+          <div class="step-dots" style="margin-bottom:18px;"><i class="on"></i><i></i><i></i></div>
+          <div class="eyebrow">냉장고 빠른 세팅</div>
+          <div class="h-title">우리집 냉장고 타입을<br>골라주세요</div>
+          <div class="h-sub">자주 먹는 스타일을 고르면 기본 재료를 알아서 채워드려요.</div>
+        </div>
+        <div class="scroll" style="padding-top:18px;">
+          <div class="type-card sel">
+            <div class="emoji">🍚</div>
+            <div><h3>집밥 기본형</h3><p>기본 반찬과 찌개를 자주 먹어요.</p></div>
+            <div class="check"></div>
+          </div>
+          <div class="type-card">
+            <div class="emoji">🍳</div>
+            <div><h3>간단 자취형</h3><p>간단하게 데워 먹거나 볶아 먹어요.</p></div>
+            <div class="check"></div>
+          </div>
+          <div class="type-card">
+            <div class="emoji">🧒</div>
+            <div><h3>아이 있는 집</h3><p>아이 반찬과 기본 재료를 자주 준비해요.</p></div>
+            <div class="check"></div>
+          </div>
+          <div class="type-card">
+            <div class="emoji">🥗</div>
+            <div><h3>다이어트 · 건강식</h3><p>단백질과 채소 위주로 먹어요.</p></div>
+            <div class="check"></div>
+          </div>
+        </div>
+        <div class="cta-wrap"><button class="cta">다음</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 2 ============ -->
+  <div class="frame-wrap">
+    <div class="frame-label"><span class="star">★</span> 2 · 빠른 세팅 (핵심 차별점)</div>
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span class="dots">🔋 📶</span></div>
+      <div class="screen">
+        <div style="padding:14px 20px 2px;">
+          <div class="step-dots" style="margin-bottom:18px;"><i></i><i class="on"></i><i></i></div>
+          <div class="eyebrow">집밥 기본형</div>
+          <div class="h-title">우리집에 있는 재료만<br>남겨주세요</div>
+          <div class="h-sub">없는 재료는 체크를 해제하세요. 나중에 언제든 바꿀 수 있어요.</div>
+        </div>
+        <div class="scroll" style="padding-top:14px;">
+          <div class="selbar">
+            <button class="active">전체 선택</button>
+            <button>전체 해제</button>
+          </div>
+          <div class="cat">
+            <div class="cat-head"><div class="name">단백질 <b>2/3</b></div><div class="fold">⌄</div></div>
+            <div class="chips">
+              <div class="chip on"><span class="box"></span>계란</div>
+              <div class="chip on"><span class="box"></span>두부</div>
+              <div class="chip"><span class="box"></span>돼지고기</div>
+              <div class="chip"><span class="box"></span>참치캔</div>
+            </div>
+          </div>
+          <div class="cat">
+            <div class="cat-head"><div class="name">채소 <b>3/5</b></div><div class="fold">⌄</div></div>
+            <div class="chips">
+              <div class="chip on"><span class="box"></span>대파</div>
+              <div class="chip on"><span class="box"></span>양파</div>
+              <div class="chip on"><span class="box"></span>마늘</div>
+              <div class="chip"><span class="box"></span>감자</div>
+              <div class="chip"><span class="box"></span>당근</div>
+            </div>
+          </div>
+          <div class="cat">
+            <div class="cat-head"><div class="name">양념 · 소스 <b>4/4</b></div><div class="fold">⌄</div></div>
+            <div class="chips">
+              <div class="chip on"><span class="box"></span>간장</div>
+              <div class="chip on"><span class="box"></span>고추장</div>
+              <div class="chip on"><span class="box"></span>된장</div>
+              <div class="chip on"><span class="box"></span>참기름</div>
+            </div>
+          </div>
+        </div>
+        <div class="cta-wrap"><button class="cta">9개 재료로 냉장고 만들기</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 3 ============ -->
+  <div class="frame-wrap">
+    <div class="frame-label">3 · 냉장고 식재료 목록</div>
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span class="dots">🔋 📶</span></div>
+      <div class="screen">
+        <div class="topbar"><h2>냉장고</h2><span style="font-size:22px;">⚙️</span></div>
+        <div style="padding:0 20px;">
+          <div class="search">🔍 식재료 검색</div>
+          <div class="stor-tabs">
+            <div class="st on">전체</div>
+            <div class="st">냉장</div>
+            <div class="st">냉동</div>
+            <div class="st">실온</div>
+            <div class="st">양념</div>
+          </div>
+          <div class="sortline">
+            <div class="cnt">총 <b>12</b>개</div>
+            <div class="sort">유통기한 임박순 ⌄</div>
+          </div>
+        </div>
+        <div class="scroll" style="padding-top:0;">
+          <div class="item">
+            <div class="ic">🧈</div>
+            <div class="mid"><div class="nm">두부</div>
+              <div class="meta"><span class="stock vlow">거의 없음</span>· 냉장</div></div>
+            <div class="dday urgent">D-1<small>임박</small></div>
+          </div>
+          <div class="item">
+            <div class="ic">🌿</div>
+            <div class="mid"><div class="nm">대파</div>
+              <div class="meta"><span class="stock low">조금 남음</span>· 냉장</div></div>
+            <div class="dday warn">D-2<small>임박</small></div>
+          </div>
+          <div class="item">
+            <div class="ic">🥚</div>
+            <div class="mid"><div class="nm">계란</div>
+              <div class="meta"><span class="stock enough">충분함</span>· 냉장</div></div>
+            <div class="dday safe">D-9</div>
+          </div>
+          <div class="item">
+            <div class="ic">🧅</div>
+            <div class="mid"><div class="nm">양파</div>
+              <div class="meta"><span class="stock enough">충분함</span>· 실온</div></div>
+            <div class="dday safe">—</div>
+          </div>
+          <div class="item">
+            <div class="ic">🥩</div>
+            <div class="mid"><div class="nm">돼지고기</div>
+              <div class="meta"><span class="stock low">조금 남음</span>· 냉동</div></div>
+            <div class="dday safe">D-20</div>
+          </div>
+        </div>
+        <div class="fab">＋</div>
+        <div class="tabbar">
+          <div class="tab"><span class="ic">🏠</span>홈</div>
+          <div class="tab on"><span class="ic">🧊</span>냉장고</div>
+          <div class="tab"><span class="ic">🍳</span>요리추천</div>
+          <div class="tab"><span class="ic">🛒</span>장보기</div>
+          <div class="tab"><span class="ic">⚙️</span>설정</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 4 ============ -->
+  <div class="frame-wrap">
+    <div class="frame-label">4 · 요리추천 카드</div>
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span class="dots">🔋 📶</span></div>
+      <div class="screen">
+        <div class="topbar"><h2>요리추천</h2></div>
+        <div style="padding:2px 20px 0;">
+          <div class="filters">
+            <div class="fchip on">바로 가능 <span class="n">5</span></div>
+            <div class="fchip">조금만 사면 <span class="n">8</span></div>
+            <div class="fchip">임박 재료로 <span class="n">3</span></div>
+          </div>
+        </div>
+        <div class="scroll" style="padding-top:2px;">
+          <div class="rcard">
+            <div class="thumb">🍚<div class="badge">⏳ 임박 재료 활용</div></div>
+            <div class="body">
+              <h3>김치볶음밥</h3>
+              <div class="rmeta"><span>⏱ 15분</span><span>🔥 쉬움</span></div>
+              <div class="matchbar"><span class="have">✓ 가진 재료 4</span></div>
+              <div class="ready">✓ 지금 바로 만들 수 있어요</div>
+            </div>
+          </div>
+          <div class="rcard">
+            <div class="thumb">🍲</div>
+            <div class="body">
+              <h3>김치찌개</h3>
+              <div class="rmeta"><span>⏱ 25분</span><span>🔥 보통</span></div>
+              <div class="matchbar"><span class="have">✓ 가진 재료 5</span><span class="need">· 부족 1</span></div>
+              <div class="missing">🛒 부족한 재료 <b>돼지고기</b></div>
+            </div>
+          </div>
+          <div class="rcard">
+            <div class="thumb">🥘</div>
+            <div class="body">
+              <h3>두부김치</h3>
+              <div class="rmeta"><span>⏱ 12분</span><span>🔥 쉬움</span></div>
+              <div class="matchbar"><span class="have">✓ 가진 재료 3</span></div>
+              <div class="ready">✓ 지금 바로 만들 수 있어요</div>
+            </div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab"><span class="ic">🏠</span>홈</div>
+          <div class="tab"><span class="ic">🧊</span>냉장고</div>
+          <div class="tab on"><span class="ic">🍳</span>요리추천</div>
+          <div class="tab"><span class="ic">🛒</span>장보기</div>
+          <div class="tab"><span class="ic">⚙️</span>설정</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
