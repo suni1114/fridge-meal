@@ -73,7 +73,6 @@ export function RecipeListScreen() {
           return (
             <Pressable key={label} style={[s.tab, on && s.tabOn]} onPress={() => goTab(i)}>
               <Text style={[s.tabText, on && s.tabTextOn]}>{label}</Text>
-              <Text style={[s.tabCount, on && s.tabCountOn]}>{listFor(i).length}</Text>
             </Pressable>
           );
         })}
@@ -171,12 +170,10 @@ const s = StyleSheet.create({
   // 탭 — 전체 / 국·찌개 / 반찬 / 메인 / 간편 (5개, 가로 스크롤)
   tabsScroll: { flexGrow: 0, marginTop: 4, marginBottom: 6 },
   tabs: { flexDirection: 'row', gap: 7, paddingHorizontal: 20 },
-  tab: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 8, paddingHorizontal: 14, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.line },
+  tab: { alignItems: 'center', justifyContent: 'center', paddingVertical: 8, paddingHorizontal: 14, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.line },
   tabOn: { backgroundColor: colors.primary, borderColor: colors.primary },
   tabText: { fontFamily: font.bold, fontSize: 12, color: colors.inkAlt },
   tabTextOn: { color: colors.white },
-  tabCount: { fontFamily: font.bold, fontSize: 10.5, color: colors.inkAlt, backgroundColor: colors.fill, minWidth: 16, height: 16, lineHeight: 16, borderRadius: 8, paddingHorizontal: 4, textAlign: 'center', overflow: 'hidden' },
-  tabCountOn: { color: colors.primary, backgroundColor: colors.white },
 
   card: { backgroundColor: colors.surface, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.line, padding: 13 },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: 11 },
