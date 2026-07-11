@@ -12,7 +12,14 @@
       "대파",
       "양파",
       "청양고추"
-    ]
+    ],
+    "seasonings": [
+      "고춧가루",
+      "국간장",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%8F%BC%EC%A7%80%EA%B9%80%EC%B9%98%EC%B0%8C%EA%B0%9C&order=reco&page=1"
   },
   {
     "menuId": "stew-02",
@@ -26,7 +33,14 @@
       "두부",
       "대파",
       "양파"
-    ]
+    ],
+    "seasonings": [
+      "고춧가루",
+      "국간장",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%B0%B8%EC%B9%98%EA%B9%80%EC%B9%98%EC%B0%8C%EA%B0%9C&order=reco&page=1"
   },
   {
     "menuId": "stew-03",
@@ -40,7 +54,14 @@
       "두부",
       "대파",
       "양파"
-    ]
+    ],
+    "seasonings": [
+      "고춧가루",
+      "국간장",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%BD%81%EC%B9%98%EA%B9%80%EC%B9%98%EC%B0%8C%EA%B0%9C&order=reco&page=1"
   },
   {
     "menuId": "stew-04",
@@ -54,7 +75,14 @@
       "두부",
       "대파",
       "양파"
-    ]
+    ],
+    "seasonings": [
+      "고춧가루",
+      "국간장",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%8A%A4%ED%8C%B8%EA%B9%80%EC%B9%98%EC%B0%8C%EA%B0%9C&order=reco&page=1"
   },
   {
     "menuId": "stew-05",
@@ -70,7 +98,12 @@
       "감자",
       "버섯",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "다진마늘",
+      "고춧가루"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%90%9C%EC%9E%A5%EC%B0%8C%EA%B0%9C&order=reco&page=1"
   },
   {
     "menuId": "stew-06",
@@ -85,7 +118,12 @@
       "애호박",
       "양파",
       "버섯"
-    ]
+    ],
+    "seasonings": [
+      "다진마늘",
+      "고춧가루"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%B0%A8%EB%8F%8C%EB%90%9C%EC%9E%A5%EC%B0%8C%EA%B0%9C&order=reco&page=1"
   },
   {
     "menuId": "stew-07",
@@ -100,7 +138,14 @@
       "바지락",
       "대파",
       "양파"
-    ]
+    ],
+    "seasonings": [
+      "고춧가루",
+      "국간장",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%88%9C%EB%91%90%EB%B6%80%EC%B0%8C%EA%B0%9C&order=reco&page=1"
   },
   {
     "menuId": "stew-08",
@@ -115,7 +160,14 @@
       "대파",
       "양파",
       "청양고추"
-    ]
+    ],
+    "seasonings": [
+      "고춧가루",
+      "국간장",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%ED%95%B4%EB%AC%BC%EC%88%9C%EB%91%90%EB%B6%80%EC%B0%8C%EA%B0%9C&order=reco&page=1"
   },
   {
     "menuId": "stew-09",
@@ -129,7 +181,14 @@
       "계란",
       "대파",
       "양파"
-    ]
+    ],
+    "seasonings": [
+      "고춧가루",
+      "국간장",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%B0%94%EC%A7%80%EB%9D%BD%EC%88%9C%EB%91%90%EB%B6%80%EC%B0%8C%EA%B0%9C&order=reco&page=1"
   },
   {
     "menuId": "stew-10",
@@ -144,7 +203,13 @@
       "애호박",
       "양파",
       "두부"
-    ]
+    ],
+    "seasonings": [
+      "고춧가루",
+      "다진마늘",
+      "국간장"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B3%A0%EC%B6%94%EC%9E%A5%EC%B0%8C%EA%B0%9C&order=reco&page=1"
   },
   {
     "menuId": "stew-11",
@@ -159,7 +224,12 @@
       "애호박",
       "양파",
       "버섯"
-    ]
+    ],
+    "seasonings": [
+      "된장",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%B2%AD%EA%B5%AD%EC%9E%A5%EC%B0%8C%EA%B0%9C&order=reco&page=1"
   },
   {
     "menuId": "stew-12",
@@ -173,7 +243,13 @@
       "돼지고기",
       "대파",
       "양파"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "다진마늘",
+      "고춧가루"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%B9%84%EC%A7%80%EC%B0%8C%EA%B0%9C&order=reco&page=1"
   },
   {
     "menuId": "stew-13",
@@ -189,7 +265,14 @@
       "두부",
       "대파",
       "치즈"
-    ]
+    ],
+    "seasonings": [
+      "고추장",
+      "고춧가루",
+      "다진마늘",
+      "간장"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%B6%80%EB%8C%80%EC%B0%8C%EA%B0%9C&order=reco&page=1"
   },
   {
     "menuId": "stew-14",
@@ -203,7 +286,13 @@
       "두부",
       "대파",
       "콩나물"
-    ]
+    ],
+    "seasonings": [
+      "고춧가루",
+      "국간장",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%8F%99%ED%83%9C%EC%B0%8C%EA%B0%9C&order=reco&page=1"
   },
   {
     "menuId": "stew-15",
@@ -217,7 +306,13 @@
       "대파",
       "애호박",
       "두부"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%BD%83%EA%B2%8C%ED%83%95&order=reco&page=1"
   },
   {
     "menuId": "stew-16",
@@ -232,7 +327,14 @@
       "대파",
       "미나리",
       "두부"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "다진마늘",
+      "고춧가루"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%A7%A4%EC%9A%B4%ED%83%95&order=reco&page=1"
   },
   {
     "menuId": "stew-17",
@@ -246,7 +348,13 @@
       "대파",
       "곤약",
       "버섯"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%96%B4%EB%AC%B5%ED%83%95&order=reco&page=1"
   },
   {
     "menuId": "stew-18",
@@ -260,7 +368,13 @@
       "무",
       "대파",
       "두부"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "참기름",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%B6%81%EC%97%87%EA%B5%AD&order=reco&page=1"
   },
   {
     "menuId": "stew-19",
@@ -273,7 +387,13 @@
     "subIngredients": [
       "대파",
       "버섯"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%86%8C%EA%B3%A0%EA%B8%B0%EB%AC%B4%EA%B5%AD&order=reco&page=1"
   },
   {
     "menuId": "stew-20",
@@ -286,7 +406,13 @@
       "소고기",
       "참치",
       "조개"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "참기름",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%AF%B8%EC%97%AD%EA%B5%AD&order=reco&page=1"
   },
   {
     "menuId": "stew-21",
@@ -298,7 +424,13 @@
     ],
     "subIngredients": [
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "참기름",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%86%8C%EA%B3%A0%EA%B8%B0%EB%AF%B8%EC%97%AD%EA%B5%AD&order=reco&page=1"
   },
   {
     "menuId": "stew-22",
@@ -310,7 +442,13 @@
     ],
     "subIngredients": [
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "참기름",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%B0%B8%EC%B9%98%EB%AF%B8%EC%97%AD%EA%B5%AD&order=reco&page=1"
   },
   {
     "menuId": "stew-23",
@@ -323,7 +461,13 @@
     "subIngredients": [
       "버섯",
       "두부"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "참기름",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%93%A4%EA%B9%A8%EB%AF%B8%EC%97%AD%EA%B5%AD&order=reco&page=1"
   },
   {
     "menuId": "stew-24",
@@ -335,7 +479,14 @@
     "subIngredients": [
       "대파",
       "청양고추"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "참기름",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%BD%A9%EB%82%98%EB%AC%BC%EA%B5%AD&order=reco&page=1"
   },
   {
     "menuId": "stew-25",
@@ -348,7 +499,14 @@
     "subIngredients": [
       "대파",
       "두부"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "참기름",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B9%80%EC%B9%98%EC%BD%A9%EB%82%98%EB%AC%BC%EA%B5%AD&order=reco&page=1"
   },
   {
     "menuId": "stew-26",
@@ -360,7 +518,13 @@
     "subIngredients": [
       "대파",
       "양파"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B3%84%EB%9E%80%EA%B5%AD&order=reco&page=1"
   },
   {
     "menuId": "stew-27",
@@ -373,7 +537,13 @@
       "계란",
       "대파",
       "김가루"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%96%A1%EA%B5%AD&order=reco&page=1"
   },
   {
     "menuId": "stew-28",
@@ -387,7 +557,13 @@
       "계란",
       "대파",
       "김가루"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%96%A1%EB%A7%8C%EB%91%A3%EA%B5%AD&order=reco&page=1"
   },
   {
     "menuId": "stew-29",
@@ -400,7 +576,13 @@
       "계란",
       "대파",
       "떡국떡"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%A7%8C%EB%91%A3%EA%B5%AD&order=reco&page=1"
   },
   {
     "menuId": "stew-30",
@@ -415,7 +597,14 @@
       "고사리",
       "버섯",
       "계란"
-    ]
+    ],
+    "seasonings": [
+      "고춧가루",
+      "국간장",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%9C%A1%EA%B0%9C%EC%9E%A5&order=reco&page=1"
   },
   {
     "menuId": "stew-31",
@@ -429,7 +618,12 @@
       "숙주",
       "고사리",
       "버섯"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%8B%AD%EA%B0%9C%EC%9E%A5&order=reco&page=1"
   },
   {
     "menuId": "stew-32",
@@ -443,7 +637,13 @@
       "대추",
       "마늘",
       "인삼"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%82%BC%EA%B3%84%ED%83%95&order=reco&page=1"
   },
   {
     "menuId": "stew-33",
@@ -456,7 +656,13 @@
       "무",
       "대파",
       "당면"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B0%88%EB%B9%84%ED%83%95&order=reco&page=1"
   },
   {
     "menuId": "stew-34",
@@ -469,7 +675,13 @@
     "subIngredients": [
       "소면",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%84%A4%EB%A0%81%ED%83%95&order=reco&page=1"
   },
   {
     "menuId": "stew-35",
@@ -482,7 +694,13 @@
     "subIngredients": [
       "대파",
       "소면"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B3%B0%ED%83%95&order=reco&page=1"
   },
   {
     "menuId": "stew-36",
@@ -496,7 +714,14 @@
       "우거지",
       "깻잎",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "된장",
+      "고춧가루",
+      "다진마늘",
+      "들깨가루"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B0%90%EC%9E%90%ED%83%95&order=reco&page=1"
   },
   {
     "menuId": "stew-37",
@@ -509,7 +734,13 @@
       "대파",
       "당면",
       "무"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%8B%AD%EA%B3%B0%ED%83%95&order=reco&page=1"
   },
   {
     "menuId": "stew-38",
@@ -522,7 +753,13 @@
     "subIngredients": [
       "두부",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%95%84%EC%9A%B1%EB%90%9C%EC%9E%A5%EA%B5%AD&order=reco&page=1"
   },
   {
     "menuId": "stew-39",
@@ -535,7 +772,13 @@
     "subIngredients": [
       "두부",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%8B%9C%EB%9E%98%EA%B8%B0%EB%90%9C%EC%9E%A5%EA%B5%AD&order=reco&page=1"
   },
   {
     "menuId": "stew-40",
@@ -548,7 +791,13 @@
     "subIngredients": [
       "두부",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%B0%B0%EC%B6%94%EB%90%9C%EC%9E%A5%EA%B5%AD&order=reco&page=1"
   },
   {
     "menuId": "stew-41",
@@ -561,7 +810,13 @@
     "subIngredients": [
       "두부",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%83%89%EC%9D%B4%EB%90%9C%EC%9E%A5%EA%B5%AD&order=reco&page=1"
   },
   {
     "menuId": "stew-42",
@@ -574,7 +829,13 @@
     "subIngredients": [
       "소고기",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%9A%B0%EA%B1%B0%EC%A7%80%EA%B5%AD&order=reco&page=1"
   },
   {
     "menuId": "stew-43",
@@ -587,7 +848,13 @@
     "subIngredients": [
       "대파",
       "청양고추"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%98%A4%EC%A7%95%EC%96%B4%EB%AC%B4%EA%B5%AD&order=reco&page=1"
   },
   {
     "menuId": "stew-44",
@@ -599,7 +866,13 @@
     "subIngredients": [
       "대파",
       "청양고추"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%ED%99%8D%ED%95%A9%ED%83%95&order=reco&page=1"
   },
   {
     "menuId": "stew-45",
@@ -612,7 +885,13 @@
       "무",
       "대파",
       "청양고추"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%A1%B0%EA%B0%9C%ED%83%95&order=reco&page=1"
   },
   {
     "menuId": "stew-46",
@@ -625,7 +904,13 @@
     "subIngredients": [
       "두부",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B5%B4%EA%B5%AD&order=reco&page=1"
   },
   {
     "menuId": "stew-47",
@@ -639,7 +924,14 @@
       "감자",
       "양파",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "고추장",
+      "고춧가루",
+      "간장",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%8F%BC%EC%A7%80%EA%B3%A0%EA%B8%B0%EC%A7%9C%EA%B8%80%EC%9D%B4&order=reco&page=1"
   },
   {
     "menuId": "stew-48",
@@ -653,7 +945,13 @@
       "두부",
       "양파",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "고춧가루",
+      "국간장",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%ED%96%84%EC%B0%8C%EA%B0%9C&order=reco&page=1"
   },
   {
     "menuId": "stew-49",
@@ -666,7 +964,13 @@
     "subIngredients": [
       "대파",
       "버섯"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%86%8C%EA%B3%A0%EA%B8%B0%EB%B0%B0%EC%B6%94%EA%B5%AD&order=reco&page=1"
   },
   {
     "menuId": "stew-50",
@@ -679,7 +983,13 @@
       "계란",
       "대파",
       "양파"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B0%90%EC%9E%90%EA%B5%AD&order=reco&page=1"
   },
   {
     "menuId": "side-01",
@@ -693,7 +1003,12 @@
       "당근",
       "양파",
       "햄"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B3%84%EB%9E%80%EB%A7%90%EC%9D%B4&order=reco&page=1"
   },
   {
     "menuId": "side-02",
@@ -706,7 +1021,12 @@
       "대파",
       "당근",
       "새우젓"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B3%84%EB%9E%80%EC%B0%9C&order=reco&page=1"
   },
   {
     "menuId": "side-03",
@@ -718,7 +1038,14 @@
     "subIngredients": [
       "꽈리고추",
       "마늘"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "설탕",
+      "맛술",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B3%84%EB%9E%80%EC%9E%A5%EC%A1%B0%EB%A6%BC&order=reco&page=1"
   },
   {
     "menuId": "side-04",
@@ -730,7 +1057,14 @@
     "subIngredients": [
       "꽈리고추",
       "마늘"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "설탕",
+      "맛술",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%A9%94%EC%B6%94%EB%A6%AC%EC%95%8C%EC%9E%A5%EC%A1%B0%EB%A6%BC&order=reco&page=1"
   },
   {
     "menuId": "side-05",
@@ -742,7 +1076,14 @@
     "subIngredients": [
       "대파",
       "양파"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "설탕",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%91%90%EB%B6%80%EC%A1%B0%EB%A6%BC&order=reco&page=1"
   },
   {
     "menuId": "side-06",
@@ -754,7 +1095,13 @@
     "subIngredients": [
       "대파",
       "양념장"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "식용유",
+      "간장"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%91%90%EB%B6%80%EB%B6%80%EC%B9%A8&order=reco&page=1"
   },
   {
     "menuId": "side-07",
@@ -767,7 +1114,14 @@
       "양파",
       "당근",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "다진마늘",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%96%B4%EB%AC%B5%EB%B3%B6%EC%9D%8C&order=reco&page=1"
   },
   {
     "menuId": "side-08",
@@ -780,7 +1134,15 @@
       "청양고추",
       "양파",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "다진마늘",
+      "참기름",
+      "식용유",
+      "고춧가루"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%A7%A4%EC%9A%B4%EC%96%B4%EB%AC%B5%EB%B3%B6%EC%9D%8C&order=reco&page=1"
   },
   {
     "menuId": "side-09",
@@ -793,7 +1155,14 @@
       "양파",
       "당근",
       "햄"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "다진마늘",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B0%90%EC%9E%90%EC%B1%84%EB%B3%B6%EC%9D%8C&order=reco&page=1"
   },
   {
     "menuId": "side-10",
@@ -805,7 +1174,14 @@
     "subIngredients": [
       "양파",
       "당근"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "설탕",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B0%90%EC%9E%90%EC%A1%B0%EB%A6%BC&order=reco&page=1"
   },
   {
     "menuId": "side-11",
@@ -817,7 +1193,14 @@
     "subIngredients": [
       "견과류",
       "꽈리고추"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "다진마늘",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%A9%B8%EC%B9%98%EB%B3%B6%EC%9D%8C&order=reco&page=1"
   },
   {
     "menuId": "side-12",
@@ -829,7 +1212,14 @@
     "subIngredients": [
       "견과류",
       "통깨"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "다진마늘",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%9E%94%EB%A9%B8%EC%B9%98%EB%B3%B6%EC%9D%8C&order=reco&page=1"
   },
   {
     "menuId": "side-13",
@@ -842,7 +1232,14 @@
     "subIngredients": [
       "견과류",
       "꽈리고추"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "다진마늘",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B3%A0%EC%B6%94%EC%9E%A5%EB%A9%B8%EC%B9%98%EB%B3%B6%EC%9D%8C&order=reco&page=1"
   },
   {
     "menuId": "side-14",
@@ -854,7 +1251,14 @@
     "subIngredients": [
       "마요네즈",
       "통깨"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "다진마늘",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%A7%84%EB%AF%B8%EC%B1%84%EB%B3%B6%EC%9D%8C&order=reco&page=1"
   },
   {
     "menuId": "side-15",
@@ -865,7 +1269,14 @@
     ],
     "subIngredients": [
       "통깨"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "다진마늘",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%AA%85%EC%97%BD%EC%B1%84%EB%B3%B6%EC%9D%8C&order=reco&page=1"
   },
   {
     "menuId": "side-16",
@@ -877,7 +1288,15 @@
     "subIngredients": [
       "대파",
       "당근"
-    ]
+    ],
+    "seasonings": [
+      "고춧가루",
+      "식초",
+      "설탕",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%BD%A9%EB%82%98%EB%AC%BC%EB%AC%B4%EC%B9%A8&order=reco&page=1"
   },
   {
     "menuId": "side-17",
@@ -889,7 +1308,15 @@
     "subIngredients": [
       "대파",
       "당근"
-    ]
+    ],
+    "seasonings": [
+      "고춧가루",
+      "식초",
+      "설탕",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%88%99%EC%A3%BC%EB%82%98%EB%AC%BC%EB%AC%B4%EC%B9%A8&order=reco&page=1"
   },
   {
     "menuId": "side-18",
@@ -901,7 +1328,14 @@
     "subIngredients": [
       "대파",
       "통깨"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "참기름",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%8B%9C%EA%B8%88%EC%B9%98%EB%82%98%EB%AC%BC&order=reco&page=1"
   },
   {
     "menuId": "side-19",
@@ -913,7 +1347,15 @@
     "subIngredients": [
       "양파",
       "부추"
-    ]
+    ],
+    "seasonings": [
+      "고춧가루",
+      "식초",
+      "설탕",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%98%A4%EC%9D%B4%EB%AC%B4%EC%B9%A8&order=reco&page=1"
   },
   {
     "menuId": "side-20",
@@ -926,7 +1368,12 @@
     "subIngredients": [
       "당근",
       "양파"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%98%A4%EC%9D%B4%EC%86%8C%EB%B0%95%EC%9D%B4&order=reco&page=1"
   },
   {
     "menuId": "side-21",
@@ -938,7 +1385,12 @@
     "subIngredients": [
       "대파",
       "통깨"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%AC%B4%EC%83%9D%EC%B1%84&order=reco&page=1"
   },
   {
     "menuId": "side-22",
@@ -950,7 +1402,14 @@
     "subIngredients": [
       "양파",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "다진마늘",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B0%80%EC%A7%80%EB%B3%B6%EC%9D%8C&order=reco&page=1"
   },
   {
     "menuId": "side-23",
@@ -962,7 +1421,14 @@
     "subIngredients": [
       "양파",
       "새우젓"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "다진마늘",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%95%A0%ED%98%B8%EB%B0%95%EB%B3%B6%EC%9D%8C&order=reco&page=1"
   },
   {
     "menuId": "side-24",
@@ -974,7 +1440,14 @@
     "subIngredients": [
       "양파",
       "당근"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "다진마늘",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%B2%84%EC%84%AF%EB%B3%B6%EC%9D%8C&order=reco&page=1"
   },
   {
     "menuId": "side-25",
@@ -987,7 +1460,14 @@
       "참치캔",
       "돼지고기",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "다진마늘",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B9%80%EC%B9%98%EB%B3%B6%EC%9D%8C&order=reco&page=1"
   },
   {
     "menuId": "side-26",
@@ -999,7 +1479,12 @@
     "subIngredients": [
       "양파",
       "당근"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B9%BB%EC%9E%8E%EC%9E%A5%EC%95%84%EC%B0%8C&order=reco&page=1"
   },
   {
     "menuId": "side-27",
@@ -1011,7 +1496,14 @@
     "subIngredients": [
       "건새우",
       "어묵"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "다진마늘",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%A7%88%EB%8A%98%EC%AB%91%EB%B3%B6%EC%9D%8C&order=reco&page=1"
   },
   {
     "menuId": "side-28",
@@ -1022,7 +1514,14 @@
     ],
     "subIngredients": [
       "통깨"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "설탕",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%97%B0%EA%B7%BC%EC%A1%B0%EB%A6%BC&order=reco&page=1"
   },
   {
     "menuId": "side-29",
@@ -1034,7 +1533,14 @@
     "subIngredients": [
       "당근",
       "통깨"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "설탕",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%9A%B0%EC%97%89%EC%A1%B0%EB%A6%BC&order=reco&page=1"
   },
   {
     "menuId": "side-30",
@@ -1047,7 +1553,14 @@
     "subIngredients": [
       "마늘",
       "통깨"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "다진마늘",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%BD%88%EB%A6%AC%EA%B3%A0%EC%B6%94%EB%A9%B8%EC%B9%98%EB%B3%B6%EC%9D%8C&order=reco&page=1"
   },
   {
     "menuId": "side-31",
@@ -1059,7 +1572,14 @@
     "subIngredients": [
       "계란",
       "꽈리고추"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "설탕",
+      "맛술",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%86%8C%EA%B3%A0%EA%B8%B0%EC%9E%A5%EC%A1%B0%EB%A6%BC&order=reco&page=1"
   },
   {
     "menuId": "side-32",
@@ -1071,7 +1591,14 @@
     "subIngredients": [
       "계란",
       "꽈리고추"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "설탕",
+      "맛술",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%8F%BC%EC%A7%80%EA%B3%A0%EA%B8%B0%EC%9E%A5%EC%A1%B0%EB%A6%BC&order=reco&page=1"
   },
   {
     "menuId": "side-33",
@@ -1083,7 +1610,14 @@
     "subIngredients": [
       "계란",
       "꽈리고추"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "설탕",
+      "맛술",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%8B%AD%EA%B0%80%EC%8A%B4%EC%82%B4%EC%9E%A5%EC%A1%B0%EB%A6%BC&order=reco&page=1"
   },
   {
     "menuId": "side-34",
@@ -1095,7 +1629,15 @@
     "subIngredients": [
       "대파",
       "통깨"
-    ]
+    ],
+    "seasonings": [
+      "고춧가루",
+      "식초",
+      "설탕",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B9%80%EB%AC%B4%EC%B9%A8&order=reco&page=1"
   },
   {
     "menuId": "side-35",
@@ -1107,7 +1649,15 @@
     "subIngredients": [
       "오이",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "고춧가루",
+      "식초",
+      "설탕",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%8F%84%EB%9D%BC%EC%A7%80%EB%AC%B4%EC%B9%A8&order=reco&page=1"
   },
   {
     "menuId": "side-36",
@@ -1119,7 +1669,14 @@
     "subIngredients": [
       "대파",
       "들깨가루"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "참기름",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B3%A0%EC%82%AC%EB%A6%AC%EB%82%98%EB%AC%BC&order=reco&page=1"
   },
   {
     "menuId": "side-37",
@@ -1131,7 +1688,15 @@
     "subIngredients": [
       "대파",
       "통깨"
-    ]
+    ],
+    "seasonings": [
+      "고춧가루",
+      "식초",
+      "설탕",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%B7%A8%EB%82%98%EB%AC%BC%EB%AC%B4%EC%B9%A8&order=reco&page=1"
   },
   {
     "menuId": "side-38",
@@ -1143,7 +1708,15 @@
     "subIngredients": [
       "두부",
       "참깨"
-    ]
+    ],
+    "seasonings": [
+      "고춧가루",
+      "식초",
+      "설탕",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%B8%8C%EB%A1%9C%EC%BD%9C%EB%A6%AC%EB%AC%B4%EC%B9%A8&order=reco&page=1"
   },
   {
     "menuId": "side-39",
@@ -1155,7 +1728,15 @@
     "subIngredients": [
       "무",
       "오이"
-    ]
+    ],
+    "seasonings": [
+      "고춧가루",
+      "식초",
+      "설탕",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%ED%8C%8C%EB%9E%98%EB%AC%B4%EC%B9%A8&order=reco&page=1"
   },
   {
     "menuId": "side-40",
@@ -1167,7 +1748,14 @@
     "subIngredients": [
       "양파",
       "당근"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "다진마늘",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%AF%B8%EC%97%AD%EC%A4%84%EA%B8%B0%EB%B3%B6%EC%9D%8C&order=reco&page=1"
   },
   {
     "menuId": "side-41",
@@ -1179,7 +1767,15 @@
     "subIngredients": [
       "청양고추",
       "마늘"
-    ]
+    ],
+    "seasonings": [
+      "고춧가루",
+      "식초",
+      "설탕",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%98%A4%EC%A7%95%EC%96%B4%EC%A0%93%EA%B0%88%EB%AC%B4%EC%B9%A8&order=reco&page=1"
   },
   {
     "menuId": "side-42",
@@ -1191,7 +1787,15 @@
     "subIngredients": [
       "고춧잎",
       "통깨"
-    ]
+    ],
+    "seasonings": [
+      "고춧가루",
+      "식초",
+      "설탕",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%AC%B4%EB%A7%90%EB%9E%AD%EC%9D%B4%EB%AC%B4%EC%B9%A8&order=reco&page=1"
   },
   {
     "menuId": "side-43",
@@ -1202,7 +1806,12 @@
     ],
     "subIngredients": [
       "통깨"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%BD%A9%EC%9E%90%EB%B0%98&order=reco&page=1"
   },
   {
     "menuId": "side-44",
@@ -1214,7 +1823,12 @@
     "subIngredients": [
       "대파",
       "햄"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B3%84%EB%9E%80%ED%9B%84%EB%9D%BC%EC%9D%B4&order=reco&page=1"
   },
   {
     "menuId": "side-45",
@@ -1227,7 +1841,14 @@
       "양파",
       "파프리카",
       "당근"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "다진마늘",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%86%8C%EC%8B%9C%EC%A7%80%EC%95%BC%EC%B1%84%EB%B3%B6%EC%9D%8C&order=reco&page=1"
   },
   {
     "menuId": "side-46",
@@ -1240,7 +1861,14 @@
     "subIngredients": [
       "양파",
       "당근"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "다진마늘",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%ED%96%84%EA%B0%90%EC%9E%90%EB%B3%B6%EC%9D%8C&order=reco&page=1"
   },
   {
     "menuId": "side-47",
@@ -1253,7 +1881,15 @@
     "subIngredients": [
       "양파",
       "옥수수콘"
-    ]
+    ],
+    "seasonings": [
+      "고춧가루",
+      "식초",
+      "설탕",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%B0%B8%EC%B9%98%EB%A7%88%EC%9A%94%EB%AC%B4%EC%B9%A8&order=reco&page=1"
   },
   {
     "menuId": "side-48",
@@ -1267,7 +1903,12 @@
       "양파",
       "당근",
       "오이"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%BD%98%EC%83%90%EB%9F%AC%EB%93%9C&order=reco&page=1"
   },
   {
     "menuId": "side-49",
@@ -1280,7 +1921,12 @@
       "당근",
       "오이",
       "마요네즈"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%96%91%EB%B0%B0%EC%B6%94%EC%83%90%EB%9F%AC%EB%93%9C&order=reco&page=1"
   },
   {
     "menuId": "side-50",
@@ -1292,7 +1938,9 @@
     "subIngredients": [
       "참기름",
       "소금"
-    ]
+    ],
+    "seasonings": [],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B9%80%EA%B5%AC%EC%9D%B4&order=reco&page=1"
   },
   {
     "menuId": "main-01",
@@ -1305,7 +1953,14 @@
       "양파",
       "대파",
       "양배추"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "다진마늘",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%A0%9C%EC%9C%A1%EB%B3%B6%EC%9D%8C&order=reco&page=1"
   },
   {
     "menuId": "main-02",
@@ -1319,7 +1974,15 @@
       "양파",
       "대파",
       "버섯"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "설탕",
+      "다진마늘",
+      "참기름",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B3%A0%EC%B6%94%EC%9E%A5%EB%8F%BC%EC%A7%80%EB%B6%88%EA%B3%A0%EA%B8%B0&order=reco&page=1"
   },
   {
     "menuId": "main-03",
@@ -1333,7 +1996,14 @@
       "양파",
       "대파",
       "버섯"
-    ]
+    ],
+    "seasonings": [
+      "설탕",
+      "다진마늘",
+      "참기름",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B0%84%EC%9E%A5%EB%8F%BC%EC%A7%80%EB%B6%88%EA%B3%A0%EA%B8%B0&order=reco&page=1"
   },
   {
     "menuId": "main-04",
@@ -1347,7 +2017,15 @@
       "대파",
       "버섯",
       "당면"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "설탕",
+      "다진마늘",
+      "참기름",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%86%8C%EB%B6%88%EA%B3%A0%EA%B8%B0&order=reco&page=1"
   },
   {
     "menuId": "main-05",
@@ -1361,7 +2039,15 @@
       "버섯",
       "양파",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "설탕",
+      "다진마늘",
+      "참기름",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%9A%9D%EB%B0%B0%EA%B8%B0%EB%B6%88%EA%B3%A0%EA%B8%B0&order=reco&page=1"
   },
   {
     "menuId": "main-06",
@@ -1375,7 +2061,15 @@
       "당근",
       "양파",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "고추장",
+      "고춧가루",
+      "간장",
+      "다진마늘",
+      "설탕"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%8B%AD%EB%B3%B6%EC%9D%8C%ED%83%95&order=reco&page=1"
   },
   {
     "menuId": "main-07",
@@ -1389,7 +2083,12 @@
       "고구마",
       "떡",
       "깻잎"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%8B%AD%EA%B0%88%EB%B9%84&order=reco&page=1"
   },
   {
     "menuId": "main-08",
@@ -1403,7 +2102,14 @@
       "감자",
       "당근",
       "양파"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "설탕",
+      "다진마늘",
+      "맛술"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%95%88%EB%8F%99%EC%B0%9C%EB%8B%AD&order=reco&page=1"
   },
   {
     "menuId": "main-09",
@@ -1417,7 +2123,14 @@
       "당근",
       "밤",
       "버섯"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "설탕",
+      "다진마늘",
+      "맛술"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%86%8C%EA%B0%88%EB%B9%84%EC%B0%9C&order=reco&page=1"
   },
   {
     "menuId": "main-10",
@@ -1430,7 +2143,14 @@
       "감자",
       "당근",
       "양파"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "설탕",
+      "다진마늘",
+      "맛술"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%8F%BC%EC%A7%80%EA%B0%88%EB%B9%84%EC%B0%9C&order=reco&page=1"
   },
   {
     "menuId": "main-11",
@@ -1443,7 +2163,14 @@
       "양파",
       "대파",
       "감자"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "설탕",
+      "다진마늘",
+      "맛술"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%93%B1%EA%B0%88%EB%B9%84%EC%B0%9C&order=reco&page=1"
   },
   {
     "menuId": "main-12",
@@ -1456,7 +2183,14 @@
       "배추",
       "마늘",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "된장",
+      "월계수잎",
+      "통후추",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%88%98%EC%9C%A1&order=reco&page=1"
   },
   {
     "menuId": "main-13",
@@ -1470,7 +2204,14 @@
       "무김치",
       "마늘",
       "고추"
-    ]
+    ],
+    "seasonings": [
+      "된장",
+      "월계수잎",
+      "통후추",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%B3%B4%EC%8C%88&order=reco&page=1"
   },
   {
     "menuId": "main-14",
@@ -1483,7 +2224,13 @@
       "마늘",
       "버섯",
       "쌈채소"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%82%BC%EA%B2%B9%EC%82%B4%EA%B5%AC%EC%9D%B4&order=reco&page=1"
   },
   {
     "menuId": "main-15",
@@ -1496,7 +2243,14 @@
       "숙주",
       "대파",
       "양파"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "다진마늘",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%8C%80%ED%8C%A8%EC%82%BC%EA%B2%B9%EC%82%B4%EB%B3%B6%EC%9D%8C&order=reco&page=1"
   },
   {
     "menuId": "main-16",
@@ -1510,7 +2264,15 @@
       "양파",
       "대파",
       "양배추"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "설탕",
+      "다진마늘",
+      "참기름",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%98%A4%EC%82%BC%EB%B6%88%EA%B3%A0%EA%B8%B0&order=reco&page=1"
   },
   {
     "menuId": "main-17",
@@ -1523,7 +2285,14 @@
       "양파",
       "대파",
       "양배추"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "다진마늘",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%A3%BC%EA%BE%B8%EB%AF%B8%EB%B3%B6%EC%9D%8C&order=reco&page=1"
   },
   {
     "menuId": "main-18",
@@ -1536,7 +2305,14 @@
       "양파",
       "대파",
       "콩나물"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "다진마늘",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%82%99%EC%A7%80%EB%B3%B6%EC%9D%8C&order=reco&page=1"
   },
   {
     "menuId": "main-19",
@@ -1549,7 +2325,14 @@
       "양파",
       "대파",
       "양배추"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "다진마늘",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%98%A4%EC%A7%95%EC%96%B4%EB%B3%B6%EC%9D%8C&order=reco&page=1"
   },
   {
     "menuId": "main-20",
@@ -1563,7 +2346,14 @@
       "대파",
       "양파",
       "감자"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "설탕",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B3%A0%EB%93%B1%EC%96%B4%EC%A1%B0%EB%A6%BC&order=reco&page=1"
   },
   {
     "menuId": "main-21",
@@ -1577,7 +2367,14 @@
       "감자",
       "대파",
       "양파"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "설탕",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B0%88%EC%B9%98%EC%A1%B0%EB%A6%BC&order=reco&page=1"
   },
   {
     "menuId": "main-22",
@@ -1590,7 +2387,14 @@
       "무",
       "대파",
       "양파"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "설탕",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%BD%94%EB%8B%A4%EB%A6%AC%EC%A1%B0%EB%A6%BC&order=reco&page=1"
   },
   {
     "menuId": "main-23",
@@ -1602,7 +2406,13 @@
     "subIngredients": [
       "레몬",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B3%A0%EB%93%B1%EC%96%B4%EA%B5%AC%EC%9D%B4&order=reco&page=1"
   },
   {
     "menuId": "main-24",
@@ -1614,7 +2424,13 @@
     "subIngredients": [
       "무",
       "레몬"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%82%BC%EC%B9%98%EA%B5%AC%EC%9D%B4&order=reco&page=1"
   },
   {
     "menuId": "main-25",
@@ -1626,7 +2442,13 @@
     "subIngredients": [
       "레몬",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B0%88%EC%B9%98%EA%B5%AC%EC%9D%B4&order=reco&page=1"
   },
   {
     "menuId": "main-26",
@@ -1638,7 +2460,13 @@
     "subIngredients": [
       "레몬",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%A1%B0%EA%B8%B0%EA%B5%AC%EC%9D%B4&order=reco&page=1"
   },
   {
     "menuId": "main-27",
@@ -1651,7 +2479,13 @@
       "양파",
       "버섯",
       "레몬"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%97%B0%EC%96%B4%EA%B5%AC%EC%9D%B4&order=reco&page=1"
   },
   {
     "menuId": "main-28",
@@ -1663,7 +2497,14 @@
     "subIngredients": [
       "견과류",
       "떡"
-    ]
+    ],
+    "seasonings": [
+      "고추장",
+      "케첩",
+      "올리고당",
+      "간장"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%8B%AD%EA%B0%95%EC%A0%95&order=reco&page=1"
   },
   {
     "menuId": "main-29",
@@ -1675,7 +2516,14 @@
     "subIngredients": [
       "떡",
       "땅콩"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "다진마늘",
+      "설탕",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%96%91%EB%85%90%EC%B9%98%ED%82%A8&order=reco&page=1"
   },
   {
     "menuId": "main-30",
@@ -1687,7 +2535,14 @@
     "subIngredients": [
       "마늘",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "다진마늘",
+      "설탕",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B0%84%EC%9E%A5%EC%B9%98%ED%82%A8&order=reco&page=1"
   },
   {
     "menuId": "main-31",
@@ -1700,7 +2555,12 @@
     "subIngredients": [
       "돼지고기",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%91%90%EB%B6%80%EA%B9%80%EC%B9%98&order=reco&page=1"
   },
   {
     "menuId": "main-32",
@@ -1713,7 +2573,15 @@
       "오이",
       "양파",
       "소면"
-    ]
+    ],
+    "seasonings": [
+      "고춧가루",
+      "식초",
+      "설탕",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B3%A8%EB%B1%85%EC%9D%B4%EB%AC%B4%EC%B9%A8&order=reco&page=1"
   },
   {
     "menuId": "main-33",
@@ -1727,7 +2595,13 @@
       "부추",
       "오징어",
       "새우"
-    ]
+    ],
+    "seasonings": [
+      "부침가루",
+      "소금",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%ED%95%B4%EB%AC%BC%ED%8C%8C%EC%A0%84&order=reco&page=1"
   },
   {
     "menuId": "main-34",
@@ -1740,7 +2614,12 @@
     "subIngredients": [
       "오징어",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B9%80%EC%B9%98%EC%A0%84&order=reco&page=1"
   },
   {
     "menuId": "main-35",
@@ -1753,7 +2632,12 @@
     "subIngredients": [
       "오징어",
       "양파"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%B6%80%EC%B6%94%EC%A0%84&order=reco&page=1"
   },
   {
     "menuId": "main-36",
@@ -1766,7 +2650,12 @@
     "subIngredients": [
       "해산물",
       "계란"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%ED%8C%8C%EC%A0%84&order=reco&page=1"
   },
   {
     "menuId": "main-37",
@@ -1778,7 +2667,13 @@
     "subIngredients": [
       "양파",
       "부추"
-    ]
+    ],
+    "seasonings": [
+      "부침가루",
+      "소금",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B0%90%EC%9E%90%EC%A0%84&order=reco&page=1"
   },
   {
     "menuId": "main-38",
@@ -1790,7 +2685,12 @@
     "subIngredients": [
       "계란",
       "부침가루"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%95%A0%ED%98%B8%EB%B0%95%EC%A0%84&order=reco&page=1"
   },
   {
     "menuId": "main-39",
@@ -1804,7 +2704,12 @@
       "당근",
       "양파",
       "계란"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%8F%99%EA%B7%B8%EB%9E%91%EB%95%A1&order=reco&page=1"
   },
   {
     "menuId": "main-40",
@@ -1816,7 +2721,12 @@
     "subIngredients": [
       "양파",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%96%A1%EA%B0%88%EB%B9%84&order=reco&page=1"
   },
   {
     "menuId": "main-41",
@@ -1829,7 +2739,14 @@
       "브로콜리",
       "양파",
       "파프리카"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "다진마늘",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%8B%AD%EA%B0%80%EC%8A%B4%EC%82%B4%EC%95%BC%EC%B1%84%EB%B3%B6%EC%9D%8C&order=reco&page=1"
   },
   {
     "menuId": "main-42",
@@ -1842,7 +2759,13 @@
       "부추",
       "양파",
       "버섯"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%ED%9B%88%EC%A0%9C%EC%98%A4%EB%A6%AC%EA%B5%AC%EC%9D%B4&order=reco&page=1"
   },
   {
     "menuId": "main-43",
@@ -1855,7 +2778,15 @@
       "양파",
       "대파",
       "부추"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "설탕",
+      "다진마늘",
+      "참기름",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%98%A4%EB%A6%AC%EB%B6%88%EA%B3%A0%EA%B8%B0&order=reco&page=1"
   },
   {
     "menuId": "main-44",
@@ -1868,7 +2799,12 @@
       "배추",
       "버섯",
       "숙주"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%83%A4%EB%B8%8C%EC%83%A4%EB%B8%8C&order=reco&page=1"
   },
   {
     "menuId": "main-45",
@@ -1882,7 +2818,12 @@
       "깻잎",
       "버섯",
       "숙주"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%B0%80%ED%91%80%EC%9C%A0%EB%82%98%EB%B2%A0&order=reco&page=1"
   },
   {
     "menuId": "main-46",
@@ -1895,7 +2836,12 @@
       "김치",
       "양파",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%8F%BC%EC%A7%80%EA%B3%A0%EA%B8%B0%EB%91%90%EB%A3%A8%EC%B9%98%EA%B8%B0&order=reco&page=1"
   },
   {
     "menuId": "main-47",
@@ -1909,7 +2855,14 @@
       "두부",
       "대파",
       "양파"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "설탕",
+      "다진마늘",
+      "맛술"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B9%80%EC%B9%98%EC%B0%9C&order=reco&page=1"
   },
   {
     "menuId": "main-48",
@@ -1922,7 +2875,13 @@
       "양파",
       "마늘",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%8F%BC%EC%A7%80%EA%B0%88%EB%B9%84%EA%B5%AC%EC%9D%B4&order=reco&page=1"
   },
   {
     "menuId": "main-49",
@@ -1934,7 +2893,13 @@
     "subIngredients": [
       "양파",
       "마늘"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=LA%EA%B0%88%EB%B9%84%EA%B5%AC%EC%9D%B4&order=reco&page=1"
   },
   {
     "menuId": "main-50",
@@ -1947,7 +2912,15 @@
       "부추",
       "양파",
       "오이"
-    ]
+    ],
+    "seasonings": [
+      "고춧가루",
+      "식초",
+      "설탕",
+      "다진마늘",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%BC%AC%EB%A7%89%EB%AC%B4%EC%B9%A8&order=reco&page=1"
   },
   {
     "menuId": "easy-01",
@@ -1961,7 +2934,13 @@
       "계란",
       "대파",
       "햄"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B9%80%EC%B9%98%EB%B3%B6%EC%9D%8C%EB%B0%A5&order=reco&page=1"
   },
   {
     "menuId": "easy-02",
@@ -1976,7 +2955,13 @@
       "계란",
       "대파",
       "김가루"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%B0%B8%EC%B9%98%EA%B9%80%EC%B9%98%EB%B3%B6%EC%9D%8C%EB%B0%A5&order=reco&page=1"
   },
   {
     "menuId": "easy-03",
@@ -1990,7 +2975,13 @@
     "subIngredients": [
       "계란",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%8A%A4%ED%8C%B8%EA%B9%80%EC%B9%98%EB%B3%B6%EC%9D%8C%EB%B0%A5&order=reco&page=1"
   },
   {
     "menuId": "easy-04",
@@ -2004,7 +2995,13 @@
       "대파",
       "당근",
       "햄"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B3%84%EB%9E%80%EB%B3%B6%EC%9D%8C%EB%B0%A5&order=reco&page=1"
   },
   {
     "menuId": "easy-05",
@@ -2018,7 +3015,13 @@
       "계란",
       "대파",
       "당근"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%83%88%EC%9A%B0%EB%B3%B6%EC%9D%8C%EB%B0%A5&order=reco&page=1"
   },
   {
     "menuId": "easy-06",
@@ -2032,7 +3035,13 @@
       "계란",
       "햄",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "참기름",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%95%BC%EC%B1%84%EB%B3%B6%EC%9D%8C%EB%B0%A5&order=reco&page=1"
   },
   {
     "menuId": "easy-07",
@@ -2047,7 +3056,12 @@
       "당근",
       "양파",
       "고기"
-    ]
+    ],
+    "seasonings": [
+      "카레가루",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%B9%B4%EB%A0%88%EB%9D%BC%EC%9D%B4%EC%8A%A4&order=reco&page=1"
   },
   {
     "menuId": "easy-08",
@@ -2061,7 +3075,13 @@
       "양파",
       "돼지고기",
       "감자"
-    ]
+    ],
+    "seasonings": [
+      "춘장",
+      "설탕",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%A7%9C%EC%9E%A5%EB%B0%A5&order=reco&page=1"
   },
   {
     "menuId": "easy-09",
@@ -2075,7 +3095,12 @@
       "양파",
       "당근",
       "햄"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%98%A4%EB%AF%80%EB%9D%BC%EC%9D%B4%EC%8A%A4&order=reco&page=1"
   },
   {
     "menuId": "easy-10",
@@ -2089,7 +3114,12 @@
       "계란",
       "고추장",
       "김가루"
-    ]
+    ],
+    "seasonings": [
+      "참기름",
+      "통깨"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%B9%84%EB%B9%94%EB%B0%A5&order=reco&page=1"
   },
   {
     "menuId": "easy-11",
@@ -2102,7 +3132,14 @@
     "subIngredients": [
       "소고기",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "참기름",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%BD%A9%EB%82%98%EB%AC%BC%EB%B0%A5&order=reco&page=1"
   },
   {
     "menuId": "easy-12",
@@ -2116,7 +3153,14 @@
       "계란",
       "김가루",
       "양파"
-    ]
+    ],
+    "seasonings": [
+      "마요네즈",
+      "간장",
+      "설탕",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%B0%B8%EC%B9%98%EB%A7%88%EC%9A%94%EB%8D%AE%EB%B0%A5&order=reco&page=1"
   },
   {
     "menuId": "easy-13",
@@ -2130,7 +3174,14 @@
       "계란",
       "김가루",
       "양파"
-    ]
+    ],
+    "seasonings": [
+      "마요네즈",
+      "간장",
+      "설탕",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%8A%A4%ED%8C%B8%EB%A7%88%EC%9A%94%EB%8D%AE%EB%B0%A5&order=reco&page=1"
   },
   {
     "menuId": "easy-14",
@@ -2143,7 +3194,15 @@
     "subIngredients": [
       "양파",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "고추장",
+      "고춧가루",
+      "간장",
+      "다진마늘",
+      "설탕"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%A0%9C%EC%9C%A1%EB%8D%AE%EB%B0%A5&order=reco&page=1"
   },
   {
     "menuId": "easy-15",
@@ -2157,7 +3216,15 @@
       "양파",
       "버섯",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "설탕",
+      "다진마늘",
+      "참기름",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%B6%88%EA%B3%A0%EA%B8%B0%EB%8D%AE%EB%B0%A5&order=reco&page=1"
   },
   {
     "menuId": "easy-16",
@@ -2171,7 +3238,13 @@
       "양파",
       "양배추",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "설탕",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%98%A4%EC%A7%95%EC%96%B4%EB%8D%AE%EB%B0%A5&order=reco&page=1"
   },
   {
     "menuId": "easy-17",
@@ -2185,7 +3258,15 @@
       "계란",
       "김가루",
       "양파"
-    ]
+    ],
+    "seasonings": [
+      "마요네즈",
+      "간장",
+      "다진마늘",
+      "설탕",
+      "식용유"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%B9%98%ED%82%A8%EB%A7%88%EC%9A%94%EB%8D%AE%EB%B0%A5&order=reco&page=1"
   },
   {
     "menuId": "easy-18",
@@ -2199,7 +3280,14 @@
       "계란",
       "버터",
       "김가루"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "설탕",
+      "맛술",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%9E%A5%EC%A1%B0%EB%A6%BC%EB%B2%84%ED%84%B0%EB%B0%A5&order=reco&page=1"
   },
   {
     "menuId": "easy-19",
@@ -2213,7 +3301,12 @@
       "간장",
       "참기름",
       "김가루"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B3%84%EB%9E%80%EA%B0%84%EC%9E%A5%EB%B0%A5&order=reco&page=1"
   },
   {
     "menuId": "easy-20",
@@ -2227,7 +3320,13 @@
     "subIngredients": [
       "김가루",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "소금",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%B2%84%ED%84%B0%EA%B0%84%EC%9E%A5%EA%B3%84%EB%9E%80%EB%B0%A5&order=reco&page=1"
   },
   {
     "menuId": "easy-21",
@@ -2242,7 +3341,13 @@
       "계란",
       "햄",
       "당근"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "참기름",
+      "통깨"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B9%80%EB%B0%A5&order=reco&page=1"
   },
   {
     "menuId": "easy-22",
@@ -2257,7 +3362,13 @@
       "단무지",
       "계란",
       "깻잎"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "참기름",
+      "통깨"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%B0%B8%EC%B9%98%EA%B9%80%EB%B0%A5&order=reco&page=1"
   },
   {
     "menuId": "easy-23",
@@ -2272,7 +3383,13 @@
       "햄",
       "단무지",
       "계란"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "참기름",
+      "통깨"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%B9%98%EC%A6%88%EA%B9%80%EB%B0%A5&order=reco&page=1"
   },
   {
     "menuId": "easy-24",
@@ -2287,7 +3404,13 @@
       "계란",
       "단무지",
       "당근"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "참기름",
+      "통깨"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%8A%A4%ED%8C%B8%EA%B9%80%EB%B0%A5&order=reco&page=1"
   },
   {
     "menuId": "easy-25",
@@ -2301,7 +3424,12 @@
       "참치",
       "계란",
       "오이"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%9C%A0%EB%B6%80%EC%B4%88%EB%B0%A5&order=reco&page=1"
   },
   {
     "menuId": "easy-26",
@@ -2314,7 +3442,14 @@
       "계란",
       "애호박",
       "김가루"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "식초",
+      "설탕",
+      "고추장"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%9E%94%EC%B9%98%EA%B5%AD%EC%88%98&order=reco&page=1"
   },
   {
     "menuId": "easy-27",
@@ -2328,7 +3463,13 @@
       "오이",
       "계란",
       "김치"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "식초",
+      "설탕"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%B9%84%EB%B9%94%EA%B5%AD%EC%88%98&order=reco&page=1"
   },
   {
     "menuId": "easy-28",
@@ -2341,7 +3482,14 @@
     "subIngredients": [
       "오이",
       "계란"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "식초",
+      "설탕",
+      "고추장"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%97%B4%EB%AC%B4%EA%B5%AD%EC%88%98&order=reco&page=1"
   },
   {
     "menuId": "easy-29",
@@ -2354,7 +3502,13 @@
       "계란",
       "오이",
       "무절임"
-    ]
+    ],
+    "seasonings": [
+      "냉면육수",
+      "식초",
+      "겨자"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%83%89%EB%A9%B4&order=reco&page=1"
   },
   {
     "menuId": "easy-30",
@@ -2367,7 +3521,13 @@
     "subIngredients": [
       "계란",
       "오이"
-    ]
+    ],
+    "seasonings": [
+      "냉면육수",
+      "식초",
+      "겨자"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%B9%84%EB%B9%94%EB%83%89%EB%A9%B4&order=reco&page=1"
   },
   {
     "menuId": "easy-31",
@@ -2380,7 +3540,13 @@
       "감자",
       "애호박",
       "바지락"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%B9%BC%EA%B5%AD%EC%88%98&order=reco&page=1"
   },
   {
     "menuId": "easy-32",
@@ -2393,7 +3559,13 @@
       "감자",
       "애호박",
       "양파"
-    ]
+    ],
+    "seasonings": [
+      "국간장",
+      "소금",
+      "다진마늘"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%88%98%EC%A0%9C%EB%B9%84&order=reco&page=1"
   },
   {
     "menuId": "easy-33",
@@ -2405,7 +3577,11 @@
     "subIngredients": [
       "계란",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "라면스프"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%9D%BC%EB%A9%B4&order=reco&page=1"
   },
   {
     "menuId": "easy-34",
@@ -2418,7 +3594,11 @@
     "subIngredients": [
       "계란",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "라면스프"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%96%A1%EB%9D%BC%EB%A9%B4&order=reco&page=1"
   },
   {
     "menuId": "easy-35",
@@ -2431,7 +3611,11 @@
     "subIngredients": [
       "계란",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "라면스프"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B9%80%EC%B9%98%EB%9D%BC%EB%A9%B4&order=reco&page=1"
   },
   {
     "menuId": "easy-36",
@@ -2444,7 +3628,11 @@
     "subIngredients": [
       "계란",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "라면스프"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%A7%8C%EB%91%90%EB%9D%BC%EB%A9%B4&order=reco&page=1"
   },
   {
     "menuId": "easy-37",
@@ -2458,7 +3646,14 @@
       "대파",
       "양배추",
       "계란"
-    ]
+    ],
+    "seasonings": [
+      "고추장",
+      "고춧가루",
+      "설탕",
+      "간장"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%96%A1%EB%B3%B6%EC%9D%B4&order=reco&page=1"
   },
   {
     "menuId": "easy-38",
@@ -2472,7 +3667,14 @@
       "어묵",
       "계란",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "고추장",
+      "고춧가루",
+      "설탕",
+      "간장"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%9D%BC%EB%B3%B6%EC%9D%B4&order=reco&page=1"
   },
   {
     "menuId": "easy-39",
@@ -2485,7 +3687,14 @@
       "오이",
       "양배추",
       "계란"
-    ]
+    ],
+    "seasonings": [
+      "고추장",
+      "식초",
+      "설탕",
+      "참기름"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%AB%84%EB%A9%B4&order=reco&page=1"
   },
   {
     "menuId": "easy-40",
@@ -2499,7 +3708,12 @@
       "오이",
       "양배추",
       "당근"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "식초"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%B9%84%EB%B9%94%EB%A7%8C%EB%91%90&order=reco&page=1"
   },
   {
     "menuId": "easy-41",
@@ -2511,7 +3725,12 @@
     "subIngredients": [
       "양념장",
       "대파"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "식초"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B5%B0%EB%A7%8C%EB%91%90&order=reco&page=1"
   },
   {
     "menuId": "easy-42",
@@ -2523,7 +3742,12 @@
     "subIngredients": [
       "대파",
       "초간장"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "식초"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%AC%BC%EB%A7%8C%EB%91%90&order=reco&page=1"
   },
   {
     "menuId": "easy-43",
@@ -2536,7 +3760,12 @@
       "계란",
       "대파",
       "떡"
-    ]
+    ],
+    "seasonings": [
+      "간장",
+      "식초"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EB%A7%8C%EB%91%90%EA%B5%AD&order=reco&page=1"
   },
   {
     "menuId": "easy-44",
@@ -2550,7 +3779,13 @@
       "햄",
       "치즈",
       "양상추"
-    ]
+    ],
+    "seasonings": [
+      "마요네즈",
+      "소금",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%83%8C%EB%93%9C%EC%9C%84%EC%B9%98&order=reco&page=1"
   },
   {
     "menuId": "easy-45",
@@ -2563,7 +3798,12 @@
     "subIngredients": [
       "마요네즈",
       "오이"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B3%84%EB%9E%80%EC%83%8C%EB%93%9C%EC%9C%84%EC%B9%98&order=reco&page=1"
   },
   {
     "menuId": "easy-46",
@@ -2577,7 +3817,12 @@
       "마요네즈",
       "양파",
       "오이"
-    ]
+    ],
+    "seasonings": [
+      "소금",
+      "후추"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%B0%B8%EC%B9%98%EC%83%8C%EB%93%9C%EC%9C%84%EC%B9%98&order=reco&page=1"
   },
   {
     "menuId": "easy-47",
@@ -2591,7 +3836,13 @@
       "양배추",
       "당근",
       "햄"
-    ]
+    ],
+    "seasonings": [
+      "버터",
+      "설탕",
+      "케첩"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EA%B8%B8%EA%B1%B0%EB%A6%AC%ED%86%A0%EC%8A%A4%ED%8A%B8&order=reco&page=1"
   },
   {
     "menuId": "easy-48",
@@ -2605,7 +3856,11 @@
     "subIngredients": [
       "버터",
       "설탕"
-    ]
+    ],
+    "seasonings": [
+      "케첩"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%ED%94%84%EB%A0%8C%EC%B9%98%ED%86%A0%EC%8A%A4%ED%8A%B8&order=reco&page=1"
   },
   {
     "menuId": "easy-49",
@@ -2619,7 +3874,13 @@
       "참치",
       "멸치",
       "단무지"
-    ]
+    ],
+    "seasonings": [
+      "참기름",
+      "소금",
+      "통깨"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%A3%BC%EB%A8%B9%EB%B0%A5&order=reco&page=1"
   },
   {
     "menuId": "easy-50",
@@ -2633,6 +3894,12 @@
       "김가루",
       "마요네즈",
       "단무지"
-    ]
+    ],
+    "seasonings": [
+      "참기름",
+      "소금",
+      "통깨"
+    ],
+    "recommendUrl": "https://www.10000recipe.com/recipe/list.html?q=%EC%B0%B8%EC%B9%98%EC%A3%BC%EB%A8%B9%EB%B0%A5&order=reco&page=1"
   }
 ]

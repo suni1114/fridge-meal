@@ -28,6 +28,7 @@ export function AdminScreen() {
   const [rCat, setRCat] = useState<RecipeCategory>('국·찌개');
   const [rMain, setRMain] = useState('');
   const [rSub, setRSub] = useState('');
+  const [rSeason, setRSeason] = useState('');
   const [rTime, setRTime] = useState('');
   const [rUrl, setRUrl] = useState('');
   const userRecipes = recipes.filter((r) => r.menuId.startsWith('user-'));
@@ -35,8 +36,9 @@ export function AdminScreen() {
     const name = rName.trim(); const main = splitList(rMain);
     if (!name || main.length === 0) return;
     addRecipe({ menuId: slug(name), name, category: rCat, mainIngredients: main, subIngredients: splitList(rSub),
+      seasonings: splitList(rSeason),
       cookTimeMinutes: rTime ? (Number(rTime) || undefined) : undefined, recommendUrl: rUrl.trim() || undefined });
-    setRName(''); setRMain(''); setRSub(''); setRTime(''); setRUrl('');
+    setRName(''); setRMain(''); setRSub(''); setRSeason(''); setRTime(''); setRUrl('');
   };
 
   const [iName, setIName] = useState('');
@@ -63,8 +65,9 @@ export function AdminScreen() {
             <View style={s.chipRow}>{RECIPE_CATEGORIES.map((c) => (<Pressable key={c} style={[s.chip, rCat === c && s.chipOn]} onPress={() => setRCat(c)}><Text style={[s.chipText, rCat === c && s.chipTextOn]}>{c}</Text></Pressable>))}</View>
             <Field label="메인 재료 (쉼표, 필수)" value={rMain} onChange={setRMain} placeholder="김치, 돼지고기" />
             <Field label="서브 재료 (쉼표)" value={rSub} onChange={setRSub} placeholder="두부, 대파, 양파" />
+            <Field label="양념 (쉼표, 매칭 제외)" value={rSeason} onChange={setRSeason} placeholder="고춧가루, 국간장, 다진마늘" />
             <Field label="조리시간(분)" value={rTime} onChange={setRTime} placeholder="25" keyboardType="numeric" />
-            <Field label="추천레시피 링크(URL)" value={rUrl} onChange={setRUrl} placeholder="https://..." />
+            <Field label="추천레시피 링크(URL)" value={rUrl} onChange={setRUrl} placeholder="https://www.10000recipe.com/..." />
             <AppButton label="요리 추가" icon="plus" onPress={submitRecipe} style={{ marginTop: 16 }} />
             <Text style={s.listHead}>추가한 요리 {userRecipes.length}개</Text>
             {userRecipes.map((r) => (

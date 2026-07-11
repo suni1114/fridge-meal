@@ -25,17 +25,18 @@ export function RecipeDetailScreen({ recipeId }: { recipeId: string }) {
   const onYoutube = () => Linking.openURL(`https://www.youtube.com/results?search_query=${encodeURIComponent(recipe.name + ' 레시피')}`);
   const onRecommend = () => recipe.recommendUrl && Linking.openURL(recipe.recommendUrl);
 
-  const Group = ({ title, items }: { title: string; items: string[] }) =>
+  // plain=양념: 보유 가정이라 가진/부족 구분 없이 회색 칩으로만 보여준다.
+  const Group = ({ title, items, plain }: { title: string; items: string[]; plain?: boolean }) =>
     items.length === 0 ? null : (
       <View style={{ marginTop: 16 }}>
         <Text style={s.groupTitle}>{title}</Text>
         <View style={s.chipWrap}>
           {items.map((name) => {
-            const owned = has(name);
+            const owned = !plain && has(name);
             return (
-              <View key={name} style={[s.ingChip, owned ? s.ingHave : s.ingMiss]}>
+              <View key={name} style={[s.ingChip, plain ? s.ingPlain : owned ? s.ingHave : s.ingMiss]}>
                 {owned && <Icon name="check-circle" size={12} color={colors.primary} weight="fill" />}
-                <Text style={[s.ingText, owned ? s.ingTextHave : s.ingTextMiss]}>{name}</Text>
+                <Text style={[s.ingText, plain ? s.ingTextPlain : owned ? s.ingTextHave : s.ingTextMiss]}>{name}</Text>
               </View>
             );
           })}
@@ -66,12 +67,14 @@ export function RecipeDetailScreen({ recipeId }: { recipeId: string }) {
           <Text style={s.haveText}>메인 재료 {m.matchedMain}/{m.totalMain} 보유{m.recommendable && m.missingSub.length > 0 ? ` · 서브 ${m.missingSub.length}개 더 필요` : ''}</Text>
           <Group title="메인 재료" items={recipe.mainIngredients} />
           <Group title="서브 재료" items={recipe.subIngredients} />
+          <Group title="양념" items={recipe.seasonings ?? []} plain />
+          {!!recipe.seasonings?.length && <Text style={s.seasonNote}>양념은 기본으로 갖고 있다고 보고 부족 재료에서 빼요.</Text>}
         </View>
       </ScrollView>
 
       <View style={[s.footer, { paddingBottom: 16 + insets.bottom }]}>
         <View style={s.footerBtns}>
-          {!!recipe.recommendUrl && <AppButton label="추천레시피" icon="heart" onPress={onRecommend} style={{ flex: 1 }} />}
+          {!!recipe.recommendUrl && <AppButton label="만개의레시피" icon="fork-knife" onPress={onRecommend} style={{ flex: 1 }} />}
           <AppButton label="유튜브 레시피" variant="ghost" onPress={onYoutube} style={{ flex: 1 }} />
         </View>
         {missingAll.length > 0 && (
@@ -101,9 +104,12 @@ const s = StyleSheet.create({
   ingChip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 11, paddingVertical: 6, borderRadius: radius.pill, borderWidth: 1 },
   ingHave: { backgroundColor: colors.primaryBg, borderColor: colors.primaryBg },
   ingMiss: { backgroundColor: colors.surface, borderColor: colors.line },
+  ingPlain: { backgroundColor: colors.fill, borderColor: colors.fill },
   ingText: { fontFamily: font.bold, fontSize: 13 },
   ingTextHave: { color: colors.primaryDark },
   ingTextMiss: { color: colors.inkAlt },
+  ingTextPlain: { color: colors.inkAsst },
+  seasonNote: { fontFamily: font.medium, fontSize: 12.5, color: colors.inkAsst, marginTop: 8 },
   footer: { padding: 16, borderTopWidth: 1, borderTopColor: colors.line, backgroundColor: colors.surface },
   footerBtns: { flexDirection: 'row', gap: 10 },
   addRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 10, paddingVertical: 10 },
