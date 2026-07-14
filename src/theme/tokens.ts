@@ -1,10 +1,11 @@
 // Design tokens — warm / homey direction per the V1.0 dev spec (§19 디자인 방향):
-// 따뜻한 그린 + 크림 화이트 + 오렌지 강조 + 코랄 임박. 가정적·실용·복잡하지 않게.
+// 브랜드 그린 + 크림 화이트 + 오렌지 강조 + 코랄 임박. 가정적·실용·복잡하지 않게.
+// primary는 로고(assets/logo.svg)의 초록과 동일하게 맞춘다.
 
 export const colors = {
-  primary: '#4C9A5E', // 따뜻한 그린
-  primaryDark: '#3B7E49',
-  primaryBg: '#E9F3EB',
+  primary: '#01A863', // 브랜드 그린 (로고와 동일)
+  primaryDark: '#01834D',
+  primaryBg: '#E6F6EF',
 
   accent: '#F2A93B', // 오렌지 강조
   accentBg: '#FCEFD7',
@@ -13,17 +14,17 @@ export const colors = {
   coral: '#E8694A', // 위험 / 임박
   coralBg: '#FBE5DE',
 
-  cream: '#FBF8F1', // 앱 배경 (보조 크림)
+  cream: '#F2F3F4', // 앱 배경 (연한 그레이 — 이전 크림 #FBF8F1에서 변경)
   surface: '#FFFFFF', // 카드 표면
-  darkGreen: '#2C3A2E', // 깊은 그린 (히어로/온보딩 등)
+  darkGreen: '#1F3A2B', // 깊은 그린 (소진 예측 카드 / 히어로 / 온보딩)
 
   ink: '#33352F', // 진한 회색 텍스트
   inkAlt: '#6E7066', // 보조 텍스트
   inkAsst: '#A1A399', // 흐린 텍스트
 
-  line: '#ECE8DC', // 옅은 구분선
-  lineStrong: '#D8D3C5',
-  fill: '#F2EFE6', // 옅은 채움
+  line: '#E7E8EA', // 옅은 구분선 (그레이 배경에 맞춘 중립 톤)
+  lineStrong: '#D3D5D8',
+  fill: '#EFF0F2', // 옅은 채움
 
   white: '#FFFFFF',
 } as const;
