@@ -56,7 +56,7 @@ type AiItem = { id: string; name: string; amount: string };
 // 모든 카테고리의 식재료 (검색용).
 const ALL_INGREDIENTS = Object.values(FINE_CATEGORY_ITEMS).flat();
 
-export function IngredientFormScreen({ itemId, prefillName, shoppingId }: { itemId?: string; prefillName?: string; shoppingId?: string }) {
+export function IngredientFormScreen({ itemId, prefillName, shoppingId, scanReceipt: autoScan }: { itemId?: string; prefillName?: string; shoppingId?: string; scanReceipt?: boolean }) {
   const { fridge, upsertFridge, removeFridge, markShoppingDone } = useApp();
   const nav = useNav();
   const insets = useSafeAreaInsets();
@@ -189,6 +189,15 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId }: { item
       setAiBusy(false);
     }
   };
+  // 홈의 '영수증 스캔' 타일로 들어온 경우 — 화면이 뜨자마자 스캔을 시작한다.
+  const autoScanned = useRef(false);
+  useEffect(() => {
+    if (!autoScan || autoScanned.current) return;
+    autoScanned.current = true;
+    scanReceiptFlow();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoScan]);
+
   const setAiField = (id: string, field: 'name' | 'amount', val: string) =>
     setAiItems((arr) => (arr ? arr.map((x) => (x.id === id ? { ...x, [field]: val } : x)) : arr));
   const removeAi = (id: string) => setAiItems((arr) => (arr ? arr.filter((x) => x.id !== id) : arr));

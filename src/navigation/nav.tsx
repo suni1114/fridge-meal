@@ -11,7 +11,7 @@ export type SetupMode = 'fresh' | 'append' | 'replace';
 
 export type Overlay =
   | { name: 'recipeDetail'; recipeId: string }
-  | { name: 'ingredientForm'; itemId?: string; prefillName?: string; shoppingId?: string }
+  | { name: 'ingredientForm'; itemId?: string; prefillName?: string; shoppingId?: string; scanReceipt?: boolean }
   | { name: 'admin' }
   | null;
 
@@ -27,7 +27,7 @@ interface Nav {
   goToFridge: (storage?: string) => void; // 냉장고 탭으로 이동 + (선택) 보관 위치 하위 탭 포커스
   clearFridgeFocus: () => void;
   openRecipe: (recipeId: string) => void;
-  openIngredientForm: (opts?: { itemId?: string; prefillName?: string; shoppingId?: string }) => void;
+  openIngredientForm: (opts?: { itemId?: string; prefillName?: string; shoppingId?: string; scanReceipt?: boolean }) => void;
   openAdmin: () => void;
   closeOverlay: () => void;
 }
@@ -74,7 +74,7 @@ export function NavProvider({ children }: { children: React.ReactNode }) {
       goToFridge: (storage) => { setTab('fridge'); setFridgeFocus(storage ?? null); },
       clearFridgeFocus: () => setFridgeFocus(null),
       openRecipe: (recipeId) => setOverlay({ name: 'recipeDetail', recipeId }),
-      openIngredientForm: (opts) => setOverlay({ name: 'ingredientForm', itemId: opts?.itemId, prefillName: opts?.prefillName, shoppingId: opts?.shoppingId }),
+      openIngredientForm: (opts) => setOverlay({ name: 'ingredientForm', itemId: opts?.itemId, prefillName: opts?.prefillName, shoppingId: opts?.shoppingId, scanReceipt: opts?.scanReceipt }),
       openAdmin: () => setOverlay({ name: 'admin' }),
       closeOverlay: () => setOverlay(null),
     }),

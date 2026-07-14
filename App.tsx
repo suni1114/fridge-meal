@@ -1,4 +1,4 @@
-// 냉장고비서 (fridge-meal) — V1.0 데모
+// 장봄이 (fridge-meal) — V1.0 데모
 // 온보딩 → 빠른 세팅 → 메인(홈·냉장고·요리추천·장보기·설정) + 오버레이(레시피 상세·식재료 폼)
 import React, { useEffect } from 'react';
 import { View, StyleSheet, Platform, BackHandler } from 'react-native';
@@ -64,7 +64,7 @@ function Root() {
         <View style={s.overlay}>
           {nav.overlay.name === 'recipeDetail' && <RecipeDetailScreen recipeId={nav.overlay.recipeId} />}
           {nav.overlay.name === 'ingredientForm' && (
-            <IngredientFormScreen itemId={nav.overlay.itemId} prefillName={nav.overlay.prefillName} shoppingId={nav.overlay.shoppingId} />
+            <IngredientFormScreen itemId={nav.overlay.itemId} prefillName={nav.overlay.prefillName} shoppingId={nav.overlay.shoppingId} scanReceipt={nav.overlay.scanReceipt} />
           )}
           {nav.overlay.name === 'admin' && <AdminScreen />}
         </View>
