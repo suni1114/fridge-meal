@@ -7,6 +7,7 @@ import { font } from '../theme/fonts';
 import { Icon } from '../components/Icon';
 import { ScreenHeader, AppButton, RecipeTile } from '../components/ui';
 import { useApp, matchRecipe } from '../data/store';
+import { recipeImage } from '../data/recipeImages';
 import { baseName } from '../data/constants';
 import { useNav } from '../navigation/nav';
 
@@ -18,6 +19,7 @@ export function RecipeDetailScreen({ recipeId }: { recipeId: string }) {
   if (!recipe) return null;
   const m = matchRecipe(recipe, fridge);
   const missingAll = [...m.missingMain, ...m.missingSub];
+  const hero = recipeImage(recipe.menuId); // 번들된 요리 사진. 없으면 카테고리 아이콘으로 대체.
 
   const have = fridge.filter((x) => x.stock !== 'empty').map((x) => baseName(x.name));
   const has = (name: string) => name.length >= 2 && have.some((fn) => fn.length >= 2 && (name.includes(fn) || fn.includes(name)));
@@ -48,8 +50,8 @@ export function RecipeDetailScreen({ recipeId }: { recipeId: string }) {
     <View style={s.root}>
       <ScreenHeader title="레시피" onBack={() => nav.closeOverlay()} />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
-        {recipe.image ? (
-          <Image source={{ uri: recipe.image }} style={s.heroImg} resizeMode="cover" />
+        {hero ? (
+          <Image source={hero} style={s.heroImg} resizeMode="cover" />
         ) : (
           <View style={[s.heroImg, s.heroFallback, { backgroundColor: m.usesNearExpiry ? colors.coralBg : colors.primaryBg }]}>
             <RecipeTile category={recipe.category} size={92} bg="transparent" />

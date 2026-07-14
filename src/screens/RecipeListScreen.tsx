@@ -1,12 +1,15 @@
 // 요리추천 — 전체 / 국·찌개 / 반찬 / 메인 / 간편. 메인 전부 보유가 추천 상단.
+// 목록은 한 줄에 2개씩 놓이는 사진 카드(사진 + 요리명). 냉장고 매칭 상태는 사진 위 배지로만 알린다.
 import React, { useRef, useState } from 'react';
-import { View, Text, ScrollView, Pressable, TextInput, StyleSheet, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+import { View, Text, ScrollView, Image, Pressable, TextInput, StyleSheet, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { colors, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon } from '../components/Icon';
 import { useApp, matchAll, matchRecipe } from '../data/store';
 import { RECIPE_CATEGORIES, RecipeMatch, isReady, needsOneMain } from '../data/recommend';
-import { RecipeTile, HeaderActions } from '../components/ui';
+import { recipeImage } from '../data/recipeImages';
+import { recipeCategoryEmoji } from '../data/constants';
+import { HeaderActions, emojiFont } from '../components/ui';
 import { useNav } from '../navigation/nav';
 
 const TABS = ['전체', ...RECIPE_CATEGORIES]; // 전체 | 국·찌개 | 반찬 | 메인 | 간편
@@ -59,24 +62,27 @@ export function RecipeListScreen() {
 
       {q ? (
         /* 검색 결과 — 전체 레시피에서 이름 일치 */
-        <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 6, gap: 9, paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
-          {results.map((m) => (
-            <RecipeCard key={m.recipe.menuId} m={m} onOpen={() => nav.openRecipe(m.recipe.menuId)} />
-          ))}
+        <ScrollView contentContainerStyle={s.page} showsVerticalScrollIndicator={false}>
+          <View style={s.grid}>
+            {results.map((m) => (
+              <RecipeCard key={m.recipe.menuId} m={m} onOpen={() => nav.openRecipe(m.recipe.menuId)} />
+            ))}
+          </View>
           {results.length === 0 && <Text style={s.empty}>'{q}' 검색 결과가 없어요.</Text>}
         </ScrollView>
       ) : (<>
-      {/* 탭 — 전체 / 국·찌개 / 반찬 / 메인 / 간편 (5개, 가로 스크롤) */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.tabsScroll} contentContainerStyle={s.tabs}>
+      {/* 탭 — 전체 / 국·찌개 / 반찬 / 메인 / 간편 (장보기·냉장고와 동일한 밑줄 스타일) */}
+      <View style={s.tabs}>
         {TABS.map((label, i) => {
           const on = i === tab;
           return (
-            <Pressable key={label} style={[s.tab, on && s.tabOn]} onPress={() => goTab(i)}>
-              <Text style={[s.tabText, on && s.tabTextOn]}>{label}</Text>
+            <Pressable key={label} style={s.tab} onPress={() => goTab(i)}>
+              <Text style={[s.tabText, on && s.tabTextOn]} numberOfLines={1}>{label}</Text>
+              <View style={[s.tabUnderline, on && s.tabUnderlineOn]} />
             </Pressable>
           );
         })}
-      </ScrollView>
+      </View>
 
       {/* 좌우 스와이프 페이지 */}
       <View style={{ flex: 1 }} onLayout={(e) => setW(e.nativeEvent.layout.width)}>
@@ -92,14 +98,16 @@ export function RecipeListScreen() {
             {TABS.map((label, i) => {
               const list = listFor(i);
               return (
-                <ScrollView key={label} style={{ width: w }} contentContainerStyle={{ padding: 16, paddingTop: 6, gap: 9, paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
-                  {list.map((m) => (
-                    <RecipeCard
-                      key={m.recipe.menuId}
-                      m={m}
-                      onOpen={() => nav.openRecipe(m.recipe.menuId)}
-                    />
-                  ))}
+                <ScrollView key={label} style={{ width: w }} contentContainerStyle={s.page} showsVerticalScrollIndicator={false}>
+                  <View style={s.grid}>
+                    {list.map((m) => (
+                      <RecipeCard
+                        key={m.recipe.menuId}
+                        m={m}
+                        onOpen={() => nav.openRecipe(m.recipe.menuId)}
+                      />
+                    ))}
+                  </View>
                   {list.length === 0 && <Text style={s.empty}>해당하는 요리가 아직 없어요.</Text>}
                 </ScrollView>
               );
@@ -112,48 +120,39 @@ export function RecipeListScreen() {
   );
 }
 
+/** 한 줄에 2개 놓이는 사진 카드 — 정사각 사진 + 상태 배지, 그 아래 요리명. */
 function RecipeCard({ m, onOpen }: { m: RecipeMatch; onOpen: () => void }) {
   const ready = isReady(m);
   const oneMain = needsOneMain(m);
-  const almost = m.recommendable || oneMain; // 거의 가능(강조색)
-  const statusBg = m.usesNearExpiry ? colors.coralBg : ready ? colors.primaryBg : almost ? colors.accentBg : colors.fill;
-  // 상태 텍스트: 바로 가능 / 재료 N개 더 / 재료 1개만 더 / 메인 부족
-  const missing = m.recommendable ? m.missingSub : m.missingMain;
-  const statusLabel = ready
+  const img = recipeImage(m.recipe.menuId);
+  // 배지: 바로 가능 / 재료 N개 / 메인 부족 — 목록에선 개수만, 어떤 재료인지는 상세에서.
+  const badgeLabel = ready
     ? '바로 가능'
     : m.recommendable
-    ? `재료 ${m.missingSub.length}개 더 있으면 완성`
+    ? `재료 ${m.missingSub.length}개`
     : oneMain
-    ? '재료 1개만 더 있으면 가능'
-    : '메인 재료 부족';
+    ? '재료 1개'
+    : '메인 부족';
+  const badgeStyle = ready ? s.badgeReady : m.recommendable || oneMain ? s.badgeAlmost : s.badgeNo;
 
   return (
     <Pressable style={s.card} onPress={onOpen}>
-      <View style={s.cardTop}>
-        <RecipeTile image={m.recipe.image} category={m.recipe.category} size={46} bg={statusBg} />
-        <View style={{ flex: 1 }}>
-          <Text style={s.cardTitle} numberOfLines={1}>{m.recipe.name}</Text>
-          <View style={s.metaRow}>
-            <Text style={s.metaText}>{m.recipe.category}{m.recipe.cookTimeMinutes ? ` · ${m.recipe.cookTimeMinutes}분` : ''}</Text>
-            {m.usesNearExpiry && (
-              <View style={s.flame}><Icon name="flame" size={11} color={colors.coral} weight="fill" /><Text style={s.flameText}>임박</Text></View>
-            )}
-          </View>
-        </View>
-      </View>
-
-      <View style={s.infoRow}>
-        <Text style={[s.status, ready ? s.statusReady : almost ? s.statusAlmost : s.statusNo]}>{statusLabel}</Text>
-        {missing.length > 0 && (
-          <View style={s.missingWrap}>
-            {missing.slice(0, 4).map((n) => (<View key={n} style={s.missChip}><Text style={s.missChipText}>{n}</Text></View>))}
-            {missing.length > 4 && <Text style={s.missMore}>+{missing.length - 4}</Text>}
+      <View style={s.thumbWrap}>
+        {img ? (
+          <Image source={img} style={s.thumb} resizeMode="cover" />
+        ) : (
+          <View style={[s.thumb, s.thumbFallback]}>
+            <Text style={[s.thumbEmoji, emojiFont]}>{recipeCategoryEmoji(m.recipe.category)}</Text>
           </View>
         )}
+        <View style={[s.badge, badgeStyle]}><Text style={s.badgeText}>{badgeLabel}</Text></View>
+        {m.usesNearExpiry && (
+          <View style={s.flame}><Icon name="flame" size={10} color={colors.white} weight="fill" /><Text style={s.flameText}>임박</Text></View>
+        )}
       </View>
-
-      <View style={s.footer}>
-        <View style={s.viewBtn}><Text style={s.viewBtnText}>상세보기</Text><Icon name="caret-right" size={15} color={colors.inkAlt} weight="bold" /></View>
+      <View style={s.cardBody}>
+        <Text style={s.cardTitle} numberOfLines={2}>{m.recipe.name}</Text>
+        <Text style={s.metaText}>{m.recipe.category}{m.recipe.cookTimeMinutes ? ` · ${m.recipe.cookTimeMinutes}분` : ''}</Text>
       </View>
     </Pressable>
   );
@@ -167,37 +166,35 @@ const s = StyleSheet.create({
   searchRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, borderRadius: radius.lg, marginHorizontal: 20, marginBottom: 8, paddingHorizontal: 14 },
   search: { flex: 1, fontFamily: font.medium, fontSize: 15, color: colors.ink, paddingVertical: 11 },
 
-  // 탭 — 전체 / 국·찌개 / 반찬 / 메인 / 간편 (5개, 가로 스크롤)
-  tabsScroll: { flexGrow: 0, marginTop: 4, marginBottom: 6 },
-  tabs: { flexDirection: 'row', gap: 7, paddingHorizontal: 20 },
-  tab: { alignItems: 'center', justifyContent: 'center', paddingVertical: 8, paddingHorizontal: 14, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.line },
-  tabOn: { backgroundColor: colors.primary, borderColor: colors.primary },
-  tabText: { fontFamily: font.bold, fontSize: 12, color: colors.inkAlt },
-  tabTextOn: { color: colors.white },
+  // 탭 — 전체 / 국·찌개 / 반찬 / 메인 / 간편 (장보기 식재료·생활용품 탭과 동일한 밑줄 스타일)
+  tabs: { flexDirection: 'row', marginHorizontal: 16, marginTop: 4, borderBottomWidth: 1, borderBottomColor: colors.line },
+  tab: { flex: 1, alignItems: 'center' },
+  tabText: { fontFamily: font.bold, fontSize: 14, color: colors.inkAsst, paddingVertical: 9 },
+  tabTextOn: { color: colors.ink },
+  tabUnderline: { height: 2.5, width: '100%', backgroundColor: 'transparent', marginBottom: -1 },
+  tabUnderlineOn: { backgroundColor: colors.ink },
 
-  card: { backgroundColor: colors.surface, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.line, padding: 13 },
-  cardTop: { flexDirection: 'row', alignItems: 'center', gap: 11 },
-  cardTitle: { fontFamily: font.extrabold, fontSize: 16, color: colors.ink, letterSpacing: -0.3 },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
-  metaText: { fontFamily: font.medium, fontSize: 12.5, color: colors.inkAlt },
-  flame: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: colors.coralBg, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill, marginLeft: 2 },
-  flameText: { fontFamily: font.extrabold, fontSize: 10.5, color: colors.coral },
+  // 그리드 — 한 줄에 2개. 카드 너비 48%, 남는 4%가 가운데 여백이 된다.
+  page: { padding: 16, paddingTop: 6, paddingBottom: 20 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 14 },
+  card: { width: '48%', backgroundColor: colors.surface, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.line, overflow: 'hidden' },
 
-  infoRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 10 },
-  status: { fontFamily: font.bold, fontSize: 13 },
-  statusReady: { color: colors.primary },
-  statusAlmost: { color: colors.accentDark },
-  statusNo: { color: colors.inkAsst },
-  infoHave: { fontFamily: font.bold, fontSize: 13, color: colors.ink },
-  missingWrap: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
-  missChip: { backgroundColor: colors.accentBg, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill },
-  missChipText: { fontFamily: font.bold, fontSize: 11.5, color: colors.accentDark },
-  missMore: { fontFamily: font.bold, fontSize: 11.5, color: colors.inkAsst },
+  thumbWrap: { width: '100%', aspectRatio: 1 },
+  thumb: { width: '100%', height: '100%', backgroundColor: colors.fill },
+  thumbFallback: { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primaryBg },
+  thumbEmoji: { fontSize: 46, lineHeight: 58, textAlign: 'center' },
 
-  // 하단 액션 — 카드와 한 덩어리(구분선) + 상세보기 버튼
-  footer: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.line },
-  viewBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 9, borderRadius: radius.md, backgroundColor: colors.fill },
-  viewBtnText: { fontFamily: font.medium, fontSize: 14, color: colors.inkAlt },
+  badge: { position: 'absolute', top: 8, left: 8, paddingHorizontal: 9, paddingVertical: 4, borderRadius: radius.pill },
+  badgeReady: { backgroundColor: colors.primary },
+  badgeAlmost: { backgroundColor: colors.accent },
+  badgeNo: { backgroundColor: 'rgba(51,53,47,0.6)' },
+  badgeText: { fontFamily: font.extrabold, fontSize: 10.5, color: colors.white },
+  flame: { position: 'absolute', top: 8, right: 8, flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: colors.coral, paddingHorizontal: 7, paddingVertical: 4, borderRadius: radius.pill },
+  flameText: { fontFamily: font.extrabold, fontSize: 10, color: colors.white },
+
+  cardBody: { paddingHorizontal: 11, paddingTop: 9, paddingBottom: 11, gap: 3 },
+  cardTitle: { fontFamily: font.extrabold, fontSize: 14.5, color: colors.ink, letterSpacing: -0.3, lineHeight: 19 },
+  metaText: { fontFamily: font.medium, fontSize: 11.5, color: colors.inkAsst },
 
   empty: { fontFamily: font.medium, fontSize: 14, color: colors.inkAsst, textAlign: 'center', marginTop: 40 },
 });

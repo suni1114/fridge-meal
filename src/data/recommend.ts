@@ -14,7 +14,6 @@ export interface Recipe {
   mainIngredients: string[];
   subIngredients: string[];
   seasonings?: string[];   // 양념 — 보유 가정, 매칭에서 제외하고 상세에만 표시
-  image?: string;          // 요리 이미지 URL
   recommendUrl?: string;   // 추천레시피 외부 링크(만개의레시피)
   cookTimeMinutes?: number;
   difficulty?: Difficulty;
