@@ -1,4 +1,4 @@
-// 하단 탭: 홈 · 냉장고 · [추가] · 요리추천 · 장보기 (설정은 홈 상단 톱니에서 접근)
+// 하단 탭: 홈 · 장보기 · [추가] · 곳간 · 요리추천 (설정은 홈 상단 톱니에서 접근)
 import React, { useRef, useEffect } from 'react';
 import { View, Text, Pressable, StyleSheet, Platform, Animated, Easing } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -41,10 +41,10 @@ function TabIcon({ name, size, active, fillWeight = 'fill' }: { name: IconName; 
 type TabDef = { key: TabKey; label: string; icon: IconName };
 const LEFT: TabDef[] = [
   { key: 'home', label: '홈', icon: 'house' },
-  { key: 'fridge', label: '냉장고', icon: 'snowflake' },
+  { key: 'shopping', label: '장보기', icon: 'shopping-cart-simple' },
 ];
 const RIGHT: TabDef[] = [
-  { key: 'shopping', label: '장보기', icon: 'shopping-cart-simple' },
+  { key: 'fridge', label: '곳간', icon: 'snowflake' },
   { key: 'recipe', label: '요리추천', icon: 'fork-knife' },
 ];
 
