@@ -1,6 +1,6 @@
 // 설정 — 사용자 화면 (관리자용 기본식재료/레시피 데이터 관리는 별도 관리자 화면으로 분리)
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, ScrollView, Pressable, Modal, Animated, Easing, Linking, Platform, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Pressable, Modal, Animated, Easing, Linking, Platform, StyleSheet, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
@@ -131,7 +131,7 @@ export function SettingsScreen() {
           </View>
         ))}
 
-        <Text style={s.version}>냉장고비서 V1.0</Text>
+        <Text style={s.version}>장봄이 V1.0</Text>
       </ScrollView>
 
       {/* ── 자주 쓰는 식재료 ──────────────────────────────── */}
@@ -185,11 +185,9 @@ export function SettingsScreen() {
       {/* ── 앱 정보 ──────────────────────────────────────── */}
       <Sheet visible={sheet === 'appInfo'} onClose={close} pad={sheetPad}>
         <View style={s.appHead}>
-          <View style={s.appIcon}>
-            <Icon name="snowflake" size={30} color={colors.primary} weight="fill" />
-          </View>
+          <Image source={require('../../assets/logo-mark.png')} style={s.appIcon} />
           <View>
-            <Text style={s.sheetTitle}>냉장고비서</Text>
+            <Text style={s.sheetTitle}>장봄이</Text>
             <Text style={s.appVersion}>버전 V1.0</Text>
           </View>
         </View>
@@ -326,7 +324,7 @@ const s = StyleSheet.create({
 
   // 앱 정보
   appHead: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 14 },
-  appIcon: { width: 56, height: 56, borderRadius: 16, backgroundColor: colors.primaryBg, alignItems: 'center', justifyContent: 'center' },
+  appIcon: { width: 56, height: 56, borderRadius: 16 },
   appVersion: { fontFamily: font.medium, fontSize: 13, color: colors.inkAlt, marginTop: 3 },
 
   // 문의

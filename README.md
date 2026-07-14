@@ -1,4 +1,4 @@
-# 냉장고비서 (fridge-meal) — V1.0 데모/시안
+# 장봄이 (fridge-meal) — V1.0 데모/시안
 
 냉장고 식재료를 관리하고, 남은 재료로 만들 수 있는 요리와 장보기 목록을 알려주는 앱.
 [개발 지시서](../docs/fridge_meal_v1_app_development_spec.md)와 [벤치마킹 문서](../docs/fridge_meal_benchmark_refrigerator_teolgi.md)를 기준으로 한 동작하는 UI 시안입니다.

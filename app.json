@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "냉장고비서",
+    "name": "장봄이",
     "slug": "fridge-assistant",
     "version": "1.0.0",
     "runtimeVersion": {
@@ -16,7 +16,7 @@
     "android": {
       "package": "com.suni1114.fridgeassistant",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#01A863",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
