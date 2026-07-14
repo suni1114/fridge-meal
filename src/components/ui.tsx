@@ -1,16 +1,16 @@
 // Shared presentational building blocks (warm palette).
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, ViewStyle, Platform, Image } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ViewStyle, Platform, Image, ImageSourcePropType } from 'react-native';
 import { colors, cat, urgency, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon, IconName } from './Icon';
-import { CATEGORY, CategoryCode, STOCK, StockLevel, emojiFor, recipeCategoryEmoji } from '../data/constants';
+import { CATEGORY, CategoryCode, STOCK, StockLevel, emojiFor, recipeCategoryEmoji, householdEmojiFor, householdColorFor } from '../data/constants';
 import { daysUntil } from '../data/date';
 import { useNav } from '../navigation/nav';
 
 // 웹에서 이모지가 흑백 외곽선(text-presentation)으로 폴백되지 않도록 컬러 이모지 폰트를 명시한다.
 // (RNW 기본 폰트 스택에는 색상 이모지 폰트가 없어 환경에 따라 흑백 외곽선으로 떨어질 수 있음.)
-const emojiFont = Platform.OS === 'web'
+export const emojiFont = Platform.OS === 'web'
   ? ({ fontFamily: '"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji",sans-serif' } as const)
   : null;
 
@@ -81,10 +81,20 @@ export function FoodTile({ name, category, size = 46 }: { name?: string; categor
 }
 
 
+/** 생활용품 타일 — 식재료 타일과 같은 모양. 이모지·색은 품목 이름으로 찾는다. */
+export function HouseholdTile({ name, size = 46 }: { name: string; size?: number }) {
+  const c = cat[householdColorFor(name)];
+  return (
+    <View style={{ width: size, height: size, borderRadius: size * 0.28, backgroundColor: c.bg, alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={[{ fontSize: size * 0.5, lineHeight: size * 0.62, textAlign: 'center' }, emojiFont]}>{householdEmojiFor(name)}</Text>
+    </View>
+  );
+}
+
 /** 레시피 타일 — 요리 이미지(URL) 우선, 없으면 카테고리 대표 이모지 + 색 배경. */
-export function RecipeTile({ image, category, size = 52, bg }: { image?: string; category?: string; size?: number; bg: string }) {
+export function RecipeTile({ image, category, size = 52, bg }: { image?: ImageSourcePropType; category?: string; size?: number; bg: string }) {
   const r = size * 0.28;
-  if (image) return <Image source={{ uri: image }} style={{ width: size, height: size, borderRadius: r, backgroundColor: bg }} resizeMode="cover" />;
+  if (image) return <Image source={image} style={{ width: size, height: size, borderRadius: r, backgroundColor: bg }} resizeMode="cover" />;
   const glyph = category ? recipeCategoryEmoji(category) : '🍽️';
   return (
     <View style={{ width: size, height: size, borderRadius: r, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }}>

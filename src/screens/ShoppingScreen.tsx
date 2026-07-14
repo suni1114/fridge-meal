@@ -1,14 +1,15 @@
 // 장보기 — 식재료 / 생활용품 탭. 각 탭은 구매목록(미구매) + 구매 완료.
 //  · 식재료: 자동추천(위쪽) + 직접추가를 '구매목록'으로 묶음. 항목 탭 = 냉장고에 추가 / 이름 수정 / 삭제.
-//  · 생활용품: 함께 살 휴지·세제 등. 냉장고 이동 없이 이름 수정 / 삭제만.
+//  · 생활용품: 함께 살 휴지·세제 등. 식재료처럼 카테고리에서 골라 담고 이모지 타일로 보인다.
+//    (냉장고에는 들어가지 않으므로 항목 탭 = 이름 수정 / 삭제만)
 import React, { useState } from 'react';
 import { View, Text, ScrollView, Pressable, TextInput, Modal, KeyboardAvoidingView, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon, IconName } from '../components/Icon';
-import { FoodTile, SectionTitle, AppButton, HeaderActions, SheetHandle } from '../components/ui';
-import { FINE_CATEGORIES, FINE_CATEGORY_ITEMS } from '../data/constants';
+import { FoodTile, HouseholdTile, SectionTitle, AppButton, HeaderActions, SheetHandle } from '../components/ui';
+import { FINE_CATEGORIES, FINE_CATEGORY_ITEMS, HOUSEHOLD_CATEGORIES, HOUSEHOLD_CATEGORY_ITEMS } from '../data/constants';
 import { useApp, ShoppingItem, ShoppingKind } from '../data/store';
 import { useNav } from '../navigation/nav';
 
@@ -66,10 +67,14 @@ export function ShoppingScreen() {
   const addCount = selected.length + (addName.trim() ? 1 : 0);
   const commitAll = () => {
     if (!addCount) return;
-    selected.forEach((n) => addToShopping(n, 'manual', undefined, 'food'));
-    if (addName.trim()) addToShopping(addName.trim(), 'manual', undefined, 'food');
+    selected.forEach((n) => addToShopping(n, 'manual', undefined, tab));
+    if (addName.trim()) addToShopping(addName.trim(), 'manual', undefined, tab);
     closeAdd();
   };
+
+  // 추가 시트의 카테고리 — 식재료/생활용품 각각의 목록을 쓴다.
+  const cats = tab === 'food' ? FINE_CATEGORIES : HOUSEHOLD_CATEGORIES;
+  const catItems = tab === 'food' ? FINE_CATEGORY_ITEMS : HOUSEHOLD_CATEGORY_ITEMS;
 
   const saveEdit = () => {
     if (editItem && editName.trim()) renameShopping(editItem.id, editName.trim());
@@ -79,9 +84,13 @@ export function ShoppingScreen() {
   // 냉장고에 추가 — 식재료 추가 상세화면(IngredientForm)을 그대로 재사용한다. (식재료 전용)
   const openRestock = (item: ShoppingItem) => nav.openIngredientForm({ prefillName: item.name, shoppingId: item.id });
 
-  // 항목 앞 타일 — 식재료만 이모지 타일. 생활용품은 아이콘 없이 이름만.
+  // 항목 앞 타일 — 식재료는 식재료 이모지, 생활용품은 생활용품 이모지.
   const Lead = ({ item, size }: { item: ShoppingItem; size: number }) =>
-    item.kind === 'household' ? null : item.category ? <FoodTile name={item.name} category={item.category} size={size} /> : null;
+    item.kind === 'household' ? (
+      <HouseholdTile name={item.name} size={size} />
+    ) : item.category ? (
+      <FoodTile name={item.name} category={item.category} size={size} />
+    ) : null;
 
   const Row = ({ item, checkSize = 22 }: { item: ShoppingItem; checkSize?: number }) => {
     const auto = isAuto(item);
@@ -121,11 +130,14 @@ export function ShoppingScreen() {
   return (
     <View style={s.root}>
       <View style={s.header}>
-        <View style={s.titleRow}>
-          <Text style={s.title}>장보기</Text>
-          <Pressable onPress={() => setHelpOpen(true)} hitSlop={8}>
-            <Icon name="info" size={20} color={colors.inkAsst} />
-          </Pressable>
+        <View style={{ flex: 1 }}>
+          <View style={s.titleRow}>
+            <Text style={s.title}>장보기 목록</Text>
+            <Pressable onPress={() => setHelpOpen(true)} hitSlop={8}>
+              <Icon name="info" size={20} color={colors.inkAsst} />
+            </Pressable>
+          </View>
+          <Text style={s.subtitle}>마트에서 하나씩 체크하며 담으세요</Text>
         </View>
         <HeaderActions showSearch={false} showBell={false} />
       </View>
@@ -161,7 +173,7 @@ export function ShoppingScreen() {
       <Modal visible={addOpen} transparent animationType="slide" onRequestClose={closeAdd}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={s.kav}>
           <Pressable style={s.backdrop} onPress={closeAdd}>
-            <Pressable style={[tab === 'household' ? s.sheet : s.addSheet, { paddingBottom: sheetPad }]}>
+            <Pressable style={[s.addSheet, { paddingBottom: sheetPad }]}>
               <SheetHandle />
               <View style={s.addHead}>
                 <Text style={s.sheetTitle}>{tab === 'food' ? '장보기 항목 추가' : '생활용품 추가'}</Text>
@@ -170,36 +182,15 @@ export function ShoppingScreen() {
                 </Pressable>
               </View>
 
-              {tab === 'household' ? (
-                /* 생활용품 — 이름 입력만 단순하게 */
+              {pickCat === null ? (
                 <>
-                  <View style={[s.addInputRow, { marginTop: 4 }]}>
-                    <Icon name="plus" size={18} color={colors.inkAsst} weight="bold" />
-                    <TextInput
-                      value={addName}
-                      onChangeText={setAddName}
-                      placeholder="생활용품 이름 입력"
-                      placeholderTextColor={colors.inkAsst}
-                      style={s.addInput}
-                      onSubmitEditing={submitText}
-                      returnKeyType="done"
-                      autoFocus
-                    />
-                    <Pressable onPress={submitText} disabled={!addName.trim()} style={[s.addBtn, !addName.trim() && s.addBtnOff]}>
-                      <Text style={s.addBtnText}>추가</Text>
-                    </Pressable>
-                  </View>
-                  <Text style={s.householdHint}>휴지·세제·물티슈처럼 장 보면서 함께 살 것들을 적어두세요.</Text>
-                </>
-              ) : pickCat === null ? (
-                <>
-                  {/* 카테고리 고르기 전: 상단 식재료 직접 입력(+추가 버튼) */}
+                  {/* 카테고리 고르기 전: 상단 직접 입력(+추가 버튼) */}
                   <View style={s.addInputRow}>
                     <Icon name="plus" size={18} color={colors.inkAsst} weight="bold" />
                     <TextInput
                       value={addName}
                       onChangeText={setAddName}
-                      placeholder="식재료 이름 입력"
+                      placeholder={tab === 'food' ? '식재료 이름 입력' : '생활용품 이름 입력'}
                       placeholderTextColor={colors.inkAsst}
                       style={s.addInput}
                       onSubmitEditing={submitText}
@@ -213,7 +204,7 @@ export function ShoppingScreen() {
                   <Text style={s.pickHint}>카테고리에서 고르기</Text>
                   <ScrollView style={s.pickScroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                     <View style={s.catGrid}>
-                      {FINE_CATEGORIES.map((c) => (
+                      {cats.map((c) => (
                         <Pressable key={c.code} style={s.catTile} onPress={() => openCat(c.code)}>
                           <Text style={s.catEmoji}>{c.emoji}</Text>
                           <Text style={s.catLabel}>{c.label}</Text>
@@ -226,12 +217,12 @@ export function ShoppingScreen() {
                 <>
                   <Pressable style={s.catBadge} onPress={backToCats}>
                     <Icon name="caret-left" size={14} color={colors.primary} weight="bold" />
-                    <Text style={s.catBadgeEmoji}>{FINE_CATEGORIES.find((c) => c.code === pickCat)?.emoji}</Text>
-                    <Text style={s.catBadgeLabel}>{FINE_CATEGORIES.find((c) => c.code === pickCat)?.label}</Text>
+                    <Text style={s.catBadgeEmoji}>{cats.find((c) => c.code === pickCat)?.emoji}</Text>
+                    <Text style={s.catBadgeLabel}>{cats.find((c) => c.code === pickCat)?.label}</Text>
                   </Pressable>
                   <ScrollView style={s.pickScroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                     <View style={s.chipWrap}>
-                      {[...(FINE_CATEGORY_ITEMS[pickCat] ?? [])].sort((a, b) => a.localeCompare(b, 'ko')).map((n) => {
+                      {[...(catItems[pickCat] ?? [])].sort((a, b) => a.localeCompare(b, 'ko')).map((n) => {
                         const picked = selected.includes(n); // 이번에 선택(아직 담기 전)
                         return (
                           <Pressable key={n} style={[s.chip, picked && s.chipOn]} onPress={() => togglePick(n)}>
@@ -247,7 +238,7 @@ export function ShoppingScreen() {
                       <TextInput
                         value={addName}
                         onChangeText={setAddName}
-                        placeholder="식재료 이름"
+                        placeholder={tab === 'food' ? '식재료 이름' : '생활용품 이름'}
                         placeholderTextColor={colors.inkAsst}
                         style={s.directInput}
                         onSubmitEditing={submitText}
@@ -370,9 +361,10 @@ function SheetAction({ icon, label, onPress, danger }: { icon: IconName; label: 
 
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.cream },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 10 },
+  header: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 10 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   title: { fontFamily: font.extrabold, fontSize: 24, color: colors.ink, letterSpacing: -0.5 },
+  subtitle: { fontFamily: font.medium, fontSize: 13.5, color: colors.inkAlt, marginTop: 5 },
 
   // 탭 (식재료 / 생활용품) — 냉장고 viewTabs와 동일한 밑줄 스타일
   tabs: { flexDirection: 'row', marginHorizontal: 16, borderBottomWidth: 1, borderBottomColor: colors.line },
@@ -409,7 +401,6 @@ const s = StyleSheet.create({
   addBtn: { backgroundColor: colors.primary, paddingHorizontal: 16, paddingVertical: 8, borderRadius: radius.pill },
   addBtnOff: { backgroundColor: colors.lineStrong },
   addBtnText: { fontFamily: font.bold, fontSize: 14, color: colors.white },
-  householdHint: { fontFamily: font.medium, fontSize: 12.5, color: colors.inkAsst, marginTop: 12, lineHeight: 18 },
   sheetTitle: { fontFamily: font.extrabold, fontSize: 18, color: colors.ink, marginBottom: 8 },
   confirmSub: { fontFamily: font.medium, fontSize: 13.5, color: colors.inkAlt, marginTop: 2, lineHeight: 20 },
   sheetHead: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingBottom: 12, marginBottom: 6, borderBottomWidth: 1, borderBottomColor: colors.line },

@@ -134,6 +134,54 @@ export function emojiFor(name: string, category?: string): string {
     ?? (category ? CATEGORY_EMOJI[category] : undefined) ?? '🍽️';
 }
 
+// ── 생활용품 (장보기 '생활용품' 탭 전용) ───────────────────────────────────
+// 식재료와 같은 방식: 카테고리 → 품목 목록에서 골라 담는다. 냉장고에는 들어가지 않는다.
+export const HOUSEHOLD_CATEGORIES: { code: string; label: string; emoji: string; color: CatKey }[] = [
+  { code: 'paper', label: '휴지·위생', emoji: '🧻', color: 'blue' },
+  { code: 'laundry', label: '세탁·청소', emoji: '🧼', color: 'teal' },
+  { code: 'kitchen', label: '주방용품', emoji: '🧽', color: 'amber' },
+  { code: 'bath', label: '욕실·세면', emoji: '🧴', color: 'pink' },
+  { code: 'living', label: '생활잡화', emoji: '💡', color: 'wheat' },
+];
+
+export const HOUSEHOLD_CATEGORY_ITEMS: Record<string, string[]> = {
+  paper: ['화장지', '물티슈', '키친타월', '미용티슈', '생리대', '기저귀', '면봉'],
+  laundry: ['세탁세제', '섬유유연제', '표백제', '청소포', '락스', '욕실세정제', '쓰레기봉투'],
+  kitchen: ['주방세제', '수세미', '고무장갑', '위생장갑', '지퍼백', '랩', '호일', '종이컵', '키친타월'],
+  bath: ['샴푸', '린스', '바디워시', '비누', '치약', '칫솔', '면도기', '핸드워시'],
+  living: ['건전지', '전구', '방향제', '살충제', '빨래집게', '옷걸이', '마스크', '반창고'],
+};
+
+export const HOUSEHOLD_EMOJI: Record<string, string> = {
+  화장지: '🧻', 물티슈: '🧻', 키친타월: '🧻', 미용티슈: '🧻', 생리대: '🩹', 기저귀: '🍼', 면봉: '🦻',
+  세탁세제: '🧴', 섬유유연제: '🧴', 표백제: '🧪', 청소포: '🧹', 락스: '🧪', 욕실세정제: '🚿', 쓰레기봉투: '🗑️',
+  주방세제: '🧼', 수세미: '🧽', 고무장갑: '🧤', 위생장갑: '🧤', 지퍼백: '🛍️', 랩: '📦', 호일: '📦', 종이컵: '🥤',
+  샴푸: '🧴', 린스: '🧴', 바디워시: '🧴', 비누: '🧼', 치약: '🪥', 칫솔: '🪥', 면도기: '🪒', 핸드워시: '🧼',
+  건전지: '🔋', 전구: '💡', 방향제: '🌸', 살충제: '🦟', 빨래집게: '📎', 옷걸이: '🧥', 마스크: '😷', 반창고: '🩹',
+};
+
+// 품목 이름 → 카테고리 코드 (아이콘 색을 정할 때 쓴다)
+export const HOUSEHOLD_BY_NAME: Record<string, string> = (() => {
+  const m: Record<string, string> = {};
+  for (const [code, names] of Object.entries(HOUSEHOLD_CATEGORY_ITEMS)) for (const n of names) m[n] = code;
+  return m;
+})();
+
+/** 생활용품 이모지 — 모르는 이름(직접 입력)은 카테고리 기본값, 그마저 없으면 장바구니. */
+export function householdEmojiFor(name: string): string {
+  const n = baseName(name);
+  if (HOUSEHOLD_EMOJI[name]) return HOUSEHOLD_EMOJI[name];
+  if (HOUSEHOLD_EMOJI[n]) return HOUSEHOLD_EMOJI[n];
+  const code = HOUSEHOLD_BY_NAME[n];
+  return HOUSEHOLD_CATEGORIES.find((c) => c.code === code)?.emoji ?? '🧺';
+}
+
+/** 생활용품 타일 색 — 카테고리별 색, 모르면 회색. */
+export function householdColorFor(name: string): CatKey {
+  const code = HOUSEHOLD_BY_NAME[baseName(name)];
+  return HOUSEHOLD_CATEGORIES.find((c) => c.code === code)?.color ?? 'grey';
+}
+
 // ── 세분화 카테고리 (냉장고 '카테고리별 보기' 전용) ──────────────────────────
 // 보관 위치(냉장/냉동/실온)와 별개로, 식재료를 종류별로 묶어 보여주기 위한 분류.
 export const FINE_CATEGORIES: { code: string; label: string; emoji: string }[] = [
