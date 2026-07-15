@@ -8,12 +8,34 @@ import { Icon } from '../components/Icon';
 import { AppButton } from '../components/ui';
 import { CATEGORY } from '../data/constants';
 import { PRESET_PACKS, useApp, matchAll, infoFor, FridgeItem } from '../data/store';
-import { isReady, needsSub } from '../data/recommend';
+import { isReady } from '../data/recommend';
 import { todayISO } from '../data/date';
 import { uid, nowISO } from '../data/id';
 import { useNav } from '../navigation/nav';
 
 const SUGGESTED = ['우유', '치즈', '콩나물', '토마토', '버섯', '참치캔', '두유', '사과'];
+
+// 스텝2 선택 칩 전용 초록 — 밝은 로고 그린(colors.primary)은 로고·메인 버튼에만 쓰고,
+// 칩 선택 상태는 명도·채도를 낮춘 '차분한 진초록'과 '아주 연한 초록 배경'으로 표현한다.
+const CHIP_GREEN = '#2A6B4C'; // 차분한 진초록 (테두리·텍스트·체크)
+const CHIP_GREEN_BG = '#F0F9F4'; // 아주 연한 초록 (선택 배경)
+
+// 곳간 기본 생필품 — 거의 모든 집에 있는 품목은 기본 선택(def:true), 그 외는 옵션(def:false).
+// 완료 시 kind:'household'로 곳간에 저장된다(식재료와 구분).
+const HOUSEHOLD_PICK: { name: string; def: boolean }[] = [
+  { name: '두루마리휴지', def: true },
+  { name: '물티슈', def: true },
+  { name: '주방세제', def: true },
+  { name: '세탁세제', def: true },
+  { name: '샴푸', def: true },
+  { name: '린스', def: true },
+  { name: '바디워시', def: true },
+  { name: '비누', def: true },
+  { name: '키친타월', def: false },
+  { name: '섬유유연제', def: false },
+  { name: '치약', def: false },
+  { name: '기저귀', def: false },
+];
 
 export function QuickSetupScreen({ onDone }: { onDone: () => void }) {
   const insets = useSafeAreaInsets();
@@ -25,6 +47,10 @@ export function QuickSetupScreen({ onDone }: { onDone: () => void }) {
   const [step, setStep] = useState(0);
   const [packCode, setPackCode] = useState('home_basic');
   const [checked, setChecked] = useState<Record<string, boolean>>({});
+  // 생필품 선택 상태 — 기본값은 HOUSEHOLD_PICK의 def(모든 집에 있는 품목은 미리 체크).
+  const [hhChecked, setHhChecked] = useState<Record<string, boolean>>(
+    () => Object.fromEntries(HOUSEHOLD_PICK.map((h) => [h.name, h.def]))
+  );
   const [added, setAdded] = useState<string[]>([]);
   const [input, setInput] = useState('');
 
@@ -42,6 +68,8 @@ export function QuickSetupScreen({ onDone }: { onDone: () => void }) {
 
   const isChecked = (n: string) => checked[n] ?? true;
   const toggle = (n: string) => setChecked((c) => ({ ...c, [n]: !isChecked(n) }));
+  const hhIsChecked = (n: string) => hhChecked[n] ?? false;
+  const hhToggle = (n: string) => setHhChecked((c) => ({ ...c, [n]: !hhIsChecked(n) }));
 
   const addItem = (n: string) => {
     const name = n.trim();
@@ -52,7 +80,6 @@ export function QuickSetupScreen({ onDone }: { onDone: () => void }) {
 
   const matches = matchAll(recipes, fridge);
   const readyCount = matches.filter(isReady).length;
-  const almostCount = matches.filter(needsSub).length;
   const total = pack.items.filter(isChecked).length + added.length;
 
   // 선택한 프리셋 재료 + 직접 추가한 재료로 냉장고를 채운다.
@@ -65,14 +92,20 @@ export function QuickSetupScreen({ onDone }: { onDone: () => void }) {
       const info = infoFor(name);
       return { id: uid(), name, category: info.category, storage: info.storage, stock: 'enough', expiry: null, added: todayISO(), updatedAt: nowISO() };
     };
+    // 선택한 생필품 — 곳간에 kind:'household'로 저장. 유통기한은 없고 늘 '충분함'으로 시작.
+    const hhNames = HOUSEHOLD_PICK.filter((h) => hhIsChecked(h.name)).map((h) => h.name);
+    const toHouseholdItem = (name: string): FridgeItem => ({
+      id: uid(), name, category: 'etc', storage: 'household', kind: 'household', stock: 'enough', expiry: null, added: todayISO(), updatedAt: nowISO(),
+    });
     if (append) {
       const existing = new Set(fridge.map((x) => x.name));
       const additions = names.filter((n) => !existing.has(n)).map(toItem);
-      setFridge((prev) => [...prev, ...additions]);
+      const hhAdditions = hhNames.filter((n) => !existing.has(n)).map(toHouseholdItem);
+      setFridge((prev) => [...prev, ...additions, ...hhAdditions]);
       logUsage(additions.map((a) => ({ name: a.name, category: a.category })));
     } else {
       const items = names.map(toItem);
-      setFridge(items);
+      setFridge([...items, ...hhNames.map(toHouseholdItem)]);
       logUsage(items.map((it) => ({ name: it.name, category: it.category })));
     }
   };
@@ -139,26 +172,34 @@ export function QuickSetupScreen({ onDone }: { onDone: () => void }) {
       {step === 1 && (
         <>
           <View style={s.head}>
-            <Text style={s.h1}>우리집에 있는 재료만{'\n'}남겨주세요.</Text>
-            <Text style={s.sub}>기본은 체크된 상태예요. 없는 재료만 해제하세요.</Text>
+            <Text style={s.stepLabel}>STEP 2 · 거의 다 됐어요</Text>
+            <Text style={[s.h1, { fontSize: 24 }]}>있는 재료만 남겨주세요.</Text>
+            <Text style={s.sub}>기본은 체크된 상태예요. 없는 것만 해제하세요.</Text>
           </View>
           <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 18, paddingBottom: 16 }} showsVerticalScrollIndicator={false}>
-            {Object.entries(grouped).map(([cat, items]) => (
-              <View key={cat} style={{ marginBottom: 18 }}>
-                <Text style={s.catLabel}>{CATEGORY[cat]?.label ?? cat}</Text>
-                <View style={s.checkWrap}>
-                  {items.map((n) => {
-                    const on = isChecked(n);
-                    return (
-                      <Pressable key={n} onPress={() => toggle(n)} style={[s.checkTile, on && s.checkTileOn]}>
-                        <Icon name={on ? 'check-circle' : 'plus-circle'} size={16} color={on ? colors.primary : colors.inkAsst} weight={on ? 'fill' : 'regular'} />
-                        <Text style={[s.checkText, on && { color: colors.ink }]}>{n}</Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
+            {/* 섹션 ① 생필품 — 곳간이 식재료뿐 아니라 생필품까지 챙기므로 맨 위에 둔다 */}
+            <View style={s.section}>
+              <Text style={s.sectionLabel}>생필품</Text>
+              <View style={s.checkWrap}>
+                {HOUSEHOLD_PICK.map(({ name }) => (
+                  <Chip key={name} label={name} on={hhIsChecked(name)} onPress={() => hhToggle(name)} />
+                ))}
               </View>
-            ))}
+            </View>
+            {/* 섹션 ② 자주 쓰는 식재료 — 한 섹션 안에서 카테고리는 가벼운 소제목으로만 구분(복잡해 보이지 않게) */}
+            <View style={s.section}>
+              <Text style={s.sectionLabel}>자주 쓰는 식재료</Text>
+              {Object.entries(grouped).map(([cat, items]) => (
+                <View key={cat} style={s.subGroup}>
+                  <Text style={s.subCatLabel}>{CATEGORY[cat]?.label ?? cat}</Text>
+                  <View style={s.checkWrap}>
+                    {items.map((n) => (
+                      <Chip key={n} label={n} on={isChecked(n)} onPress={() => toggle(n)} />
+                    ))}
+                  </View>
+                </View>
+              ))}
+            </View>
           </ScrollView>
           <AppButton label="다음" onPress={() => setStep(2)} style={s.cta} />
         </>
@@ -167,7 +208,8 @@ export function QuickSetupScreen({ onDone }: { onDone: () => void }) {
       {step === 2 && (
         <>
           <View style={s.head}>
-            <Text style={s.h1}>빠진 재료가 있나요?</Text>
+            <Text style={s.stepLabel}>STEP 3 · 마지막이에요</Text>
+            <Text style={[s.h1, { fontSize: 24 }]}>빠진 재료가 있나요?</Text>
             <Text style={s.sub}>기본 세트에 없는 재료를 추가하세요.</Text>
           </View>
           <View style={{ paddingHorizontal: 20 }}>
@@ -228,14 +270,14 @@ export function QuickSetupScreen({ onDone }: { onDone: () => void }) {
           <View style={s.doneIcon}>
             <Icon name="check-circle" size={64} color={colors.primary} weight="fill" />
           </View>
-          <Text style={s.doneTitle}>냉장고가 준비됐어요.</Text>
-          <Text style={s.doneSub}>{append ? `${pack.label} 재료를 기존 냉장고에 더했어요.` : `${pack.label} 기준으로 채웠어요.`}</Text>
+          <Text style={s.doneTitle}>곳간이 채워졌어요.</Text>
+          <Text style={s.doneSub}>{append ? `${pack.label} 재료를 기존 곳간에 더했어요.` : `${pack.label} 기준으로 채웠어요.`}</Text>
           <View style={s.statCard}>
-            <Stat n={fridge.length} label="등록된 식재료" />
+            <Stat n={fridge.filter((x) => x.kind !== 'household').length} label="등록된 식재료" />
             <View style={s.statDivider} />
-            <Stat n={readyCount} label="바로 만드는 요리" />
+            <Stat n={fridge.filter((x) => x.kind === 'household').length} label="생필품" />
             <View style={s.statDivider} />
-            <Stat n={almostCount} label="조금만 사면" />
+            <Stat n={readyCount} label="가능한 요리" />
           </View>
           <AppButton label="홈으로 가기" icon="house" onPress={onDone} style={{ alignSelf: 'stretch', marginHorizontal: 24, marginTop: 28 }} />
         </View>
@@ -253,6 +295,16 @@ function Stat({ n, label }: { n: number; label: string }) {
   );
 }
 
+// 선택 칩 — 선택 시 초록 테두리+체크, 미선택 시 회색 배경+플러스. (생필품·식재료 공용)
+function Chip({ label, on, onPress }: { label: string; on: boolean; onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} style={[s.checkTile, on && s.checkTileOn]}>
+      <Icon name={on ? 'check' : 'plus'} size={14} color={on ? CHIP_GREEN : colors.inkAsst} weight="bold" />
+      <Text style={[s.checkText, on && s.checkTextOn]}>{label}</Text>
+    </Pressable>
+  );
+}
+
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.cream },
   progressRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
@@ -261,6 +313,7 @@ const s = StyleSheet.create({
   progressText: { fontFamily: font.bold, fontSize: 12, color: colors.inkAlt, width: 28, textAlign: 'right' },
 
   head: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 4 },
+  stepLabel: { fontFamily: font.bold, fontSize: 11, color: colors.primary, letterSpacing: 0.3, marginBottom: 6 },
   h1: { fontFamily: font.extrabold, fontSize: 26, color: colors.ink, lineHeight: 34, letterSpacing: -0.5 },
   sub: { fontFamily: font.regular, fontSize: 14, color: colors.inkAlt, marginTop: 10 },
 
@@ -273,10 +326,19 @@ const s = StyleSheet.create({
   typeDesc: { fontFamily: font.medium, fontSize: 13, color: colors.inkAlt, marginTop: 4 },
 
   catLabel: { fontFamily: font.extrabold, fontSize: 14, color: colors.inkAlt, marginBottom: 10 },
-  checkWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
-  checkTile: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 7, paddingHorizontal: 11, borderRadius: radius.pill, borderWidth: 1.5, borderColor: colors.line, backgroundColor: colors.surface },
-  checkTileOn: { borderColor: colors.primary, backgroundColor: colors.primaryBg },
-  checkText: { fontFamily: font.bold, fontSize: 13, color: colors.inkAsst },
+  // 큰 섹션(생필품 · 자주 쓰는 식재료) — 화면을 딱 두 덩어리로 보이게 하는 상위 제목.
+  section: { marginBottom: 24 },
+  sectionLabel: { fontFamily: font.extrabold, fontSize: 17, color: colors.ink, marginBottom: 12, letterSpacing: -0.3 },
+  // 식재료 안의 카테고리 — 작고 옅은 소제목으로만 나눠 복잡해 보이지 않게.
+  subGroup: { marginBottom: 14 },
+  subCatLabel: { fontFamily: font.bold, fontSize: 12, color: colors.inkAsst, marginBottom: 8 },
+  checkWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  // 미선택 — 흰 박스 + 거의 안 보이는 옅은 회색 라인.
+  checkTile: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 8, paddingHorizontal: 13, borderRadius: radius.pill, borderWidth: 1.5, borderColor: colors.line, backgroundColor: colors.surface },
+  // 선택 — 아주 연한 초록 배경 + 차분한 진초록 라인·글자.
+  checkTileOn: { borderColor: CHIP_GREEN, backgroundColor: CHIP_GREEN_BG },
+  checkText: { fontFamily: font.bold, fontSize: 13.5, color: colors.inkAsst },
+  checkTextOn: { color: CHIP_GREEN },
 
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.line, borderRadius: radius.lg, paddingHorizontal: 14, paddingVertical: 6 },
   input: { flex: 1, fontFamily: font.medium, fontSize: 15, color: colors.ink, paddingVertical: 8 },
