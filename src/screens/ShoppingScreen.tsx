@@ -28,14 +28,19 @@ const TABS: { key: ShoppingKind; label: string }[] = [
 
 const recent = (a: ShoppingItem, b: ShoppingItem) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '');
 const isAuto = (x: ShoppingItem) => x.source !== 'manual' && (x.kind ?? 'food') === 'food';
+// 천 단위 콤마 (RN 엔진 무관하게 안전하게). 예: 41300 → "41,300"
+const won = (n: number) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
 export function ShoppingScreen() {
   const insets = useSafeAreaInsets();
   // 바텀시트는 화면 하단에 붙으므로 실기기 제스처 바만큼 더 띄워 마지막 버튼(삭제)이 바닥에 붙지 않게 한다.
   const sheetPad = Platform.OS === 'web' ? 30 : insets.bottom + 30;
-  const { shopping, toggleShoppingChecked, addToShopping, renameShopping, removeShopping, clearCheckedShopping } = useApp();
+  const { shopping, toggleShoppingChecked, addToShopping, renameShopping, removeShopping, clearCheckedShopping, setShoppingPrice, moveCheckedToFridge } = useApp();
   const nav = useNav();
   const [tab, setTab] = useState<ShoppingKind>('food');
+  const [pricingId, setPricingId] = useState<string | null>(null); // 금액 인라인 편집 중인 행
+  const [priceDraft, setPriceDraft] = useState('');
+  const [moveOpen, setMoveOpen] = useState(false); // 곳간으로 이동 확인
   const [addOpen, setAddOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false); // 장보기 사용법 안내
   const [pickCat, setPickCat] = useState<string | null>(null); // 펼친 카테고리 (식재료 전용)
@@ -53,6 +58,18 @@ export function ShoppingScreen() {
   const buyList = [...unchecked.filter(isAuto).sort(recent), ...unchecked.filter((x) => !isAuto(x)).sort(recent)];
   // 구매완료 — 최근 변경(체크)된 것이 가장 위로.
   const done = shopping.filter((x) => inTab(x) && x.checked).sort(recent);
+  // 합계 — 현재 탭 구매완료 합계 + 두 탭(식재료+생활용품) 합친 전체 합계. 금액 입력된 것만 더한다.
+  const tabTotal = done.reduce((sum, x) => sum + (x.price ?? 0), 0);
+  const grandTotal = shopping.filter((x) => x.checked).reduce((sum, x) => sum + (x.price ?? 0), 0);
+  const movable = done.filter((x) => !x.addedToFridge); // 아직 곳간에 안 올린 구매완료 항목
+
+  const startPrice = (it: ShoppingItem) => { setPriceDraft(it.price != null ? String(it.price) : ''); setPricingId(it.id); };
+  const commitPrice = () => {
+    if (!pricingId) return;
+    const n = parseInt(priceDraft.replace(/[^0-9]/g, ''), 10);
+    setShoppingPrice(pricingId, isNaN(n) || n <= 0 ? undefined : n);
+    setPricingId(null); setPriceDraft('');
+  };
 
   const openAdd = () => { setPickCat(null); setAddName(''); setSelected([]); setAddOpen(true); };
   const closeAdd = () => { setAddOpen(false); setPickCat(null); setAddName(''); setSelected([]); };
@@ -109,14 +126,37 @@ export function ShoppingScreen() {
             <View style={s.nameLine}>
               <Text style={[s.name, item.checked && s.nameDone]} numberOfLines={1}>{item.name}</Text>
               {auto && <View style={s.autoBadge}><Text style={s.autoBadgeText}>비서추천</Text></View>}
+              {item.checked && item.addedToFridge && (
+                <View style={s.inTag}>
+                  <Icon name="check" size={11} color={colors.primary} weight="bold" />
+                  <Text style={s.inTagText}>입고됨</Text>
+                </View>
+              )}
             </View>
             {item.note ? <Text style={s.note}>{item.note}</Text> : auto ? <Text style={s.note}>{SOURCE_LABEL[item.source]}</Text> : null}
           </View>
-          {item.checked && item.addedToFridge ? (
-            <View style={s.inTag}>
-              <Icon name="snowflake" size={12} color={colors.primary} weight="fill" />
-              <Text style={s.inTagText}>입고됨</Text>
-            </View>
+          {/* 구매완료 행: 금액 인라인 입력/수정 · 구매목록 행: 자세히 보기 캐럿 */}
+          {item.checked ? (
+            pricingId === item.id ? (
+              <TextInput
+                autoFocus
+                value={priceDraft}
+                onChangeText={(t) => setPriceDraft(t.replace(/[^0-9]/g, ''))}
+                keyboardType="number-pad"
+                onBlur={commitPrice}
+                onSubmitEditing={commitPrice}
+                placeholder="0"
+                placeholderTextColor={colors.inkAsst}
+                style={s.priceInput}
+                returnKeyType="done"
+              />
+            ) : (
+              <Pressable hitSlop={6} onPress={() => startPrice(item)}>
+                {item.price != null
+                  ? <Text style={s.priceText}>{won(item.price)}원</Text>
+                  : <Text style={s.priceEmpty}>금액 입력</Text>}
+              </Pressable>
+            )
           ) : (
             <Icon name="caret-right" size={16} color={colors.inkAsst} weight="bold" />
           )}
@@ -155,6 +195,14 @@ export function ShoppingScreen() {
         })}
       </View>
 
+      {/* 전체 합계 — 식재료+생활용품 합친 이번 장보기 총액 (항상 위에 고정) */}
+      {grandTotal > 0 && (
+        <View style={s.grandBar}>
+          <Text style={s.grandLabel}>이번 장보기</Text>
+          <Text style={s.grandValue}>{won(grandTotal)}원</Text>
+        </View>
+      )}
+
       <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 22, paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
         <SectionTitle title="구매목록" count={buyList.length} actionLabel="추가" onAction={openAdd} compact style={s.secTitle} />
         <View style={s.group}>
@@ -163,7 +211,28 @@ export function ShoppingScreen() {
 
         {done.length > 0 && (
           <>
-            <SectionTitle title="구매 완료" count={done.length} actionLabel="전체 삭제" actionIcon="trash" onAction={() => setClearOpen(true)} compact style={s.secTitleGap} />
+            {/* 구매완료 헤더 — 곳간으로 이동 + 전체 삭제 두 액션 */}
+            <View style={s.doneHead}>
+              <View style={s.doneHeadLeft}>
+                <Text style={s.doneHeadTitle}>구매 완료</Text>
+                <Text style={s.doneHeadCount}>{done.length}</Text>
+              </View>
+              <View style={s.doneActions}>
+                <Pressable style={[s.moveBtn, !movable.length && s.moveBtnOff]} onPress={() => movable.length && setMoveOpen(true)} disabled={!movable.length}>
+                  <Icon name="package" size={14} color={movable.length ? colors.primary : colors.inkAsst} weight="bold" />
+                  <Text style={[s.moveBtnText, !movable.length && { color: colors.inkAsst }]}>곳간으로</Text>
+                </Pressable>
+                <Pressable style={s.clearBtn} onPress={() => setClearOpen(true)} hitSlop={6}>
+                  <Icon name="trash" size={16} color={colors.inkAsst} />
+                </Pressable>
+              </View>
+            </View>
+            {tabTotal > 0 && (
+              <View style={s.tabTotalRow}>
+                <Text style={s.tabTotalLabel}>{tab === 'food' ? '식재료' : '생활용품'} 합계</Text>
+                <Text style={s.tabTotalValue}>{won(tabTotal)}원</Text>
+              </View>
+            )}
             <View style={s.group}>{done.map((it) => <Row key={it.id} item={it} />)}</View>
           </>
         )}
@@ -264,6 +333,25 @@ export function ShoppingScreen() {
             <View style={s.dialogBtns}>
               <AppButton label="취소" variant="ghost" onPress={() => setClearOpen(false)} style={{ flex: 1 }} />
               <AppButton label="전체 삭제" onPress={() => { clearCheckedShopping(tab); setClearOpen(false); }} style={{ flex: 1.4 }} />
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* 곳간으로 이동 확인 */}
+      <Modal visible={moveOpen} transparent animationType="fade" onRequestClose={() => setMoveOpen(false)}>
+        <Pressable style={s.backdrop} onPress={() => setMoveOpen(false)}>
+          <Pressable style={[s.sheet, { paddingBottom: sheetPad }]}>
+            <SheetHandle />
+            <Text style={s.sheetTitle}>구매 완료 {movable.length}개를 곳간으로 옮길까요?</Text>
+            <Text style={s.confirmSub}>
+              {tab === 'food'
+                ? '식재료는 보관위치 미지정(미분류)으로 곳간에 담겨요. 곳간에서 냉장·냉동·실온을 정해주세요.'
+                : '생활용품이 곳간에 담겨요.'}
+            </Text>
+            <View style={s.dialogBtns}>
+              <AppButton label="취소" variant="ghost" onPress={() => setMoveOpen(false)} style={{ flex: 1 }} />
+              <AppButton label="곳간으로 이동" onPress={() => { moveCheckedToFridge(tab); setMoveOpen(false); }} style={{ flex: 1.4 }} />
             </View>
           </Pressable>
         </Pressable>
@@ -387,8 +475,34 @@ const s = StyleSheet.create({
   note: { fontFamily: font.medium, fontSize: 11.5, color: colors.inkAlt, marginTop: 2 },
   autoBadge: { backgroundColor: colors.primaryBg, paddingHorizontal: 7, paddingVertical: 2, borderRadius: radius.pill },
   autoBadgeText: { fontFamily: font.bold, fontSize: 10, color: colors.primary },
-  inTag: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.primaryBg, paddingHorizontal: 9, paddingVertical: 5, borderRadius: radius.pill },
-  inTagText: { fontFamily: font.bold, fontSize: 11, color: colors.primary },
+  inTag: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: colors.primaryBg, paddingHorizontal: 7, paddingVertical: 2, borderRadius: radius.pill },
+  inTagText: { fontFamily: font.bold, fontSize: 10, color: colors.primary },
+
+  // 금액 인라인 입력/표시 (구매완료 행 우측)
+  priceText: { fontFamily: font.extrabold, fontSize: 14, color: colors.ink },
+  priceEmpty: { fontFamily: font.semibold, fontSize: 12.5, color: colors.inkAsst },
+  priceInput: { fontFamily: font.extrabold, fontSize: 14, color: colors.primary, minWidth: 70, textAlign: 'right', paddingVertical: 2, borderBottomWidth: 1.5, borderBottomColor: colors.primary },
+
+  // 전체 합계 바 (탭 아래 고정)
+  grandBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: 16, marginTop: 12, paddingHorizontal: 16, paddingVertical: 12, borderRadius: radius.lg, backgroundColor: colors.primaryBg },
+  grandLabel: { fontFamily: font.bold, fontSize: 14, color: colors.primaryDark },
+  grandValue: { fontFamily: font.extrabold, fontSize: 20, color: colors.primaryDark, letterSpacing: -0.5 },
+
+  // 구매완료 헤더 (곳간으로 이동 + 전체 삭제)
+  doneHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 20, marginBottom: 8 },
+  doneHeadLeft: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  doneHeadTitle: { fontFamily: font.extrabold, fontSize: 16, color: colors.ink },
+  doneHeadCount: { fontFamily: font.bold, fontSize: 13, color: colors.inkAsst },
+  doneActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  moveBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 6, paddingHorizontal: 11, borderRadius: radius.pill, backgroundColor: colors.primaryBg },
+  moveBtnOff: { backgroundColor: colors.fill },
+  moveBtnText: { fontFamily: font.bold, fontSize: 12.5, color: colors.primary },
+  clearBtn: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.fill },
+
+  // 탭별 합계 줄
+  tabTotalRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, paddingHorizontal: 4 },
+  tabTotalLabel: { fontFamily: font.semibold, fontSize: 12.5, color: colors.inkAlt },
+  tabTotalValue: { fontFamily: font.extrabold, fontSize: 15, color: colors.ink },
   empty: { fontFamily: font.medium, fontSize: 13.5, color: colors.inkAsst, paddingVertical: 16, textAlign: 'center' },
 
   kav: { flex: 1 },
