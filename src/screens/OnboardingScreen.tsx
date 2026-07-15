@@ -1,4 +1,5 @@
-// 온보딩 (spec §9.1) — 3 slides, 앱 가치 전달.
+// 온보딩 (spec §9.1) — 4 slides, 앱 가치 전달.
+// 포지셔닝: '냉장고 식재료 관리'에서 '장보기 + 우리집 곳간(식재료·생필품) 관리'로 확장.
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Animated, Easing, Platform, PanResponder, BackHandler } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,19 +10,24 @@ import { AppButton } from '../components/ui';
 
 const SLIDES: { icon: IconName; title: string; body: string }[] = [
   {
-    icon: 'snowflake',
-    title: '냉장고 속 재료,\n이제 잊지 마세요.',
-    body: '식재료를 등록하면 유통기한과\n남은 재료를 쉽게 확인할 수 있어요.',
-  },
-  {
-    icon: 'cooking-pot',
-    title: '있는 재료로\n오늘의 한 끼를 추천해요.',
-    body: '지금 만들 수 있는 요리와\n조금만 사면 가능한 요리를 알려드려요.',
+    icon: 'house',
+    title: '장보기부터\n우리집 곳간 관리까지,\n한 곳에서',
+    body: '손으로 적던 장보기 목록도,\n냉장고 속 식재료와 생필품도\n곳간이 알아서 챙겨드려요.',
   },
   {
     icon: 'basket',
-    title: '장보기 목록까지\n자동으로 정리해요.',
-    body: '떨어진 재료와 부족한 재료를\n한 번에 장보기 목록으로 모아보세요.',
+    title: '장보기, 이제\n손으로 안 적어요.',
+    body: '살 것을 목록에 담아두고\n마트에서 하나씩 체크만 하세요.\n다 사면 곳간으로 자동 정리돼요.',
+  },
+  {
+    icon: 'snowflake',
+    title: '식재료도 생필품도\n곳간이 챙겨요.',
+    body: '냉장·냉동·상온부터 휴지·물티슈까지,\n유통기한 임박과 떨어질 때를\n미리 알려드려요.',
+  },
+  {
+    icon: 'cooking-pot',
+    title: '있는 재료로\n오늘의 한 끼.',
+    body: '지금 만들 수 있는 요리와\n조금만 사면 가능한 요리를\n알려드려요.',
   },
 ];
 
@@ -101,6 +107,8 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
             <SpinningSnowflake />
           ) : slide.icon === 'basket' ? (
             <BouncingBasket />
+          ) : slide.icon === 'house' ? (
+            <CozyHouse />
           ) : (
             <Icon name={slide.icon} size={72} color={colors.primary} weight="fill" />
           )}
@@ -116,7 +124,7 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
       </View>
 
       <AppButton
-        label={last ? '냉장고 시작하기' : '다음'}
+        label={last ? '장봄이 시작하기' : '다음'}
         icon={last ? 'arrow-right' : undefined}
         onPress={() => {
           if (last) onDone();
@@ -249,6 +257,33 @@ function BouncingBasket() {
       }}
     >
       <Icon name="basket" size={72} color={colors.primary} weight="fill" />
+    </Animated.View>
+  );
+}
+
+// 아늑한 우리집 — 숨을 쉬듯 은은하게 부풀었다 잦아들고, 살짝 떠오른다.
+function CozyHouse() {
+  const breathe = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(breathe, { toValue: 1, duration: 1800, easing: Easing.inOut(Easing.sin), useNativeDriver: USE_NATIVE_DRIVER }),
+        Animated.timing(breathe, { toValue: 0, duration: 1800, easing: Easing.inOut(Easing.sin), useNativeDriver: USE_NATIVE_DRIVER }),
+      ])
+    );
+    anim.start();
+    return () => anim.stop();
+  }, []);
+  return (
+    <Animated.View
+      style={{
+        transform: [
+          { translateY: breathe.interpolate({ inputRange: [0, 1], outputRange: [0, -3] }) },
+          { scale: breathe.interpolate({ inputRange: [0, 1], outputRange: [1, 1.06] }) },
+        ],
+      }}
+    >
+      <Icon name="house" size={72} color={colors.primary} weight="fill" />
     </Animated.View>
   );
 }
