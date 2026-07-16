@@ -14,6 +14,13 @@ if (!BG) { console.error(`variant는 ${Object.keys(VARIANTS).join(' | ')} 또는
 
 const SRC = 'assets/logo.svg';
 
+// 적응형 아이콘 전경이 캔버스에서 차지할 비율.
+// 안드로이드는 108dp 캔버스 중 바깥 18dp를 잘라내 ~72dp만 보여주므로, 0.6이면
+// 보이는 원의 90%를 장바구니가 채워 답답해 보인다. 0.48이면 ~72%로 여백이 생긴다.
+const FG_RATIO = 0.48;
+// 런처 아이콘(전경·모노크롬)만 다시 뽑고 스플래시/파비콘 등은 건드리지 않을 때 사용
+const ADAPTIVE_ONLY = process.argv.includes('--adaptive-only');
+
 // 초록 배경 제거 → 흰 장바구니만 남은 투명 PNG (슬릿 구멍 유지)
 async function basketCut(size) {
   const { data, info } = await sharp(fs.readFileSync(SRC), { density: 600 })
@@ -57,20 +64,23 @@ async function centered(basket, canvas, ratio, tint) {
   const square = (size, file) =>
     sharp(basket).flatten({ background: BG }).resize(size, size).png().toFile(file);
 
-  // 1) 앱 아이콘 — 모서리까지 꽉 찬 초록 사각형 (iOS가 알아서 둥글게 마스킹)
-  await square(1024, 'assets/icon.png');
+  // 1) 안드로이드 적응형 — 배경 단색, 전경은 안전영역 안의 장바구니 (런처 아이콘)
+  await sharp(await centered(basket, 1024, FG_RATIO)).toFile('assets/android-icon-foreground.png');
+  await sharp(await centered(basket, 1024, FG_RATIO, '#FFFFFF')).toFile('assets/android-icon-monochrome.png');
 
-  // 2) 안드로이드 적응형 — 배경 단색, 전경은 안전영역(중앙 60%) 안의 장바구니
-  await sharp({ create: { width: 1024, height: 1024, channels: 3, background: BG } })
-    .png().toFile('assets/android-icon-background.png');
-  await sharp(await centered(basket, 1024, 0.6)).toFile('assets/android-icon-foreground.png');
-  await sharp(await centered(basket, 1024, 0.6, '#FFFFFF')).toFile('assets/android-icon-monochrome.png');
+  if (!ADAPTIVE_ONLY) {
+    await sharp({ create: { width: 1024, height: 1024, channels: 3, background: BG } })
+      .png().toFile('assets/android-icon-background.png');
 
-  // 3) 스플래시 / 파비콘 / 앱 내 헤더 마크
-  await square(1024, 'assets/splash-icon.png');
-  await square(64, 'assets/favicon.png');
-  await square(256, 'assets/logo-mark.png');
+    // 2) 앱 아이콘 — 모서리까지 꽉 찬 초록 사각형 (iOS가 알아서 둥글게 마스킹)
+    await square(1024, 'assets/icon.png');
 
-  console.log(`variant=${variant}  bg=${BG}`);
+    // 3) 스플래시 / 파비콘 / 앱 내 헤더 마크
+    await square(1024, 'assets/splash-icon.png');
+    await square(64, 'assets/favicon.png');
+    await square(256, 'assets/logo-mark.png');
+  }
+
+  console.log(`variant=${variant}  bg=${BG}  전경비율=${FG_RATIO}${ADAPTIVE_ONLY ? '  (적응형만)' : ''}`);
   console.log('※ app.json의 android.adaptiveIcon.backgroundColor 도 같은 값이어야 합니다.');
 })().catch((e) => { console.error('ERR', e); process.exit(1); });
