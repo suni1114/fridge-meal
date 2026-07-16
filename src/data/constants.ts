@@ -135,7 +135,7 @@ export function emojiFor(name: string, category?: string): string {
     ?? (category ? CATEGORY_EMOJI[category] : undefined) ?? '🍽️';
 }
 
-// ── 생활용품 (장보기 '생활용품' 탭 전용) ───────────────────────────────────
+// ── 생필품 (장보기 '생필품' 탭 전용) ───────────────────────────────────
 // 식재료와 같은 방식: 카테고리 → 품목 목록에서 골라 담는다. 냉장고에는 들어가지 않는다.
 export const HOUSEHOLD_CATEGORIES: { code: string; label: string; emoji: string; color: CatKey }[] = [
   { code: 'paper', label: '휴지·위생', emoji: '🧻', color: 'blue' },
@@ -168,7 +168,7 @@ export const HOUSEHOLD_BY_NAME: Record<string, string> = (() => {
   return m;
 })();
 
-/** 생활용품 이모지 — 모르는 이름(직접 입력)은 카테고리 기본값, 그마저 없으면 장바구니. */
+/** 생필품 이모지 — 모르는 이름(직접 입력)은 카테고리 기본값, 그마저 없으면 장바구니. */
 export function householdEmojiFor(name: string): string {
   const n = baseName(name);
   if (HOUSEHOLD_EMOJI[name]) return HOUSEHOLD_EMOJI[name];
@@ -177,7 +177,7 @@ export function householdEmojiFor(name: string): string {
   return HOUSEHOLD_CATEGORIES.find((c) => c.code === code)?.emoji ?? '🧺';
 }
 
-/** 생활용품 타일 색 — 카테고리별 색, 모르면 회색. */
+/** 생필품 타일 색 — 카테고리별 색, 모르면 회색. */
 export function householdColorFor(name: string): CatKey {
   const code = HOUSEHOLD_BY_NAME[baseName(name)];
   return HOUSEHOLD_CATEGORIES.find((c) => c.code === code)?.color ?? 'grey';
@@ -305,7 +305,8 @@ export function coarseFromFine(code: string): CategoryCode {
 }
 
 // ── 수량 단위 (재료별로 그람/갯수/퍼센트 자동 구분) ──────────────────────────
-export type QtyUnit = 'count' | 'gram' | 'percent';
+// liter는 생필품(세제·샴푸 등 액체) 전용.
+export type QtyUnit = 'count' | 'gram' | 'percent' | 'liter';
 
 // 세분류 기본 단위
 const UNIT_BY_FINE: Record<string, QtyUnit> = {
@@ -327,12 +328,22 @@ export function unitOf(name: string, fineCat?: string): QtyUnit {
   return UNIT_BY_NAME[name] ?? UNIT_BY_NAME[baseName(name)] ?? UNIT_BY_FINE[fineCat ?? fineCategoryOf(name)] ?? 'percent';
 }
 
-export const UNIT_SUFFIX: Record<QtyUnit, string> = { count: '개', gram: 'g', percent: '%' };
+export const UNIT_SUFFIX: Record<QtyUnit, string> = { count: '개', gram: 'g', percent: '%', liter: 'L' };
+
+// 생필품 단위 — 액체류(세제·샴푸 등)는 리터, 나머지는 개수. 사용자가 수정에서 바꿀 수 있다.
+const HOUSEHOLD_LITER = new Set([
+  '세탁세제', '섬유유연제', '표백제', '락스', '욕실세정제', '주방세제',
+  '샴푸', '린스', '바디워시', '핸드워시',
+]);
+export function householdUnitOf(name: string): QtyUnit {
+  return HOUSEHOLD_LITER.has(baseName(name)) ? 'liter' : 'count';
+}
 
 // 단위/수량 → 내부 잔량 레벨(정렬·장보기 로직용). 등록 단계라 '없음'은 만들지 않는다.
 export function stockFromQty(unit: QtyUnit, amount: number): StockLevel {
   if (unit === 'percent') return amount >= 75 ? 'enough' : amount >= 50 ? 'low' : 'very_low';
   if (unit === 'count') return amount >= 3 ? 'enough' : amount >= 2 ? 'low' : 'very_low';
+  if (unit === 'liter') return amount >= 1 ? 'enough' : amount >= 0.5 ? 'low' : 'very_low';
   return amount >= 300 ? 'enough' : amount >= 100 ? 'low' : 'very_low'; // gram
 }
 

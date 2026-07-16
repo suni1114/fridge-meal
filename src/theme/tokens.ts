@@ -14,6 +14,10 @@ export const colors = {
   coral: '#E8694A', // 위험 / 임박
   coralBg: '#FBE5DE',
 
+  // 요리추천 '임박재료' 표시 — 목록·상세 공용
+  nearBg: '#FFF2EC', // 배경
+  nearFg: '#E04D00', // 글씨 · 불꽃 아이콘
+
   cream: '#F2F3F4', // 앱 배경 (연한 그레이 — 이전 크림 #FBF8F1에서 변경)
   surface: '#FFFFFF', // 카드 표면
   darkGreen: '#1F3A2B', // 깊은 그린 (소진 예측 카드 / 히어로 / 온보딩)

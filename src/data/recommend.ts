@@ -4,7 +4,20 @@ import { baseName } from './constants';
 import { daysUntil } from './date';
 
 export type RecipeCategory = '국·찌개' | '반찬' | '메인' | '간편';
-export type Difficulty = '쉬움' | '보통' | '어려움';
+// 난이도 5단계. '어려움'은 정말 손이 많이 가는 소수 요리(설렁탕·곰탕 등)에만 쓴다.
+export type Difficulty = '아주쉬움' | '쉬움' | '보통' | '조금어려움' | '어려움';
+
+export const DIFFICULTIES: Difficulty[] = ['아주쉬움', '쉬움', '보통', '조금어려움', '어려움'];
+
+// 난이도 → 별 개수(1~5). 별이 많을수록 어렵다.
+export const DIFFICULTY_LEVEL: Record<Difficulty, number> = {
+  아주쉬움: 1, 쉬움: 2, 보통: 3, 조금어려움: 4, 어려움: 5,
+};
+/** 난이도를 별점 문자열로. 예: 보통 → '★★★☆☆' */
+export function difficultyStars(d: Difficulty): string {
+  const n = DIFFICULTY_LEVEL[d] ?? 3;
+  return '★'.repeat(n) + '☆'.repeat(5 - n);
+}
 export const RECIPE_CATEGORIES: RecipeCategory[] = ['국·찌개', '반찬', '메인', '간편'];
 
 export interface Recipe {
@@ -80,3 +93,9 @@ export const isReady = (m: RecipeMatch) => m.recommendable && m.missingSub.lengt
 export const needsSub = (m: RecipeMatch) => m.recommendable && m.missingSub.length > 0;
 // 재료 1개만 더 있으면 가능 = 메인 딱 1개 부족.
 export const needsOneMain = (m: RecipeMatch) => !m.recommendable && m.missingMain.length === 1;
+
+// 특정 재료(냉장고 항목명)가 이 요리의 메인/서브 재료에 들어가는지 — 매칭과 동일한 부분일치 규칙.
+export function recipeUsesIngredient(recipe: Recipe, name: string): boolean {
+  const n = baseName(name);
+  return hit(n, recipe.mainIngredients) || hit(n, recipe.subIngredients);
+}

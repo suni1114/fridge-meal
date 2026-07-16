@@ -6,6 +6,7 @@ import { font } from '../theme/fonts';
 import { Icon, IconName } from './Icon';
 import { CATEGORY, CategoryCode, STOCK, StockLevel, emojiFor, recipeCategoryEmoji, householdEmojiFor, householdColorFor } from '../data/constants';
 import { daysUntil } from '../data/date';
+import { Difficulty, DIFFICULTY_LEVEL } from '../data/recommend';
 import { useNav } from '../navigation/nav';
 
 // 웹에서 이모지가 흑백 외곽선(text-presentation)으로 폴백되지 않도록 컬러 이모지 폰트를 명시한다.
@@ -81,7 +82,7 @@ export function FoodTile({ name, category, size = 46 }: { name?: string; categor
 }
 
 
-/** 생활용품 타일 — 식재료 타일과 같은 모양. 이모지·색은 품목 이름으로 찾는다. */
+/** 생필품 타일 — 식재료 타일과 같은 모양. 이모지·색은 품목 이름으로 찾는다. */
 export function HouseholdTile({ name, size = 46 }: { name: string; size?: number }) {
   const c = cat[householdColorFor(name)];
   return (
@@ -141,7 +142,7 @@ export function StockTag({ stock, qty }: { stock: StockLevel; qty?: string }) {
 }
 
 /** Section title with optional right action. */
-export function SectionTitle({ title, count, actionLabel, actionIcon, onAction, style, compact }: { title: string; count?: number; actionLabel?: string; actionIcon?: IconName; onAction?: () => void; style?: ViewStyle; compact?: boolean }) {
+export function SectionTitle({ title, count, actionLabel, actionIcon, onAction, style, compact, actionProminent }: { title: string; count?: number; actionLabel?: string; actionIcon?: IconName; onAction?: () => void; style?: ViewStyle; compact?: boolean; actionProminent?: boolean }) {
   return (
     <View style={[s.sectionTitle, style]}>
       <View style={s.sectionTitleLeft}>
@@ -153,12 +154,28 @@ export function SectionTitle({ title, count, actionLabel, actionIcon, onAction, 
         )}
       </View>
       {actionLabel && (
-        <Pressable onPress={onAction} hitSlop={8} style={s.sectionAction}>
-          <Text style={s.sectionActionText}>{actionLabel}</Text>
-          <Icon name={actionIcon ?? 'caret-right'} size={14} color={colors.inkAlt} weight="bold" />
+        // 기본은 옅은 텍스트 링크(전체보기 등), actionProminent면 초록 알약 버튼(추가 등)으로 또렷하게.
+        <Pressable onPress={onAction} hitSlop={8} style={[s.sectionAction, actionProminent && s.sectionActionPill]}>
+          {actionProminent && <Icon name={actionIcon ?? 'plus'} size={14} color={colors.white} weight="bold" />}
+          <Text style={[s.sectionActionText, actionProminent && s.sectionActionTextOn]}>{actionLabel}</Text>
+          {!actionProminent && <Icon name={actionIcon ?? 'caret-right'} size={14} color={colors.inkAlt} weight="bold" />}
         </Pressable>
       )}
     </View>
+  );
+}
+
+// 난이도 별점 색 — 채운 별은 선명한 금색, 빈 별은 옅은 회색이라 개수가 한눈에 보인다.
+const STAR_ON = '#FFB300';
+const STAR_OFF = '#D8DAD6';
+/** 난이도 별점(1~5). 별이 많을수록 어렵다. 목록·상세·관리자에서 공용. */
+export function DifficultyStars({ difficulty, size = 14 }: { difficulty: Difficulty; size?: number }) {
+  const n = DIFFICULTY_LEVEL[difficulty] ?? 3;
+  return (
+    <Text style={{ fontSize: size, letterSpacing: 2, fontFamily: font.bold }}>
+      <Text style={{ color: STAR_ON }}>{'★'.repeat(n)}</Text>
+      <Text style={{ color: STAR_OFF }}>{'☆'.repeat(5 - n)}</Text>
+    </Text>
   );
 }
 
@@ -256,6 +273,9 @@ const s = StyleSheet.create({
   sectionCountText: { fontFamily: font.bold, fontSize: 12.5, color: colors.inkAlt },
   sectionAction: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   sectionActionText: { fontFamily: font.semibold, fontSize: 13, color: colors.inkAlt },
+  // 또렷한 '추가' 액션 — 솔리드 초록 버튼(초록 배경 + 흰 글자)
+  sectionActionPill: { gap: 4, paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill, backgroundColor: colors.primary },
+  sectionActionTextOn: { fontFamily: font.bold, color: colors.white },
 
   pill: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 11, paddingVertical: 6, borderRadius: radius.pill },
   pillText: { fontFamily: font.bold, fontSize: 12.5 },
