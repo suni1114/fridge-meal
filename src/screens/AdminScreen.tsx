@@ -4,9 +4,9 @@ import { View, Text, ScrollView, Pressable, TextInput, StyleSheet } from 'react-
 import { colors, radius } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon } from '../components/Icon';
-import { ScreenHeader, AppButton } from '../components/ui';
+import { ScreenHeader, AppButton, DifficultyStars } from '../components/ui';
 import { useApp } from '../data/store';
-import { RECIPE_CATEGORIES, RecipeCategory } from '../data/recommend';
+import { RECIPE_CATEGORIES, RecipeCategory, DIFFICULTIES, Difficulty } from '../data/recommend';
 import { FINE_CATEGORIES, coarseFromFine } from '../data/constants';
 import { useNav } from '../navigation/nav';
 
@@ -30,6 +30,7 @@ export function AdminScreen() {
   const [rSub, setRSub] = useState('');
   const [rSeason, setRSeason] = useState('');
   const [rTime, setRTime] = useState('');
+  const [rDiff, setRDiff] = useState<Difficulty>('보통'); // 난이도(별점) — 기본 보통
   const [rUrl, setRUrl] = useState('');
   const userRecipes = recipes.filter((r) => r.menuId.startsWith('user-'));
   const submitRecipe = () => {
@@ -37,8 +38,8 @@ export function AdminScreen() {
     if (!name || main.length === 0) return;
     addRecipe({ menuId: slug(name), name, category: rCat, mainIngredients: main, subIngredients: splitList(rSub),
       seasonings: splitList(rSeason),
-      cookTimeMinutes: rTime ? (Number(rTime) || undefined) : undefined, recommendUrl: rUrl.trim() || undefined });
-    setRName(''); setRMain(''); setRSub(''); setRSeason(''); setRTime(''); setRUrl('');
+      cookTimeMinutes: rTime ? (Number(rTime) || undefined) : undefined, difficulty: rDiff, recommendUrl: rUrl.trim() || undefined });
+    setRName(''); setRMain(''); setRSub(''); setRSeason(''); setRTime(''); setRDiff('보통'); setRUrl('');
   };
 
   const [iName, setIName] = useState('');
@@ -67,6 +68,20 @@ export function AdminScreen() {
             <Field label="서브 재료 (쉼표)" value={rSub} onChange={setRSub} placeholder="두부, 대파, 양파" />
             <Field label="양념 (쉼표, 매칭 제외)" value={rSeason} onChange={setRSeason} placeholder="고춧가루, 국간장, 다진마늘" />
             <Field label="조리시간(분)" value={rTime} onChange={setRTime} placeholder="25" keyboardType="numeric" />
+            {/* 난이도 — 별이 많을수록 어렵다 */}
+            <Text style={s.label}>난이도</Text>
+            <View style={s.diffCol}>
+              {DIFFICULTIES.map((d) => {
+                const on = rDiff === d;
+                return (
+                  <Pressable key={d} style={[s.diffRow, on && s.diffRowOn]} onPress={() => setRDiff(d)}>
+                    <DifficultyStars difficulty={d} size={15} />
+                    <Text style={[s.diffLabel, on && s.diffLabelOn]}>{d}</Text>
+                    {on && <Icon name="check-circle" size={18} color={colors.primary} weight="fill" />}
+                  </Pressable>
+                );
+              })}
+            </View>
             <Field label="추천레시피 링크(URL)" value={rUrl} onChange={setRUrl} placeholder="https://www.10000recipe.com/..." />
             <AppButton label="요리 추가" icon="plus" onPress={submitRecipe} style={{ marginTop: 16 }} />
             <Text style={s.listHead}>추가한 요리 {userRecipes.length}개</Text>
@@ -121,6 +136,13 @@ const s = StyleSheet.create({
   chipOn: { backgroundColor: colors.primary, borderColor: colors.primary },
   chipText: { fontFamily: font.bold, fontSize: 13, color: colors.inkAlt },
   chipTextOn: { color: colors.white },
+  // 난이도 선택 — 별점 + 라벨 한 줄씩
+  diffCol: { gap: 6, marginBottom: 4 },
+  diffRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 9, paddingHorizontal: 12, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.line },
+  diffRowOn: { borderColor: colors.primary, backgroundColor: colors.primaryBg },
+  diffLabel: { flex: 1, fontFamily: font.bold, fontSize: 13.5, color: colors.inkAlt },
+  diffLabelOn: { color: colors.primaryDark },
+
   listHead: { fontFamily: font.extrabold, fontSize: 15, color: colors.ink, marginTop: 26, marginBottom: 10 },
   listRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, borderRadius: radius.lg, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 8 },
   listName: { fontFamily: font.bold, fontSize: 15, color: colors.ink },
