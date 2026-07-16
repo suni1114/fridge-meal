@@ -29,11 +29,6 @@ const TABS: { label: string; icon: IconName; match: (storage: string) => boolean
   { label: '냉동', icon: 'snowflake', match: (st) => st === 'frozen' },
   { label: '실온', icon: 'sun-horizon', match: (st) => st === 'room_temp' || st === 'sauce' || st === 'etc' },
 ];
-// 보관위치 선택 탭의 '차분한 초록' — 밝은 로고 그린(colors.primary)은 로고·메인 버튼 전용이라,
-// 스텝2 칩과 동일한 톤(테두리·글자)과 아주 연한 초록 배경으로 선택 상태를 표현한다.
-const LOC_GREEN = '#2A6B4C';
-const LOC_GREEN_BG = '#F0F9F4';
-
 // 정렬 옵션 — 라벨은 간결하게.
 const SORTS: { key: string; label: string }[] = [
   { key: 'expiry', label: '임박순' },
@@ -188,31 +183,33 @@ export function FridgeScreen() {
         </View>
       )}
 
-      {/* 최상위 구분 — 식재료 / 생필품 (밑줄 탭) + 식재료일 때만 우측에 위치/종류 세그먼트 */}
+      {/* 최상위 구분 — 식재료 / 생필품 밑줄 탭(각 50%). 식재료 탭 안, 글자 오른쪽에 위치/종류 세그먼트. */}
       <View style={s.tabBar}>
-        <View style={s.viewTabs}>
-          {([['food', '식재료'], ['household', '생필품']] as const).map(([m, label]) => {
-            const on = topTab === m;
-            return (
-              <Pressable key={m} style={s.viewTab} onPress={() => setTopTab(m)}>
-                <Text style={[s.viewTabText, on && s.viewTabTextOn]}>{label}</Text>
-                <View style={[s.viewUnderline, on && s.viewUnderlineOn]} />
-              </Pressable>
-            );
-          })}
-        </View>
-        {topTab === 'food' && (
-          <View style={s.segment}>
-            {([['location', '위치'], ['category', '종류']] as const).map(([g, label]) => {
-              const on = foodGroup === g;
-              return (
-                <Pressable key={g} style={[s.segmentBtn, on && s.segmentBtnOn]} onPress={() => setFoodGroup(g)}>
-                  <Text style={[s.segmentText, on && s.segmentTextOn]}>{label}</Text>
-                </Pressable>
-              );
-            })}
+        <Pressable style={s.viewTab} onPress={() => setTopTab('food')}>
+          <View style={s.viewTabRow}>
+            <Text style={[s.viewTabText, topTab === 'food' && s.viewTabTextOn]}>식재료</Text>
+            {topTab === 'food' && (
+              <View style={s.segment}>
+                {([['location', '위치'], ['category', '종류']] as const).map(([g, label]) => {
+                  const on = foodGroup === g;
+                  return (
+                    <Pressable key={g} style={[s.segmentBtn, on && s.segmentBtnOn]} onPress={() => setFoodGroup(g)}>
+                      <Text style={[s.segmentText, on && s.segmentTextOn]}>{label}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            )}
           </View>
-        )}
+          <View style={[s.viewUnderline, topTab === 'food' && s.viewUnderlineOn]} />
+        </Pressable>
+
+        <Pressable style={s.viewTab} onPress={() => setTopTab('household')}>
+          <View style={s.viewTabRow}>
+            <Text style={[s.viewTabText, topTab === 'household' && s.viewTabTextOn]}>생필품</Text>
+          </View>
+          <View style={[s.viewUnderline, topTab === 'household' && s.viewUnderlineOn]} />
+        </Pressable>
       </View>
 
       {/* 위치 모드일 때만 보관위치 하위 탭 — 냉장·냉동·실온 (아이콘 + 개수, 선택 시 채움) */}
@@ -222,7 +219,7 @@ export function FridgeScreen() {
             const on = i === tabClamped;
             return (
               <Pressable key={t.label} style={[s.locTab, on && s.locTabOn]} onPress={() => goTab(i)}>
-                <Icon name={t.icon} size={18} color={on ? LOC_GREEN : colors.inkAlt} weight={on ? 'fill' : 'regular'} />
+                <Icon name={t.icon} size={18} color={on ? colors.white : colors.inkAlt} weight={on ? 'fill' : 'regular'} />
                 <Text style={[s.locTabText, on && s.locTabTextOn]}>{t.label}</Text>
                 <Text style={[s.locTabCount, on && s.locTabCountOn]}>{listFor(i).length}</Text>
               </Pressable>
@@ -341,20 +338,29 @@ const s = StyleSheet.create({
   search: { flex: 1, fontFamily: font.medium, fontSize: 15, color: colors.ink, paddingVertical: 11 },
 
   // 최상위 밑줄 탭(식재료/생필품) + 우측 세그먼트를 한 줄에. 밑줄은 줄 전체에 깔린다.
-  tabBar: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginHorizontal: 20, marginTop: 8, borderBottomWidth: 1, borderBottomColor: colors.line },
-  viewTabs: { flexDirection: 'row' },
+  tabBar: { flexDirection: 'row', alignItems: 'flex-end', marginHorizontal: 20, marginTop: 8, borderBottomWidth: 1, borderBottomColor: colors.line },
   // 탭에 가로 여백을 넉넉히 줘 식재료/생필품 영역과 밑줄(선택바)을 넓게 잡는다.
-  viewTab: { alignItems: 'center', marginRight: 14 },
-  viewTabText: { fontFamily: font.bold, fontSize: 16, color: colors.inkAsst, paddingVertical: 10, paddingHorizontal: 14 },
+  // 각 탭이 전체 폭의 50%. 식재료 탭 안에서 글자 + 위치/종류 세그먼트가 한 줄로.
+  viewTab: { flex: 1, alignItems: 'center' },
+  viewTabRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 9 },
+  viewTabText: { fontFamily: font.bold, fontSize: 16, color: colors.inkAsst },
   viewTabTextOn: { color: colors.ink },
   viewUnderline: { height: 3, width: '100%', backgroundColor: 'transparent', marginBottom: -1 },
   viewUnderlineOn: { backgroundColor: colors.ink },
 
   // 위치 / 종류 세그먼트 토글 — 회색 트랙 위 흰 알약(선택). 작고 차분하게.
-  segment: { flexDirection: 'row', backgroundColor: colors.fill, borderRadius: radius.pill, padding: 2, marginBottom: 6 },
-  segmentBtn: { paddingVertical: 5, paddingHorizontal: 12, borderRadius: radius.pill },
-  segmentBtnOn: { backgroundColor: colors.surface },
-  segmentText: { fontFamily: font.bold, fontSize: 12, color: colors.inkAsst },
+  // 곳간 배경(cream)과 트랙(fill)이 거의 같은 회색이라 묻힌다 → 테두리로 토글임을 드러낸다.
+  segment: { flexDirection: 'row', backgroundColor: colors.fill, borderRadius: radius.pill, padding: 2, borderWidth: 1, borderColor: colors.lineStrong },
+  segmentBtn: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: radius.pill },
+  // 선택 알약 — 흰 배경 + 아래로 옅은 그림자를 줘 트랙 위에 떠 보이게(토글 느낌).
+  segmentBtnOn: {
+    backgroundColor: colors.surface,
+    ...Platform.select({
+      web: { boxShadow: '0 1px 3px rgba(20,30,20,0.22)' } as any,
+      default: { elevation: 2, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 2, shadowOffset: { width: 0, height: 1 } },
+    }),
+  },
+  segmentText: { fontFamily: font.bold, fontSize: 11.5, color: colors.inkAlt },
   segmentTextOn: { color: colors.ink },
   // 카테고리별 보기 — 종류 소제목(옅고 작게).
   groupLabel: { fontFamily: font.bold, fontSize: 12.5, color: colors.inkAlt, marginBottom: 7, marginLeft: 2 },
@@ -368,13 +374,13 @@ const s = StyleSheet.create({
   // 보관 위치 탭 (냉장·냉동·실온) — 가장 중요한 메뉴라 크고 또렷하게(아이콘+개수, 선택 시 채움).
   locTabs: { flexDirection: 'row', gap: 8, marginHorizontal: 20, marginTop: 10 },
   locTab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 8, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.line },
-  // 선택 — 초록 꽉채움 대신 차분한 초록 테두리 + 아주 연한 초록 배경(스텝2 칩과 톤 통일).
-  locTabOn: { backgroundColor: LOC_GREEN_BG, borderColor: LOC_GREEN },
+  // 선택 — 초록으로 꽉 채우고 글자·아이콘은 흰색.
+  locTabOn: { backgroundColor: colors.primary, borderColor: colors.primary },
   locTabText: { fontFamily: font.bold, fontSize: 14, color: colors.inkAlt },
-  locTabTextOn: { color: LOC_GREEN },
-  // 개수 배지 — 선택 시 차분한 초록으로 채워 연한 배경 위에서도 또렷하게.
+  locTabTextOn: { color: colors.white },
+  // 개수 배지 — 선택 시 초록 배경 위에서 흰 배지 + 초록 글자로 뒤집는다.
   locTabCount: { fontFamily: font.bold, fontSize: 11, color: colors.inkAlt, backgroundColor: colors.fill, minWidth: 18, height: 18, lineHeight: 18, borderRadius: 9, paddingHorizontal: 5, textAlign: 'center', overflow: 'hidden' },
-  locTabCountOn: { color: colors.white, backgroundColor: LOC_GREEN },
+  locTabCountOn: { color: colors.primary, backgroundColor: colors.white },
 
   // 정렬 칩 (임박순·최신순·이름순·잔량순) — 가벼운 텍스트 칩으로 위치 필터와 구분.
   sortRow: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 18, paddingTop: 12, paddingBottom: 4 },
