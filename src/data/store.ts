@@ -29,7 +29,7 @@ export interface FridgeItem {
 }
 
 export type ShoppingSource = 'manual' | 'low_stock' | 'recipe_missing' | 'expired' | 'near_expiry';
-export type ShoppingKind = 'food' | 'household'; // 식재료 / 생활용품 탭 구분
+export type ShoppingKind = 'food' | 'household'; // 식재료 / 생필품 탭 구분
 export interface ShoppingItem {
   id: string;
   name: string;
@@ -41,6 +41,17 @@ export interface ShoppingItem {
   checked: boolean;
   addedToFridge: boolean;
   updatedAt?: string; // 마지막 변경 시각(ISO) — 동기화 충돌 해결용.
+}
+
+// 곳간 배치 등록 1건 — '식재료 등록' 화면(장보기 → 곳간으로 이동)에서 위치·유통기한을 정해 넣는다.
+export interface RegisterEntry {
+  shoppingId?: string; // 장보기에서 온 항목이면 그 id (완료 처리용)
+  name: string;
+  category: CategoryCode;
+  storage: string; // refrigerated | frozen | room_temp | household
+  kind?: ShoppingKind; // 'household' = 생필품
+  qty?: string;
+  expiry: string | null;
 }
 
 // ---- ingredient knowledge (name → category / storage) --------------------
@@ -209,8 +220,8 @@ interface AppState {
   markAddedToFridge: (id: string, storage: string, stock: StockLevel, expiry: string | null) => void;
   markShoppingDone: (id: string) => void;
   setShoppingPrice: (id: string, price: number | undefined) => void; // 구매완료 항목 금액 입력/수정
-  moveCheckedToFridge: (kind: ShoppingKind) => void; // 구매완료(입고 전) 항목을 한꺼번에 곳간으로
-  assignStorage: (id: string, storage: string) => void; // 곳간 항목 보관위치 지정(미분류 → 냉장/냉동/실온)
+  registerToFridge: (entries: RegisterEntry[]) => void; // '식재료 등록' 화면에서 위치·유통기한을 정해 한꺼번에 곳간으로
+  assignStorage: (id: string, storage: string) => void; // 곳간 항목 보관위치 변경(냉장/냉동/실온)
   renameShopping: (id: string, name: string) => void;
   removeShopping: (id: string) => void;
   clearCheckedShopping: (kind?: ShoppingKind) => void;
@@ -318,7 +329,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (isNew) setUsageLog((u) => [...u, { id: uid(), name, category: item.category, date: item.added ?? todayISO() }]);
       },
       // 같은 이름이 이미 목록에 있어도 출처가 다르면(예: 자동추천에 떠 있는 걸 직접 추가) 담는다.
-      // 냉장고에 있어 자동추천에 뜬 재료라도 "또 사기"가 가능하도록. kind(식재료/생활용품)도 구분.
+      // 냉장고에 있어 자동추천에 뜬 재료라도 "또 사기"가 가능하도록. kind(식재료/생필품)도 구분.
       addToShopping: (name, source, note, kind = 'food') =>
         setShopping((p) =>
           p.some((x) => x.name === name && !x.checked && x.source === source && (x.kind ?? 'food') === kind)
@@ -338,36 +349,45 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       // 식재료 등록 폼으로 냉장고에 넣은 경우 — 냉장고 항목은 폼이 생성하므로 장보기 항목만 완료 처리.
       markShoppingDone: (id) =>
         setShopping((prev) => prev.map((x) => (x.id === id ? { ...x, addedToFridge: true, checked: true, updatedAt: nowISO() } : x))),
+      // 금액 입력은 정렬(updatedAt 최신순)에 영향 주지 않도록 updatedAt을 갱신하지 않는다 — 구매완료에서 제자리 유지.
       setShoppingPrice: (id, price) =>
-        setShopping((p) => p.map((x) => (x.id === id ? { ...x, price, updatedAt: nowISO() } : x))),
-      // 구매완료(체크) 중 아직 입고 안 된 항목을 한꺼번에 곳간으로. 식재료는 storage:'unsorted'(미분류),
-      // 생활용품은 storage:'household'. 이동 항목은 addedToFridge=true로 '입고됨' 표시만 남긴다.
-      moveCheckedToFridge: (kind) => {
-        const movers = shopping.filter((x) => x.checked && !x.addedToFridge && (x.kind ?? 'food') === kind);
-        if (!movers.length) return;
-        const isHH = kind === 'household';
-        const newItems: FridgeItem[] = movers.map((it) => ({
-          id: uid(),
-          name: it.name,
-          category: (it.category ?? 'etc') as CategoryCode,
-          storage: isHH ? 'household' : 'unsorted',
-          kind: isHH ? 'household' : undefined,
-          stock: 'enough',
-          expiry: null,
-          added: todayISO(),
-          updatedAt: nowISO(),
-        }));
-        setFridge((pf) => [...pf, ...newItems]);
-        if (!isHH) setUsageLog((u) => [...u, ...newItems.map((n) => ({ id: uid(), name: n.name, category: n.category, date: todayISO() }))]);
-        const movedIds = new Set(movers.map((m) => m.id));
-        setShopping((prev) => prev.map((x) => (movedIds.has(x.id) ? { ...x, addedToFridge: true, updatedAt: nowISO() } : x)));
+        setShopping((p) => p.map((x) => (x.id === id ? { ...x, price } : x))),
+      // '식재료 등록' 화면에서 항목별 보관위치·유통기한을 정해 한꺼번에 곳간으로 넣는다.
+      // 식재료는 정한 위치(냉장/냉동/실온), 생필품(kind:'household')은 storage:'household'로 담고,
+      // 장보기에서 온 항목(shoppingId)은 addedToFridge=true로 '입고됨' 표시를 남긴다.
+      registerToFridge: (entries) => {
+        if (!entries.length) return;
+        setFridge((pf) => {
+          let cur = pf;
+          for (const e of entries) {
+            const name = uniqueFridgeName(e.name, cur); // 배치 안에서도 같은 이름은 "우유2"처럼 구분
+            cur = [...cur, {
+              id: uid(),
+              name,
+              category: e.category,
+              storage: e.storage,
+              kind: e.kind,
+              stock: 'enough',
+              qty: e.qty,
+              expiry: e.expiry,
+              added: todayISO(),
+              updatedAt: nowISO(),
+            }];
+          }
+          return cur;
+        });
+        // 사용 로그는 식재료(생필품 제외)만 적재.
+        const foodEntries = entries.filter((e) => e.kind !== 'household');
+        if (foodEntries.length) setUsageLog((u) => [...u, ...foodEntries.map((e) => ({ id: uid(), name: e.name, category: e.category, date: todayISO() }))]);
+        const movedIds = new Set(entries.map((e) => e.shoppingId).filter(Boolean));
+        if (movedIds.size) setShopping((prev) => prev.map((x) => (movedIds.has(x.id) ? { ...x, addedToFridge: true, checked: true, updatedAt: nowISO() } : x)));
       },
       assignStorage: (id, storage) =>
         setFridge((p) => p.map((x) => (x.id === id ? { ...x, storage, updatedAt: nowISO() } : x))),
       renameShopping: (id, name) =>
         setShopping((p) => p.map((x) => (x.id === id ? { ...x, name: name.trim() || x.name, updatedAt: nowISO() } : x))),
       removeShopping: (id) => setShopping((p) => p.filter((x) => x.id !== id)),
-      // 구매 완료(체크된) 항목 일괄 삭제. kind를 주면 해당 탭(식재료/생활용품)만. 냉장고 재료는 그대로.
+      // 구매 완료(체크된) 항목 일괄 삭제. kind를 주면 해당 탭(식재료/생필품)만. 냉장고 재료는 그대로.
       clearCheckedShopping: (kind) =>
         setShopping((p) => p.filter((x) => !(x.checked && (kind ? (x.kind ?? 'food') === kind : true)))),
       // 데이터 초기화 — 냉장고/장보기/사용로그를 모두 비운다(빈 배열도 hydrated 이후 저장소에 반영됨).

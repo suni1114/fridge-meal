@@ -1,15 +1,15 @@
-// 장보기 — 식재료 / 생활용품 탭. 각 탭은 구매목록(미구매) + 구매 완료.
+// 장보기 — 식재료 / 생필품 탭. 각 탭은 구매목록(미구매) + 구매 완료.
 //  · 식재료: 자동추천(위쪽) + 직접추가를 '구매목록'으로 묶음. 항목 탭 = 냉장고에 추가 / 이름 수정 / 삭제.
-//  · 생활용품: 함께 살 휴지·세제 등. 식재료처럼 카테고리에서 골라 담고 이모지 타일로 보인다.
+//  · 생필품: 함께 살 휴지·세제 등. 식재료처럼 카테고리에서 골라 담고 이모지 타일로 보인다.
 //    (냉장고에는 들어가지 않으므로 항목 탭 = 이름 수정 / 삭제만)
 import React, { useState } from 'react';
 import { View, Text, ScrollView, Pressable, TextInput, Modal, KeyboardAvoidingView, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, radius } from '../theme/tokens';
+import { colors, radius, cat } from '../theme/tokens';
 import { font } from '../theme/fonts';
 import { Icon, IconName } from '../components/Icon';
 import { FoodTile, HouseholdTile, SectionTitle, AppButton, HeaderActions, SheetHandle } from '../components/ui';
-import { FINE_CATEGORIES, FINE_CATEGORY_ITEMS, HOUSEHOLD_CATEGORIES, HOUSEHOLD_CATEGORY_ITEMS } from '../data/constants';
+import { FINE_CATEGORIES, FINE_CATEGORY_ITEMS, HOUSEHOLD_CATEGORIES, HOUSEHOLD_CATEGORY_ITEMS, householdUnitOf, UNIT_SUFFIX, CategoryCode } from '../data/constants';
 import { useApp, ShoppingItem, ShoppingKind } from '../data/store';
 import { useNav } from '../navigation/nav';
 
@@ -23,24 +23,25 @@ const SOURCE_LABEL: Record<string, string> = {
 
 const TABS: { key: ShoppingKind; label: string }[] = [
   { key: 'food', label: '식재료' },
-  { key: 'household', label: '생활용품' },
+  { key: 'household', label: '생필품' },
 ];
 
 const recent = (a: ShoppingItem, b: ShoppingItem) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '');
 const isAuto = (x: ShoppingItem) => x.source !== 'manual' && (x.kind ?? 'food') === 'food';
 // 천 단위 콤마 (RN 엔진 무관하게 안전하게). 예: 41300 → "41,300"
 const won = (n: number) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+// 합계 카드 통화 표기 — 샘플과 동일하게 ₩ 접두. 예: 24800 → "₩24,800"
+const wonMark = (n: number) => `₩${won(n)}`;
 
 export function ShoppingScreen() {
   const insets = useSafeAreaInsets();
   // 바텀시트는 화면 하단에 붙으므로 실기기 제스처 바만큼 더 띄워 마지막 버튼(삭제)이 바닥에 붙지 않게 한다.
   const sheetPad = Platform.OS === 'web' ? 30 : insets.bottom + 30;
-  const { shopping, toggleShoppingChecked, addToShopping, renameShopping, removeShopping, clearCheckedShopping, setShoppingPrice, moveCheckedToFridge } = useApp();
+  const { shopping, toggleShoppingChecked, addToShopping, renameShopping, removeShopping, clearCheckedShopping, setShoppingPrice, registerToFridge } = useApp();
   const nav = useNav();
   const [tab, setTab] = useState<ShoppingKind>('food');
   const [pricingId, setPricingId] = useState<string | null>(null); // 금액 인라인 편집 중인 행
   const [priceDraft, setPriceDraft] = useState('');
-  const [moveOpen, setMoveOpen] = useState(false); // 곳간으로 이동 확인
   const [addOpen, setAddOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false); // 장보기 사용법 안내
   const [pickCat, setPickCat] = useState<string | null>(null); // 펼친 카테고리 (식재료 전용)
@@ -51,17 +52,19 @@ export function ShoppingScreen() {
   const [editItem, setEditItem] = useState<ShoppingItem | null>(null); // 이름 수정
   const [editName, setEditName] = useState('');
 
-  // 현재 탭(식재료/생활용품)에 속한 항목.
+  // 현재 탭(식재료/생필품)에 속한 항목.
   const inTab = (x: ShoppingItem) => (tab === 'food' ? (x.kind ?? 'food') === 'food' : x.kind === 'household');
   const unchecked = shopping.filter((x) => inTab(x) && !x.checked);
-  // 구매목록 — 자동추천을 위쪽으로, 그 다음 직접추가. 각각 최근 추가가 위로. (생활용품은 자동추천이 없어 그대로)
+  // 구매목록 — 자동추천을 위쪽으로, 그 다음 직접추가. 각각 최근 추가가 위로. (생필품은 자동추천이 없어 그대로)
   const buyList = [...unchecked.filter(isAuto).sort(recent), ...unchecked.filter((x) => !isAuto(x)).sort(recent)];
   // 구매완료 — 최근 변경(체크)된 것이 가장 위로.
-  const done = shopping.filter((x) => inTab(x) && x.checked).sort(recent);
-  // 합계 — 현재 탭 구매완료 합계 + 두 탭(식재료+생활용품) 합친 전체 합계. 금액 입력된 것만 더한다.
-  const tabTotal = done.reduce((sum, x) => sum + (x.price ?? 0), 0);
+  // 구매완료 — 아직 곳간에 안 넣은 것만. 곳간에 넣으면(입고됨) 목록에서 빠져 곳간에서만 보인다.
+  const done = shopping.filter((x) => inTab(x) && x.checked && !x.addedToFridge).sort(recent);
+  // 합계 — 두 탭(식재료+생필품) 합친 이번 장보기 전체 합계. 금액 입력된 것만 더한다.
   const grandTotal = shopping.filter((x) => x.checked).reduce((sum, x) => sum + (x.price ?? 0), 0);
-  const movable = done.filter((x) => !x.addedToFridge); // 아직 곳간에 안 올린 구매완료 항목
+  // 요약 박스용 — 현재 탭과 무관하게 식재료/생필품 각각의 구매완료 합계.
+  const foodTotal = shopping.filter((x) => x.checked && (x.kind ?? 'food') === 'food').reduce((sum, x) => sum + (x.price ?? 0), 0);
+  const householdTotal = shopping.filter((x) => x.checked && x.kind === 'household').reduce((sum, x) => sum + (x.price ?? 0), 0);
 
   const startPrice = (it: ShoppingItem) => { setPriceDraft(it.price != null ? String(it.price) : ''); setPricingId(it.id); };
   const commitPrice = () => {
@@ -75,7 +78,7 @@ export function ShoppingScreen() {
   const closeAdd = () => { setAddOpen(false); setPickCat(null); setAddName(''); setSelected([]); };
   const openCat = (code: string) => { setSelected([]); setPickCat(code); };
   const backToCats = () => { setSelected([]); setPickCat(null); };
-  // 직접 입력 한 줄 추가 (식재료/생활용품 공용) — 현재 탭 kind로 담고 목록으로.
+  // 직접 입력 한 줄 추가 (식재료/생필품 공용) — 현재 탭 kind로 담고 목록으로.
   const submitText = () => {
     if (addName.trim()) { addToShopping(addName.trim(), 'manual', undefined, tab); closeAdd(); }
   };
@@ -89,7 +92,7 @@ export function ShoppingScreen() {
     closeAdd();
   };
 
-  // 추가 시트의 카테고리 — 식재료/생활용품 각각의 목록을 쓴다.
+  // 추가 시트의 카테고리 — 식재료/생필품 각각의 목록을 쓴다.
   const cats = tab === 'food' ? FINE_CATEGORIES : HOUSEHOLD_CATEGORIES;
   const catItems = tab === 'food' ? FINE_CATEGORY_ITEMS : HOUSEHOLD_CATEGORY_ITEMS;
 
@@ -98,10 +101,24 @@ export function ShoppingScreen() {
     setEditItem(null);
   };
 
-  // 냉장고에 추가 — 식재료 추가 상세화면(IngredientForm)을 그대로 재사용한다. (식재료 전용)
+  // 곳간으로 이동(식재료) — 보관위치·유통기한을 정해야 하므로 상세화면(IngredientForm)을 재사용한다.
   const openRestock = (item: ShoppingItem) => nav.openIngredientForm({ prefillName: item.name, shoppingId: item.id });
+  // 곳간으로 이동(생필품) — 보관위치·유통기한이 없어 폼 없이 바로 곳간(생필품)으로 옮긴다.
+  const moveHouseholdToFridge = (item: ShoppingItem) => {
+    const u = householdUnitOf(item.name);
+    registerToFridge([{
+      shoppingId: item.id,
+      name: item.name,
+      category: (item.category ?? 'etc') as CategoryCode,
+      storage: 'household',
+      kind: 'household',
+      qty: `1${UNIT_SUFFIX[u]}`,
+      expiry: null,
+    }]);
+    nav.goToFridge('household');
+  };
 
-  // 항목 앞 타일 — 식재료는 식재료 이모지, 생활용품은 생활용품 이모지.
+  // 항목 앞 타일 — 식재료는 식재료 이모지, 생필품은 생필품 이모지.
   const Lead = ({ item, size }: { item: ShoppingItem; size: number }) =>
     item.kind === 'household' ? (
       <HouseholdTile name={item.name} size={size} />
@@ -125,13 +142,7 @@ export function ShoppingScreen() {
           <View style={{ flex: 1 }}>
             <View style={s.nameLine}>
               <Text style={[s.name, item.checked && s.nameDone]} numberOfLines={1}>{item.name}</Text>
-              {auto && <View style={s.autoBadge}><Text style={s.autoBadgeText}>비서추천</Text></View>}
-              {item.checked && item.addedToFridge && (
-                <View style={s.inTag}>
-                  <Icon name="check" size={11} color={colors.primary} weight="bold" />
-                  <Text style={s.inTagText}>입고됨</Text>
-                </View>
-              )}
+              {auto && !item.checked && <View style={s.autoBadge}><Text style={s.autoBadgeText}>AI추천</Text></View>}
             </View>
             {item.note ? <Text style={s.note}>{item.note}</Text> : auto ? <Text style={s.note}>{SOURCE_LABEL[item.source]}</Text> : null}
           </View>
@@ -165,7 +176,7 @@ export function ShoppingScreen() {
     );
   };
 
-  const emptyMsg = tab === 'food' ? '담은 재료가 없어요.' : '담을 생활용품을 추가해 보세요.';
+  const emptyMsg = tab === 'food' ? '담은 재료가 없어요.' : '담을 생필품을 추가해 보세요.';
 
   return (
     <View style={s.root}>
@@ -182,7 +193,27 @@ export function ShoppingScreen() {
         <HeaderActions showSearch={false} showBell={false} />
       </View>
 
-      {/* 탭 — 식재료 / 생활용품 (냉장고 보기방식 탭과 동일한 밑줄 스타일) */}
+      {/* 이번 장보기 요약 — 탭 위. 상단: 담은 것 합계 / 하단: 식재료·생필품 박스 (샘플과 동일) */}
+      {grandTotal > 0 && (
+        <View style={s.grandBar}>
+          <View style={s.grandTop}>
+            <Text style={s.grandLabel}>구매완료 합계</Text>
+            <Text style={s.grandValue}>{wonMark(grandTotal)}</Text>
+          </View>
+          <View style={s.grandBoxes}>
+            <View style={s.grandBox}>
+              <Text style={s.grandBoxLabel}>식재료</Text>
+              <Text style={s.grandBoxValue}>{wonMark(foodTotal)}</Text>
+            </View>
+            <View style={s.grandBox}>
+              <Text style={s.grandBoxLabel}>생필품</Text>
+              <Text style={s.grandBoxValue}>{wonMark(householdTotal)}</Text>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {/* 탭 — 식재료 / 생필품 (냉장고 보기방식 탭과 동일한 밑줄 스타일) */}
       <View style={s.tabs}>
         {TABS.map((t) => {
           const on = tab === t.key;
@@ -195,16 +226,8 @@ export function ShoppingScreen() {
         })}
       </View>
 
-      {/* 전체 합계 — 식재료+생활용품 합친 이번 장보기 총액 (항상 위에 고정) */}
-      {grandTotal > 0 && (
-        <View style={s.grandBar}>
-          <Text style={s.grandLabel}>이번 장보기</Text>
-          <Text style={s.grandValue}>{won(grandTotal)}원</Text>
-        </View>
-      )}
-
       <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 22, paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
-        <SectionTitle title="구매목록" count={buyList.length} actionLabel="추가" onAction={openAdd} compact style={s.secTitle} />
+        <SectionTitle title="구매목록" count={buyList.length} actionLabel="추가" actionProminent onAction={openAdd} compact style={s.secTitle} />
         <View style={s.group}>
           {buyList.length ? buyList.map((it) => <Row key={it.id} item={it} checkSize={18} />) : <Text style={s.empty}>{emptyMsg}</Text>}
         </View>
@@ -218,34 +241,29 @@ export function ShoppingScreen() {
                 <Text style={s.doneHeadCount}>{done.length}</Text>
               </View>
               <View style={s.doneActions}>
-                <Pressable style={[s.moveBtn, !movable.length && s.moveBtnOff]} onPress={() => movable.length && setMoveOpen(true)} disabled={!movable.length}>
-                  <Icon name="package" size={14} color={movable.length ? colors.primary : colors.inkAsst} weight="bold" />
-                  <Text style={[s.moveBtnText, !movable.length && { color: colors.inkAsst }]}>곳간으로</Text>
-                </Pressable>
                 <Pressable style={s.clearBtn} onPress={() => setClearOpen(true)} hitSlop={6}>
-                  <Icon name="trash" size={16} color={colors.inkAsst} />
+                  <Icon name="trash" size={14} color="#9D4949" />
+                  <Text style={s.clearBtnText}>전체삭제</Text>
+                </Pressable>
+                <Pressable style={s.moveBtn} onPress={() => nav.openRegister(tab)}>
+                  <Text style={s.moveBtnText}>곳간으로 이동</Text>
+                  <Icon name="arrow-right" size={14} color="#2A6B4C" weight="bold" />
                 </Pressable>
               </View>
             </View>
-            {tabTotal > 0 && (
-              <View style={s.tabTotalRow}>
-                <Text style={s.tabTotalLabel}>{tab === 'food' ? '식재료' : '생활용품'} 합계</Text>
-                <Text style={s.tabTotalValue}>{won(tabTotal)}원</Text>
-              </View>
-            )}
             <View style={s.group}>{done.map((it) => <Row key={it.id} item={it} />)}</View>
           </>
         )}
       </ScrollView>
 
-      {/* 추가 모달 — 식재료는 카테고리+직접입력(긴 시트), 생활용품은 이름 입력만(짧은 시트) */}
+      {/* 추가 모달 — 식재료는 카테고리+직접입력(긴 시트), 생필품은 이름 입력만(짧은 시트) */}
       <Modal visible={addOpen} transparent animationType="slide" onRequestClose={closeAdd}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={s.kav}>
           <Pressable style={s.backdrop} onPress={closeAdd}>
             <Pressable style={[s.addSheet, { paddingBottom: sheetPad }]}>
               <SheetHandle />
               <View style={s.addHead}>
-                <Text style={s.sheetTitle}>{tab === 'food' ? '장보기 항목 추가' : '생활용품 추가'}</Text>
+                <Text style={s.sheetTitle}>{tab === 'food' ? '장보기 항목 추가' : '생필품 추가'}</Text>
                 <Pressable onPress={closeAdd} hitSlop={8}>
                   <Icon name="x" size={20} color={colors.inkAlt} weight="bold" />
                 </Pressable>
@@ -259,7 +277,7 @@ export function ShoppingScreen() {
                     <TextInput
                       value={addName}
                       onChangeText={setAddName}
-                      placeholder={tab === 'food' ? '식재료 이름 입력' : '생활용품 이름 입력'}
+                      placeholder={tab === 'food' ? '식재료 이름 입력' : '생필품 이름 입력'}
                       placeholderTextColor={colors.inkAsst}
                       style={s.addInput}
                       onSubmitEditing={submitText}
@@ -307,7 +325,7 @@ export function ShoppingScreen() {
                       <TextInput
                         value={addName}
                         onChangeText={setAddName}
-                        placeholder={tab === 'food' ? '식재료 이름' : '생활용품 이름'}
+                        placeholder={tab === 'food' ? '식재료 이름' : '생필품 이름'}
                         placeholderTextColor={colors.inkAsst}
                         style={s.directInput}
                         onSubmitEditing={submitText}
@@ -338,25 +356,6 @@ export function ShoppingScreen() {
         </Pressable>
       </Modal>
 
-      {/* 곳간으로 이동 확인 */}
-      <Modal visible={moveOpen} transparent animationType="fade" onRequestClose={() => setMoveOpen(false)}>
-        <Pressable style={s.backdrop} onPress={() => setMoveOpen(false)}>
-          <Pressable style={[s.sheet, { paddingBottom: sheetPad }]}>
-            <SheetHandle />
-            <Text style={s.sheetTitle}>구매 완료 {movable.length}개를 곳간으로 옮길까요?</Text>
-            <Text style={s.confirmSub}>
-              {tab === 'food'
-                ? '식재료는 보관위치 미지정(미분류)으로 곳간에 담겨요. 곳간에서 냉장·냉동·실온을 정해주세요.'
-                : '생활용품이 곳간에 담겨요.'}
-            </Text>
-            <View style={s.dialogBtns}>
-              <AppButton label="취소" variant="ghost" onPress={() => setMoveOpen(false)} style={{ flex: 1 }} />
-              <AppButton label="곳간으로 이동" onPress={() => { moveCheckedToFridge(tab); setMoveOpen(false); }} style={{ flex: 1.4 }} />
-            </View>
-          </Pressable>
-        </Pressable>
-      </Modal>
-
       {/* 항목 액션 시트 */}
       <Modal visible={!!actionItem} transparent animationType="fade" onRequestClose={() => setActionItem(null)}>
         <Pressable style={s.backdrop} onPress={() => setActionItem(null)}>
@@ -368,12 +367,22 @@ export function ShoppingScreen() {
                   <Lead item={actionItem} size={40} />
                   <View style={{ flex: 1 }}>
                     <Text style={s.sheetName}>{actionItem.name}</Text>
-                    <Text style={s.note}>{actionItem.note ?? (isAuto(actionItem) ? SOURCE_LABEL[actionItem.source] : actionItem.kind === 'household' ? '생활용품' : '직접 추가')}</Text>
+                    <Text style={s.note}>{actionItem.note ?? (isAuto(actionItem) ? SOURCE_LABEL[actionItem.source] : actionItem.kind === 'household' ? '생필품' : '직접 추가')}</Text>
                   </View>
                 </View>
                 {/* 냉장고에 추가 — 식재료만, 아직 입고 전인 경우 */}
-                {actionItem.kind !== 'household' && !actionItem.addedToFridge && (
-                  <SheetAction icon="snowflake" label="냉장고에 추가" onPress={() => { const it = actionItem; setActionItem(null); openRestock(it); }} />
+                {/* 곳간으로 이동 — 식재료는 상세화면(위치·유통기한), 생필품은 바로 이동 */}
+                {!actionItem.addedToFridge && (
+                  <SheetAction
+                    icon="package"
+                    label="곳간으로 이동"
+                    onPress={() => {
+                      const it = actionItem;
+                      setActionItem(null);
+                      if (it.kind === 'household') moveHouseholdToFridge(it);
+                      else openRestock(it);
+                    }}
+                  />
                 )}
                 <SheetAction icon="pencil" label="이름 수정" onPress={() => { setEditName(actionItem.name); setEditItem(actionItem); setActionItem(null); }} />
                 <SheetAction icon="trash" label="삭제" danger onPress={() => { removeShopping(actionItem.id); setActionItem(null); }} />
@@ -414,7 +423,7 @@ export function ShoppingScreen() {
             <SheetHandle />
             <Text style={s.sheetTitle}>장보기 이렇게 써요</Text>
             <View style={s.helpList}>
-              <HelpStep icon="list-checks" title="식재료 · 생활용품 탭" desc="식재료와 함께 살 생활용품(휴지·세제 등)을 따로 적어두고 한 번에 장 볼 수 있어요." />
+              <HelpStep icon="list-checks" title="식재료 · 생필품 탭" desc="식재료와 함께 살 생필품(휴지·세제 등)을 따로 적어두고 한 번에 장 볼 수 있어요." />
               <HelpStep icon="check-circle" title="담은 항목을 체크" desc="장 보면서 담은 항목을 체크하면 ‘구매 완료’로 내려가요." />
               <HelpStep icon="snowflake" title="구매 완료 → 냉장고에 추가" desc="식재료는 구매 완료 후 눌러서 바로 냉장고에 넣을 수 있어요." />
             </View>
@@ -454,7 +463,7 @@ const s = StyleSheet.create({
   title: { fontFamily: font.extrabold, fontSize: 24, color: colors.ink, letterSpacing: -0.5 },
   subtitle: { fontFamily: font.medium, fontSize: 13.5, color: colors.inkAlt, marginTop: 5 },
 
-  // 탭 (식재료 / 생활용품) — 냉장고 viewTabs와 동일한 밑줄 스타일
+  // 탭 (식재료 / 생필품) — 냉장고 viewTabs와 동일한 밑줄 스타일
   tabs: { flexDirection: 'row', marginHorizontal: 16, borderBottomWidth: 1, borderBottomColor: colors.line },
   tab: { flex: 1, alignItems: 'center' },
   tabText: { fontFamily: font.bold, fontSize: 15, color: colors.inkAsst, paddingVertical: 9 },
@@ -473,20 +482,25 @@ const s = StyleSheet.create({
   name: { fontFamily: font.bold, fontSize: 15, color: colors.ink, flexShrink: 1 },
   nameDone: { color: colors.inkAsst, textDecorationLine: 'line-through' },
   note: { fontFamily: font.medium, fontSize: 11.5, color: colors.inkAlt, marginTop: 2 },
-  autoBadge: { backgroundColor: colors.primaryBg, paddingHorizontal: 7, paddingVertical: 2, borderRadius: radius.pill },
-  autoBadgeText: { fontFamily: font.bold, fontSize: 10, color: colors.primary },
-  inTag: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: colors.primaryBg, paddingHorizontal: 7, paddingVertical: 2, borderRadius: radius.pill },
-  inTagText: { fontFamily: font.bold, fontSize: 10, color: colors.primary },
+  // AI추천 배지 — 블루.
+  autoBadge: { backgroundColor: cat.blue.bg, paddingHorizontal: 7, paddingVertical: 2, borderRadius: radius.pill },
+  autoBadgeText: { fontFamily: font.bold, fontSize: 10, color: cat.blue.fg },
 
   // 금액 인라인 입력/표시 (구매완료 행 우측)
   priceText: { fontFamily: font.extrabold, fontSize: 14, color: colors.ink },
   priceEmpty: { fontFamily: font.semibold, fontSize: 12.5, color: colors.inkAsst },
-  priceInput: { fontFamily: font.extrabold, fontSize: 14, color: colors.primary, minWidth: 70, textAlign: 'right', paddingVertical: 2, borderBottomWidth: 1.5, borderBottomColor: colors.primary },
+  priceInput: { fontFamily: font.extrabold, fontSize: 14, color: colors.primary, width: 96, textAlign: 'right', paddingVertical: 2, borderBottomWidth: 1.5, borderBottomColor: colors.primary },
 
-  // 전체 합계 바 (탭 아래 고정)
-  grandBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: 16, marginTop: 12, paddingHorizontal: 16, paddingVertical: 12, borderRadius: radius.lg, backgroundColor: colors.primaryBg },
-  grandLabel: { fontFamily: font.bold, fontSize: 14, color: colors.primaryDark },
-  grandValue: { fontFamily: font.extrabold, fontSize: 20, color: colors.primaryDark, letterSpacing: -0.5 },
+  // 이번 장보기 요약 카드 (탭 위) — 짙은 그린 카드. 상단 합계 + 하단 식재료/생필품 박스
+  grandBar: { marginHorizontal: 16, marginTop: 4, marginBottom: 12, padding: 16, borderRadius: radius.xl, backgroundColor: colors.darkGreen },
+  grandTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 },
+  grandLabel: { fontFamily: font.bold, fontSize: 14, color: '#7FE3AA' },
+  grandValue: { fontFamily: font.extrabold, fontSize: 22, color: colors.white, letterSpacing: -0.5 },
+  // 하단 식재료 / 생필품 박스 — 카드 위에 살짝 밝은 어두운 패널
+  grandBoxes: { flexDirection: 'row', gap: 10 },
+  grandBox: { flex: 1, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: radius.md, paddingHorizontal: 13, paddingVertical: 11, gap: 5 },
+  grandBoxLabel: { fontFamily: font.bold, fontSize: 12.5, color: '#9FBCAB' },
+  grandBoxValue: { fontFamily: font.extrabold, fontSize: 15, color: colors.white },
 
   // 구매완료 헤더 (곳간으로 이동 + 전체 삭제)
   doneHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 20, marginBottom: 8 },
@@ -494,15 +508,11 @@ const s = StyleSheet.create({
   doneHeadTitle: { fontFamily: font.extrabold, fontSize: 16, color: colors.ink },
   doneHeadCount: { fontFamily: font.bold, fontSize: 13, color: colors.inkAsst },
   doneActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  moveBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 6, paddingHorizontal: 11, borderRadius: radius.pill, backgroundColor: colors.primaryBg },
-  moveBtnOff: { backgroundColor: colors.fill },
-  moveBtnText: { fontFamily: font.bold, fontSize: 12.5, color: colors.primary },
-  clearBtn: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.fill },
-
-  // 탭별 합계 줄
-  tabTotalRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, paddingHorizontal: 4 },
-  tabTotalLabel: { fontFamily: font.semibold, fontSize: 12.5, color: colors.inkAlt },
-  tabTotalValue: { fontFamily: font.extrabold, fontSize: 15, color: colors.ink },
+  moveBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 6, paddingHorizontal: 11, borderRadius: radius.pill, backgroundColor: '#F0F9F4' },
+  moveBtnText: { fontFamily: font.bold, fontSize: 12.5, color: '#2A6B4C' },
+  // 전체삭제 — 곳간으로 이동과 명도·채도를 맞춘 붉은색 알약 버튼 (색상만 빨강)
+  clearBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 11, paddingVertical: 6, borderRadius: radius.pill, backgroundColor: '#F9F0F0' },
+  clearBtnText: { fontFamily: font.bold, fontSize: 12.5, color: '#9D4949' },
   empty: { fontFamily: font.medium, fontSize: 13.5, color: colors.inkAsst, paddingVertical: 16, textAlign: 'center' },
 
   kav: { flex: 1 },

@@ -20,6 +20,7 @@ import { RecipeDetailScreen } from './src/screens/RecipeDetailScreen';
 import { ShoppingScreen } from './src/screens/ShoppingScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { IngredientFormScreen } from './src/screens/IngredientFormScreen';
+import { RegisterScreen } from './src/screens/RegisterScreen';
 import { AdminScreen } from './src/screens/AdminScreen';
 
 function Root() {
@@ -66,6 +67,7 @@ function Root() {
           {nav.overlay.name === 'ingredientForm' && (
             <IngredientFormScreen itemId={nav.overlay.itemId} prefillName={nav.overlay.prefillName} shoppingId={nav.overlay.shoppingId} scanReceipt={nav.overlay.scanReceipt} />
           )}
+          {nav.overlay.name === 'register' && <RegisterScreen kind={nav.overlay.kind} />}
           {nav.overlay.name === 'admin' && <AdminScreen />}
         </View>
       )}
