@@ -12,6 +12,9 @@ import {
   STORAGE_LABEL,
   FINE_CATEGORIES,
   FINE_CATEGORY_ITEMS,
+  HOUSEHOLD_CATEGORIES,
+  HOUSEHOLD_CATEGORY_ITEMS,
+  HOUSEHOLD_BY_NAME,
   fineCategoryOf,
   coarseFromFine,
   unitOf,
@@ -22,7 +25,7 @@ import {
   householdUnitOf,
   QtyUnit,
 } from '../data/constants';
-import { useApp, infoFor } from '../data/store';
+import { useApp, infoFor, ShoppingKind } from '../data/store';
 import { uid } from '../data/id';
 import { startOfToday, addDays, toISO, fromISO, daysUntil, todayISO, sameYMD, fmtFull, fmtDot, WEEKDAYS } from '../data/date';
 import { useNav } from '../navigation/nav';
@@ -60,23 +63,37 @@ const HH_UNIT_OPTIONS: { code: QtyUnit; label: string }[] = [
 
 type AiItem = { id: string; name: string; amount: string };
 
-// 모든 카테고리의 식재료 (검색용).
+// 모든 카테고리의 식재료 / 생필품 (검색용).
 const ALL_INGREDIENTS = Object.values(FINE_CATEGORY_ITEMS).flat();
+const ALL_HOUSEHOLD = Object.values(HOUSEHOLD_CATEGORY_ITEMS).flat();
 
 export function IngredientFormScreen({ itemId, prefillName, shoppingId, scanReceipt: autoScan }: { itemId?: string; prefillName?: string; shoppingId?: string; scanReceipt?: boolean }) {
   const { fridge, upsertFridge, removeFridge, markShoppingDone } = useApp();
   const nav = useNav();
   const insets = useSafeAreaInsets();
   const editing = fridge.find((x) => x.id === itemId);
-  // 생필품 수정 — 유통기한·보관위치·카테고리는 숨기고 수량(개/L)·메모만 다룬다.
-  const isHH = editing?.kind === 'household';
+  // 식재료 / 생필품. 생필품은 유통기한·보관위치·카테고리 없이 수량(개/L)·메모만 다룬다.
+  const [kind, setKind] = useState<ShoppingKind>(editing?.kind ?? 'food');
+  const isHH = kind === 'household';
 
   const initialName = editing?.name ?? prefillName ?? '';
   // 수정/프리필이면 바로 상세(2단계), 신규는 카테고리 선택(0단계)부터.
   const [step, setStep] = useState<0 | 1 | 2>(editing || prefillName ? 2 : 0);
+  // 카테고리 코드 — 식재료면 FINE_CATEGORIES, 생필품이면 HOUSEHOLD_CATEGORIES 기준.
   const [fineCat, setFineCat] = useState<string>(
     editing ? fineCategoryOf(editing.name, editing.category) : initialName ? fineCategoryOf(initialName) : 'meat'
   );
+  // 식재료 ↔ 생필품 전환 — 카테고리·이름을 초기화하고 처음 단계로.
+  const switchKind = (k: ShoppingKind) => {
+    if (k === kind) return;
+    setKind(k);
+    setFineCat(k === 'household' ? 'paper' : 'meat');
+    setName('');
+    setStep(0);
+  };
+  // 현재 종류에 맞는 카테고리 / 품목 목록
+  const cats = isHH ? HOUSEHOLD_CATEGORIES : FINE_CATEGORIES;
+  const catItems = isHH ? HOUSEHOLD_CATEGORY_ITEMS : FINE_CATEGORY_ITEMS;
   const [name, setName] = useState(initialName);
   const [nameEditing, setNameEditing] = useState(false); // 상세에서 이름 직접 수정 중인지
   const [q, setQ] = useState(''); // 0단계 식재료 검색어
@@ -109,8 +126,10 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId, scanRece
     setAmount(defaultAmount(unit));
   }, [unit]);
 
-  const catMeta = FINE_CATEGORIES.find((c) => c.code === fineCat);
-  const items = [...(FINE_CATEGORY_ITEMS[fineCat] ?? [])].sort((a, b) => a.localeCompare(b, 'ko'));
+  const catMeta = cats.find((c) => c.code === fineCat);
+  const items = [...(catItems[fineCat] ?? [])].sort((a, b) => a.localeCompare(b, 'ko'));
+  // 검색 대상도 종류에 맞게 (식재료 / 생필품)
+  const allNames = isHH ? ALL_HOUSEHOLD : ALL_INGREDIENTS;
 
   const pickCategory = (code: string) => {
     setFineCat(code);
@@ -119,25 +138,27 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId, scanRece
   };
   const chooseIngredient = (n: string) => {
     setName(n);
-    setStorage(normStorage(infoFor(n).storage));
+    if (!isHH) setStorage(normStorage(infoFor(n).storage)); // 생필품은 보관위치 개념 없음
     setNameEditing(false);
     setStep(2);
   };
   const nextWithTyped = () => {
     const nm = name.trim();
     if (!nm) return;
-    setStorage(normStorage(infoFor(nm).storage));
+    if (!isHH) setStorage(normStorage(infoFor(nm).storage));
     setStep(2);
   };
   const selectFromSearch = (n: string) => {
     const nm = n.trim();
     if (!nm) return;
     setName(nm);
-    setFineCat(fineCategoryOf(nm));
-    setStorage(normStorage(infoFor(nm).storage));
+    if (!isHH) {
+      setFineCat(fineCategoryOf(nm));
+      setStorage(normStorage(infoFor(nm).storage));
+    }
     setStep(2);
   };
-  const searchHits = q.trim() ? ALL_INGREDIENTS.filter((n) => n.includes(q.trim())).slice(0, 40) : [];
+  const searchHits = q.trim() ? allNames.filter((n) => n.includes(q.trim())).slice(0, 40) : [];
 
   const stepSize = unit === 'gram' ? 50 : unit === 'liter' ? 0.5 : 1;
   const adjust = (d: number) => {
@@ -152,10 +173,10 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId, scanRece
     upsertFridge({
       id: editing?.id ?? uid(),
       name: name.trim(),
-      // 생필품은 카테고리·보관위치·유통기한을 다루지 않으므로 기존 값을 유지한다.
+      // 생필품은 식재료 카테고리·보관위치·유통기한을 쓰지 않는다.
       category: isHH ? (editing?.category ?? 'etc') : coarseFromFine(fineCat),
       storage: isHH ? 'household' : storage,
-      kind: editing?.kind, // 'household'면 생필품 유지 (없으면 식재료)
+      kind: isHH ? 'household' : undefined, // 식재료는 kind 없음
       stock: stockFromQty(unit, amt),
       qty: `${amt}${UNIT_SUFFIX[unit]}`,
       expiry: isHH ? null : expiry,
@@ -256,7 +277,7 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId, scanRece
     return () => sub.remove();
   }, [step, editing?.id, prefillName]);
 
-  const headerTitle = isHH ? '생필품 상세 설정' : editing ? '재료 상세 설정' : step === 2 ? '재료 상세 설정' : '식재료 추가';
+  const headerTitle = step === 2 ? (isHH ? '생필품 상세 설정' : '재료 상세 설정') : '곳간 채우기';
 
   return (
     // 안드로이드는 OS adjustResize가 키보드를 처리 — height KAV와 충돌(리사이즈 떨림) 방지로 iOS만 padding.
@@ -266,12 +287,24 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId, scanRece
       {/* ── 0단계: 카테고리 선택 / 검색 ───────────────────────── */}
       {step === 0 && (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: 24 + insets.bottom }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          {/* 무엇을 채울지 — 식재료 / 생필품 */}
+          <View style={s.kindRow}>
+            {([['food', '식재료'], ['household', '생필품']] as const).map(([k, label]) => {
+              const on = kind === k;
+              return (
+                <Pressable key={k} style={[s.kindBtn, on && s.kindBtnOn]} onPress={() => switchKind(k)}>
+                  <Text style={[s.kindText, on && s.kindTextOn]}>{label}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
           <View style={s.searchRow}>
             <Icon name="search" size={18} color={colors.inkAsst} />
             <TextInput
               value={q}
               onChangeText={setQ}
-              placeholder="식재료 검색 또는 직접 입력"
+              placeholder={isHH ? '생필품 검색 또는 직접 입력' : '식재료 검색 또는 직접 입력'}
               placeholderTextColor={colors.inkAsst}
               style={s.search}
             />
@@ -286,12 +319,16 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId, scanRece
             <View>
               {searchHits.map((n) => (
                 <Pressable key={n} style={s.resultRow} onPress={() => selectFromSearch(n)}>
-                  <Text style={s.resultEmoji}>{emojiFor(n, coarseFromFine(fineCategoryOf(n)))}</Text>
+                  <Text style={s.resultEmoji}>{isHH ? householdEmojiFor(n) : emojiFor(n, coarseFromFine(fineCategoryOf(n)))}</Text>
                   <Text style={s.resultName}>{n}</Text>
-                  <Text style={s.resultCat}>{FINE_CATEGORIES.find((c) => c.code === fineCategoryOf(n))?.label}</Text>
+                  <Text style={s.resultCat}>
+                    {isHH
+                      ? HOUSEHOLD_CATEGORIES.find((c) => c.code === HOUSEHOLD_BY_NAME[n])?.label
+                      : FINE_CATEGORIES.find((c) => c.code === fineCategoryOf(n))?.label}
+                  </Text>
                 </Pressable>
               ))}
-              {!ALL_INGREDIENTS.includes(q.trim()) && (
+              {!allNames.includes(q.trim()) && (
                 <Pressable style={s.resultRow} onPress={() => selectFromSearch(q.trim())}>
                   <Icon name="plus-circle" size={20} color={colors.primary} weight="fill" />
                   <Text style={[s.resultName, { color: colors.primary }]}>‘{q.trim()}’ 직접 등록</Text>
@@ -300,25 +337,28 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId, scanRece
             </View>
           ) : (
             <>
-              <View style={s.aiCard}>
-                <Text style={s.aiTitle}>✨ AI로 빠르게 등록</Text>
-                <View style={s.aiBtns}>
-                  <Pressable style={[s.aiChip, aiBusy && s.aiChipOff]} onPress={scanReceiptFlow} disabled={aiBusy}>
-                    <Text style={s.aiChipEmoji}>🧾</Text>
-                    <Text style={s.aiChipText}>{aiBusy ? '스캔중…' : '영수증 스캔'}</Text>
-                  </Pressable>
-                  {/* 식재료 사진 인식은 준비중 — 비활성 */}
-                  <View style={[s.aiChip, s.aiChipOff]}>
-                    <Text style={s.aiChipEmoji}>📷</Text>
-                    <Text style={s.aiChipTextOff}>식재료 사진</Text>
-                    <View style={s.aiSoonTag}><Text style={s.aiSoonText}>준비중</Text></View>
+              {/* AI 등록은 영수증 식재료 인식이라 식재료일 때만 */}
+              {!isHH && (
+                <View style={s.aiCard}>
+                  <Text style={s.aiTitle}>✨ AI로 빠르게 등록</Text>
+                  <View style={s.aiBtns}>
+                    <Pressable style={[s.aiChip, aiBusy && s.aiChipOff]} onPress={scanReceiptFlow} disabled={aiBusy}>
+                      <Text style={s.aiChipEmoji}>🧾</Text>
+                      <Text style={s.aiChipText}>{aiBusy ? '스캔중…' : '영수증 스캔'}</Text>
+                    </Pressable>
+                    {/* 식재료 사진 인식은 준비중 — 비활성 */}
+                    <View style={[s.aiChip, s.aiChipOff]}>
+                      <Text style={s.aiChipEmoji}>📷</Text>
+                      <Text style={s.aiChipTextOff}>식재료 사진</Text>
+                      <View style={s.aiSoonTag}><Text style={s.aiSoonText}>준비중</Text></View>
+                    </View>
                   </View>
                 </View>
-              </View>
+              )}
 
               <Text style={s.stepLabel}>어떤 종류인가요?</Text>
               <View style={s.catGrid}>
-                {FINE_CATEGORIES.map((c) => (
+                {cats.map((c) => (
                   <Pressable key={c.code} style={s.catGridItem} onPress={() => pickCategory(c.code)}>
                     <Text style={s.catGridEmoji}>{c.emoji}</Text>
                     <Text style={s.catGridLabel}>{c.label}</Text>
@@ -339,7 +379,7 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId, scanRece
             <Text style={s.catBadgeChange}>변경</Text>
           </Pressable>
 
-          <Text style={s.stepLabel}>어떤 재료인가요?</Text>
+          <Text style={s.stepLabel}>{isHH ? '어떤 생필품인가요?' : '어떤 재료인가요?'}</Text>
           {items.length > 0 && (
             <View style={s.wrap}>
               {items.map((n) => {
@@ -357,7 +397,7 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId, scanRece
             <TextInput
               value={name}
               onChangeText={setName}
-              placeholder="식재료 이름"
+              placeholder={isHH ? '생필품 이름' : '식재료 이름'}
               placeholderTextColor={colors.inkAsst}
               style={s.search}
               onSubmitEditing={nextWithTyped}
@@ -555,7 +595,7 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId, scanRece
       )}
       {step === 2 && (
         <View style={[s.footer, { paddingBottom: 16 + insets.bottom }]}>
-          <AppButton label={editing ? '저장' : '냉장고에 추가'} onPress={save} disabled={!canSave} />
+          <AppButton label={editing ? '저장' : '곳간에 넣기'} onPress={save} disabled={!canSave} />
         </View>
       )}
 
@@ -786,6 +826,13 @@ const s = StyleSheet.create({
   orLabel: { fontFamily: font.semibold, fontSize: 13, color: colors.inkAsst, marginTop: 22, marginBottom: 10 },
 
   // 검색 / 직접 입력
+  // 무엇을 채울지 — 식재료 / 생필품 (선택 시 초록 채움)
+  kindRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
+  kindBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.line },
+  kindBtnOn: { backgroundColor: colors.primary, borderColor: colors.primary },
+  kindText: { fontFamily: font.bold, fontSize: 14.5, color: colors.inkAlt },
+  kindTextOn: { color: colors.white },
+
   searchRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, borderRadius: radius.lg, paddingHorizontal: 14, marginBottom: 18 },
   search: { flex: 1, fontFamily: font.medium, fontSize: 15, color: colors.ink, paddingVertical: 12 },
   resultRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 4, borderBottomWidth: 1, borderBottomColor: colors.line },

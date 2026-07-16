@@ -360,7 +360,7 @@ const s = StyleSheet.create({
       default: { elevation: 2, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 2, shadowOffset: { width: 0, height: 1 } },
     }),
   },
-  segmentText: { fontFamily: font.bold, fontSize: 11.5, color: colors.inkAlt },
+  segmentText: { fontFamily: font.bold, fontSize: 12, color: colors.inkAlt },
   segmentTextOn: { color: colors.ink },
   // 카테고리별 보기 — 종류 소제목(옅고 작게).
   groupLabel: { fontFamily: font.bold, fontSize: 12.5, color: colors.inkAlt, marginBottom: 7, marginLeft: 2 },

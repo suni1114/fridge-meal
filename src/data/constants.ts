@@ -143,6 +143,7 @@ export const HOUSEHOLD_CATEGORIES: { code: string; label: string; emoji: string;
   { code: 'kitchen', label: '주방용품', emoji: '🧽', color: 'amber' },
   { code: 'bath', label: '욕실·세면', emoji: '🧴', color: 'pink' },
   { code: 'living', label: '생활잡화', emoji: '💡', color: 'wheat' },
+  { code: 'etc', label: '기타', emoji: '📦', color: 'grey' },
 ];
 
 export const HOUSEHOLD_CATEGORY_ITEMS: Record<string, string[]> = {
@@ -151,6 +152,8 @@ export const HOUSEHOLD_CATEGORY_ITEMS: Record<string, string[]> = {
   kitchen: ['주방세제', '수세미', '고무장갑', '위생장갑', '지퍼백', '랩', '호일', '종이컵', '키친타월'],
   bath: ['샴푸', '린스', '바디워시', '비누', '치약', '칫솔', '면도기', '핸드워시'],
   living: ['건전지', '전구', '방향제', '살충제', '빨래집게', '옷걸이', '마스크', '반창고'],
+  // 기타 — 위 분류에 안 맞는 생필품. 목록에 없으면 직접 입력해서 담는다.
+  etc: ['수건', '우산', '양초', '테이프', '노끈', '슬리퍼'],
 };
 
 export const HOUSEHOLD_EMOJI: Record<string, string> = {
@@ -159,6 +162,7 @@ export const HOUSEHOLD_EMOJI: Record<string, string> = {
   주방세제: '🧼', 수세미: '🧽', 고무장갑: '🧤', 위생장갑: '🧤', 지퍼백: '🛍️', 랩: '📦', 호일: '📦', 종이컵: '🥤',
   샴푸: '🧴', 린스: '🧴', 바디워시: '🧴', 비누: '🧼', 치약: '🪥', 칫솔: '🪥', 면도기: '🪒', 핸드워시: '🧼',
   건전지: '🔋', 전구: '💡', 방향제: '🌸', 살충제: '🦟', 빨래집게: '📎', 옷걸이: '🧥', 마스크: '😷', 반창고: '🩹',
+  수건: '🧺', 우산: '☂️', 양초: '🕯️', 테이프: '📦', 노끈: '🧵', 슬리퍼: '🩴',
 };
 
 // 품목 이름 → 카테고리 코드 (아이콘 색을 정할 때 쓴다)
