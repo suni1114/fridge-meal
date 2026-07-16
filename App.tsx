@@ -1,4 +1,4 @@
-// 장봄이 (fridge-meal) — V1.0 데모
+// 장봄 (fridge-meal) — V1.0 데모
 // 온보딩 → 빠른 세팅 → 메인(홈·냉장고·요리추천·장보기·설정) + 오버레이(레시피 상세·식재료 폼)
 import React, { useEffect } from 'react';
 import { View, StyleSheet, Platform, BackHandler } from 'react-native';

@@ -131,7 +131,7 @@ export function SettingsScreen() {
           </View>
         ))}
 
-        <Text style={s.version}>장봄이 V1.0</Text>
+        <Text style={s.version}>장봄 V1.0</Text>
       </ScrollView>
 
       {/* ── 자주 쓰는 식재료 ──────────────────────────────── */}
@@ -187,7 +187,7 @@ export function SettingsScreen() {
         <View style={s.appHead}>
           <Image source={require('../../assets/logo-mark.png')} style={s.appIcon} />
           <View>
-            <Text style={s.sheetTitle}>장봄이</Text>
+            <Text style={s.sheetTitle}>장봄</Text>
             <Text style={s.appVersion}>버전 V1.0</Text>
           </View>
         </View>

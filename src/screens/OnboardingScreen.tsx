@@ -124,7 +124,7 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
       </View>
 
       <AppButton
-        label={last ? '장봄이 시작하기' : '다음'}
+        label={last ? '장봄 시작하기' : '다음'}
         icon={last ? 'arrow-right' : undefined}
         onPress={() => {
           if (last) onDone();
