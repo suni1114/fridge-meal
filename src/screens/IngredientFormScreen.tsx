@@ -18,6 +18,8 @@ import {
   UNIT_SUFFIX,
   stockFromQty,
   emojiFor,
+  householdEmojiFor,
+  householdUnitOf,
   QtyUnit,
 } from '../data/constants';
 import { useApp, infoFor } from '../data/store';
@@ -50,6 +52,11 @@ const UNIT_OPTIONS: { code: QtyUnit; label: string }[] = [
   { code: 'gram', label: '그람(g)' },
   { code: 'percent', label: '퍼센트(%)' },
 ];
+// 생필품은 개수 / 리터만 쓴다 (유통기한·보관위치 개념 없음).
+const HH_UNIT_OPTIONS: { code: QtyUnit; label: string }[] = [
+  { code: 'count', label: '개수' },
+  { code: 'liter', label: '리터(L)' },
+];
 
 type AiItem = { id: string; name: string; amount: string };
 
@@ -61,6 +68,8 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId, scanRece
   const nav = useNav();
   const insets = useSafeAreaInsets();
   const editing = fridge.find((x) => x.id === itemId);
+  // 생필품 수정 — 유통기한·보관위치·카테고리는 숨기고 수량(개/L)·메모만 다룬다.
+  const isHH = editing?.kind === 'household';
 
   const initialName = editing?.name ?? prefillName ?? '';
   // 수정/프리필이면 바로 상세(2단계), 신규는 카테고리 선택(0단계)부터.
@@ -83,16 +92,16 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId, scanRece
   const addedDate = fromISO(added);
 
   // 수량 단위(개/그람/퍼센트) — 재료에 맞게 자동 선택하되, 사용자가 바꿀 수 있다.
-  const autoUnit = unitOf(name, fineCat);
+  const autoUnit = isHH ? householdUnitOf(name) : unitOf(name, fineCat);
   const detectUnit = (qty?: string): QtyUnit | null =>
-    qty?.includes('%') ? 'percent' : qty?.includes('g') ? 'gram' : qty?.includes('개') ? 'count' : null;
+    qty?.includes('%') ? 'percent' : qty?.includes('L') ? 'liter' : qty?.includes('g') ? 'gram' : qty?.includes('개') ? 'count' : null;
   const [unitOverride, setUnitOverride] = useState<QtyUnit | null>(editing ? detectUnit(editing.qty) : null);
   const unit = unitOverride ?? autoUnit;
-  // 단위별 기본 수량: 개=1, 그람=100, 퍼센트=100.
-  const defaultAmount = (u: QtyUnit) => (u === 'count' ? '1' : '100');
+  // 단위별 기본 수량: 개=1, 리터=1, 그람=100, 퍼센트=100.
+  const defaultAmount = (u: QtyUnit) => (u === 'count' || u === 'liter' ? '1' : '100');
   const [amount, setAmount] = useState<string>(() => {
     const f = editing?.qty ? parseFloat(editing.qty) : NaN;
-    return !isNaN(f) ? String(f) : defaultAmount(unitOf(initialName, fineCat));
+    return !isNaN(f) ? String(f) : defaultAmount(isHH ? householdUnitOf(initialName) : unitOf(initialName, fineCat));
   });
   const firstUnit = useRef(true);
   useEffect(() => {
@@ -130,7 +139,7 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId, scanRece
   };
   const searchHits = q.trim() ? ALL_INGREDIENTS.filter((n) => n.includes(q.trim())).slice(0, 40) : [];
 
-  const stepSize = unit === 'gram' ? 50 : 1;
+  const stepSize = unit === 'gram' ? 50 : unit === 'liter' ? 0.5 : 1;
   const adjust = (d: number) => {
     const v = parseFloat(amount) || 0;
     setAmount(String(Math.max(0, Math.round((v + d) * 10) / 10)));
@@ -143,11 +152,13 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId, scanRece
     upsertFridge({
       id: editing?.id ?? uid(),
       name: name.trim(),
-      category: coarseFromFine(fineCat), // 카테고리는 그대로, 이름만 바뀔 수 있음
-      storage,
+      // 생필품은 카테고리·보관위치·유통기한을 다루지 않으므로 기존 값을 유지한다.
+      category: isHH ? (editing?.category ?? 'etc') : coarseFromFine(fineCat),
+      storage: isHH ? 'household' : storage,
+      kind: editing?.kind, // 'household'면 생필품 유지 (없으면 식재료)
       stock: stockFromQty(unit, amt),
       qty: `${amt}${UNIT_SUFFIX[unit]}`,
-      expiry,
+      expiry: isHH ? null : expiry,
       added,
       memo: memo.trim() || undefined,
     });
@@ -156,8 +167,8 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId, scanRece
       markShoppingDone(shoppingId);
       nav.setTab('shopping');
     } else {
-      // 일반 식재료 추가: 저장한 보관 위치(냉장/냉동/실온) 하위 탭으로 냉장고로 이동.
-      nav.goToFridge(storage);
+      // 저장한 보관 위치 하위 탭으로 곳간 이동. 생필품은 곳간의 생필품 탭으로.
+      nav.goToFridge(isHH ? 'household' : storage);
     }
     nav.closeOverlay();
   };
@@ -245,7 +256,7 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId, scanRece
     return () => sub.remove();
   }, [step, editing?.id, prefillName]);
 
-  const headerTitle = editing ? '재료 상세 설정' : step === 2 ? '재료 상세 설정' : '식재료 추가';
+  const headerTitle = isHH ? '생필품 상세 설정' : editing ? '재료 상세 설정' : step === 2 ? '재료 상세 설정' : '식재료 추가';
 
   return (
     // 안드로이드는 OS adjustResize가 키보드를 처리 — height KAV와 충돌(리사이즈 떨림) 방지로 iOS만 padding.
@@ -362,10 +373,10 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId, scanRece
           {/* 선택한 재료 히어로 (이름 직접 수정 가능) */}
           <View style={s.hero}>
             <View style={s.heroTile}>
-              <Text style={s.heroEmoji}>{emojiFor(name, coarseFromFine(fineCat))}</Text>
+              <Text style={s.heroEmoji}>{isHH ? householdEmojiFor(name) : emojiFor(name, coarseFromFine(fineCat))}</Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={s.heroCat}>{catMeta?.label}</Text>
+              <Text style={s.heroCat}>{isHH ? '생필품' : catMeta?.label}</Text>
               {nameEditing ? (
                 <View style={s.nameEditRow}>
                   <TextInput
@@ -391,34 +402,40 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId, scanRece
             </View>
           </View>
 
-          {/* 소비기한 — 가장 중요하므로 별도 카드로 크게 강조 */}
-          <Pressable style={s.expiryCard} onPress={() => setCal('expiry')}>
-            <View style={{ flex: 1 }}>
-              <View style={s.expiryLabelRow}>
-                <Icon name="clock" size={15} color={colors.coral} weight="fill" />
-                <Text style={s.expiryLabel}>소비기한</Text>
+          {/* 소비기한 — 가장 중요하므로 별도 카드로 크게 강조. 생필품은 유통기한 개념이 없어 숨긴다. */}
+          {!isHH && (
+            <Pressable style={s.expiryCard} onPress={() => setCal('expiry')}>
+              <View style={{ flex: 1 }}>
+                <View style={s.expiryLabelRow}>
+                  <Icon name="clock" size={15} color={colors.coral} weight="fill" />
+                  <Text style={s.expiryLabel}>소비기한</Text>
+                </View>
+                <Text style={[s.expiryDate, !expiryDate && s.expiryDateMuted]}>
+                  {expiryDate ? fmtFull(expiryDate) : '눌러서 설정하기'}
+                </Text>
               </View>
-              <Text style={[s.expiryDate, !expiryDate && s.expiryDateMuted]}>
-                {expiryDate ? fmtFull(expiryDate) : '눌러서 설정하기'}
-              </Text>
-            </View>
-            <View style={s.expiryRight}>
-              <DdayBadge expiry={expiry} />
-              <Icon name="caret-right" size={16} color={colors.inkAsst} weight="bold" />
-            </View>
-          </Pressable>
-
-          {/* 설정 리스트 카드 */}
-          <View style={s.card}>
-            {/* 카테고리 — 탭하면 카테고리 선택 바텀시트(식재료 추가 페이지로 넘어가지 않음) */}
-            <Pressable style={s.listRow} onPress={() => setCatPickOpen(true)}>
-              <Text style={s.rowLabel}>카테고리</Text>
-              <View style={s.rowRight}>
-                <Text style={s.rowValue}>{catMeta?.label}</Text>
+              <View style={s.expiryRight}>
+                <DdayBadge expiry={expiry} />
                 <Icon name="caret-right" size={16} color={colors.inkAsst} weight="bold" />
               </View>
             </Pressable>
-            <View style={s.divider} />
+          )}
+
+          {/* 설정 리스트 카드 */}
+          <View style={s.card}>
+            {/* 카테고리 — 탭하면 카테고리 선택 바텀시트. 생필품은 식재료 카테고리를 쓰지 않아 숨긴다. */}
+            {!isHH && (
+              <>
+                <Pressable style={s.listRow} onPress={() => setCatPickOpen(true)}>
+                  <Text style={s.rowLabel}>카테고리</Text>
+                  <View style={s.rowRight}>
+                    <Text style={s.rowValue}>{catMeta?.label}</Text>
+                    <Icon name="caret-right" size={16} color={colors.inkAsst} weight="bold" />
+                  </View>
+                </Pressable>
+                <View style={s.divider} />
+              </>
+            )}
 
             {/* 등록일 */}
             <Pressable style={s.listRow} onPress={() => setCal('added')}>
@@ -430,28 +447,32 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId, scanRece
             </Pressable>
             <View style={s.divider} />
 
-            {/* 보관 위치 — 냉장/냉동/실온 */}
-            <View style={s.listRowTop}>
-              <Text style={s.rowLabel}>보관 위치</Text>
-              <View style={s.segRow}>
-                {STORAGE_PICKS.map((st) => {
-                  const on = storage === st.code;
-                  return (
-                    <Pressable key={st.code} onPress={() => setStorage(st.code)} style={[s.seg, on && s.segOn]}>
-                      <Icon name={st.icon} size={15} color={on ? colors.white : colors.inkAlt} weight="bold" />
-                      <Text style={[s.segText, on && s.segTextOn]}>{STORAGE_LABEL[st.code]}</Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </View>
-            <View style={s.divider} />
+            {/* 보관 위치 — 냉장/냉동/실온. 생필품은 보관위치 개념이 없어 숨긴다. */}
+            {!isHH && (
+              <>
+                <View style={s.listRowTop}>
+                  <Text style={s.rowLabel}>보관 위치</Text>
+                  <View style={s.segRow}>
+                    {STORAGE_PICKS.map((st) => {
+                      const on = storage === st.code;
+                      return (
+                        <Pressable key={st.code} onPress={() => setStorage(st.code)} style={[s.seg, on && s.segOn]}>
+                          <Icon name={st.icon} size={15} color={on ? colors.white : colors.inkAlt} weight="bold" />
+                          <Text style={[s.segText, on && s.segTextOn]}>{STORAGE_LABEL[st.code]}</Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </View>
+                <View style={s.divider} />
+              </>
+            )}
 
-            {/* 단위 — 자동 선택되며, 사용자가 직접 바꿀 수 있다 */}
+            {/* 단위 — 자동 선택되며, 사용자가 직접 바꿀 수 있다. 생필품은 개수/리터. */}
             <View style={s.listRowTop}>
               <Text style={s.rowLabel}>단위</Text>
               <View style={s.segRow}>
-                {UNIT_OPTIONS.map((u) => {
+                {(isHH ? HH_UNIT_OPTIONS : UNIT_OPTIONS).map((u) => {
                   const on = unit === u.code;
                   return (
                     <Pressable key={u.code} onPress={() => setUnitOverride(u.code)} style={[s.seg, on && s.segOn]}>
@@ -592,7 +613,7 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId, scanRece
         value={cal === 'added' ? addedDate : expiryDate ?? addDays(startOfToday(), 7)}
         title={cal === 'added' ? '등록일 선택' : '소비기한 선택'}
         hint={cal === 'added' ? '냉장고에 넣은 날짜예요.' : '날짜를 고르면 남은 일수가 자동 계산돼요.'}
-        disableBefore={cal === 'expiry' ? startOfToday() : null}
+        disableBefore={null}
         disableAfter={cal === 'added' ? startOfToday() : null}
         presets={cal === 'expiry' ? DDAY_PRESETS : undefined}
         presetSel={cal === 'expiry' ? (expiry === null ? 'none' : dleft) : undefined}
