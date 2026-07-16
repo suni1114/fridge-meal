@@ -355,6 +355,19 @@ export function recipeCategoryEmoji(category: string): string {
   return RECIPE_CATEGORY_EMOJI[category] ?? '🍽️';
 }
 
+// 요리명 → 대표 이모지. 사진이 없는 요리의 타일에 쓴다(없으면 카테고리 이모지).
+const RECIPE_NAME_EMOJI: Record<string, string> = {
+  김치볶음밥: '🍚', 열무국수: '🍜', 떡볶이: '🍢', 비빔만두: '🥟', 군만두: '🥟',
+  샌드위치: '🥪', 주먹밥: '🍙', 참치주먹밥: '🍙', 닭볶음탕: '🍗', 돼지갈비찜: '🍖',
+  삼겹살구이: '🥓', 코다리조림: '🐟', 양념치킨: '🍗', 떡갈비: '🍖', 밀푀유나베: '🍲',
+  두부조림: '🧈', 고추장멸치볶음: '🐟', 돼지고기장조림: '🥩', 브로콜리무침: '🥦',
+  참치김치찌개: '🍲', 순두부찌개: '🍲', 콩나물국: '🍲', 감자탕: '🍲',
+};
+/** 요리 타일 이모지 — 요리명 우선, 없으면 카테고리 기준. */
+export function recipeEmoji(name: string, category: string): string {
+  return RECIPE_NAME_EMOJI[name] ?? recipeCategoryEmoji(category);
+}
+
 // 관리자가 추가한 식재료 아이콘(런타임). AppProvider가 로드/갱신.
 let USER_EMOJI: Record<string, string> = {};
 export function setUserEmoji(map: Record<string, string>) { USER_EMOJI = map; }

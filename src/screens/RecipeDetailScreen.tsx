@@ -82,7 +82,12 @@ export function RecipeDetailScreen({ recipeId }: { recipeId: string }) {
             <View style={s.metaPill}><Text style={s.metaText}>{recipe.category}</Text></View>
             {recipe.cookTimeMinutes != null && (<View style={s.metaPill}><Icon name="flame" size={12} color={colors.inkAlt} weight="fill" /><Text style={s.metaText}>{recipe.cookTimeMinutes}분</Text></View>)}
             {/* 난이도 — 목록과 동일하게 별점(별이 많을수록 어려움) */}
-            {!!recipe.difficulty && <View style={[s.metaPill, s.metaPillOutline]}><DifficultyStars difficulty={recipe.difficulty} size={13} /></View>}
+            {!!recipe.difficulty && (
+              <View style={[s.metaPill, s.metaPillOutline]}>
+                <Text style={s.metaText}>난이도</Text>
+                <DifficultyStars difficulty={recipe.difficulty} size={13} />
+              </View>
+            )}
           </View>
 
           <Text style={s.sectionTitle}>재료</Text>

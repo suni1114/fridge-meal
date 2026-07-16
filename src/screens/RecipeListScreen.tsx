@@ -8,7 +8,7 @@ import { Icon } from '../components/Icon';
 import { useApp, matchAll, matchRecipe } from '../data/store';
 import { RECIPE_CATEGORIES, RecipeMatch, isReady, recipeUsesIngredient } from '../data/recommend';
 import { recipeImage } from '../data/recipeImages';
-import { recipeCategoryEmoji } from '../data/constants';
+import { recipeEmoji } from '../data/constants';
 import { HeaderActions, emojiFont, DifficultyStars } from '../components/ui';
 import { useNav } from '../navigation/nav';
 
@@ -157,7 +157,7 @@ function RecipeCard({ m, onOpen }: { m: RecipeMatch; onOpen: () => void }) {
           <Image source={img} style={s.thumb} resizeMode="cover" />
         ) : (
           <View style={[s.thumb, s.thumbFallback]}>
-            <Text style={[s.thumbEmoji, emojiFont]}>{recipeCategoryEmoji(m.recipe.category)}</Text>
+            <Text style={[s.thumbEmoji, emojiFont]}>{recipeEmoji(m.recipe.name, m.recipe.category)}</Text>
           </View>
         )}
       </View>
@@ -170,7 +170,8 @@ function RecipeCard({ m, onOpen }: { m: RecipeMatch; onOpen: () => void }) {
           </Text>
           {!!m.recipe.difficulty && (
             <>
-              <Text style={s.metaText}> · </Text>
+              {/* '난이도'를 붙여 평점이 아니라 난이도임을 분명히 한다 */}
+              <Text style={s.metaText}> · 난이도 </Text>
               <DifficultyStars difficulty={m.recipe.difficulty} size={14} />
             </>
           )}
