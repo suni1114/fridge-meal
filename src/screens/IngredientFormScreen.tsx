@@ -26,6 +26,7 @@ import {
   QtyUnit,
 } from '../data/constants';
 import { useApp, infoFor, ShoppingKind } from '../data/store';
+import { useKeyboardAwareScroll } from '../hooks/useKeyboardAwareScroll';
 import { uid } from '../data/id';
 import { startOfToday, addDays, toISO, fromISO, daysUntil, todayISO, sameYMD, fmtFull, fmtDot, WEEKDAYS } from '../data/date';
 import { useNav } from '../navigation/nav';
@@ -103,6 +104,9 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId, scanRece
   const [cal, setCal] = useState<null | 'expiry' | 'added'>(null);
   const [catPickOpen, setCatPickOpen] = useState(false); // 수정 시 카테고리 변경 시트
   const [memo, setMemo] = useState(editing?.memo ?? '');
+  // 키패드가 올라올 때 포커스된 입력칸이 가리지 않도록 스크롤(단계별 ScrollView 공용 — 한 번에 하나만 마운트).
+  const scrollRef = useRef<ScrollView>(null);
+  const kbAware = useKeyboardAwareScroll(scrollRef);
 
   const dleft = daysUntil(expiry); // null = 미설정
   const expiryDate = expiry ? fromISO(expiry) : null;
@@ -372,7 +376,7 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId, scanRece
 
       {/* ── 1단계: 식재료 선택 ────────────────────────────────── */}
       {step === 1 && (
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: 24 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <ScrollView ref={scrollRef} {...kbAware} style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: 24 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <Pressable style={s.catBadge} onPress={() => setStep(0)}>
             <Text style={s.catBadgeEmoji}>{catMeta?.emoji}</Text>
             <Text style={s.catBadgeLabel}>{catMeta?.label}</Text>
@@ -409,7 +413,7 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId, scanRece
 
       {/* ── 2단계: 재료 상세 설정 ─────────────────────────────── */}
       {step === 2 && (
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
+        <ScrollView ref={scrollRef} {...kbAware} style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: 24 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           {/* 선택한 재료 히어로 (이름 직접 수정 가능) */}
           <View style={s.hero}>
             <View style={s.heroTile}>
@@ -528,12 +532,30 @@ export function IngredientFormScreen({ itemId, prefillName, shoppingId, scanRece
             <View style={s.listRowTop}>
               <Text style={s.rowLabel}>수량</Text>
               {unit === 'percent' ? (
-                <View style={s.wrap}>
-                  {['100', '75', '50', '25'].map((p) => (
+                <View style={s.pctRow}>
+                  {['100', '50'].map((p) => (
                     <Pressable key={p} onPress={() => setAmount(p)} style={[s.chip, amount === p && s.chipOn]}>
                       <Text style={[s.chipText, amount === p && s.chipTextOn]}>{p}%</Text>
                     </Pressable>
                   ))}
+                  {/* 직접 입력 — 0~100 사이 임의 값 */}
+                  <View style={s.pctInputWrap}>
+                    <TextInput
+                      value={amount}
+                      onChangeText={(t) => {
+                        const clean = t.replace(/[^0-9]/g, '');
+                        if (clean === '') { setAmount(''); return; }
+                        setAmount(String(Math.min(100, parseInt(clean, 10))));
+                      }}
+                      keyboardType="number-pad"
+                      placeholder="직접"
+                      placeholderTextColor={colors.inkAsst}
+                      style={s.pctInput}
+                      textAlign="right"
+                      maxLength={3}
+                    />
+                    <Text style={s.pctSuffix}>%</Text>
+                  </View>
                 </View>
               ) : (
                 <View style={s.stepper}>
@@ -841,6 +863,11 @@ const s = StyleSheet.create({
   resultCat: { fontFamily: font.semibold, fontSize: 12, color: colors.inkAsst },
 
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  // 퍼센트 수량 — 프리셋(100/50) 칩 + 직접 입력칸
+  pctRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
+  pctInputWrap: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', paddingVertical: 7, paddingHorizontal: 13, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line },
+  pctInput: { width: 48, fontFamily: font.bold, fontSize: 14, color: colors.ink, padding: 0 },
+  pctSuffix: { fontFamily: font.bold, fontSize: 14, color: colors.inkAlt, marginLeft: 1 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 9, paddingHorizontal: 13, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line },
   chipOn: { backgroundColor: colors.primary, borderColor: colors.primary },
   chipEmoji: { fontSize: 14, ...(EMOJI_FONT || {}) },
