@@ -76,7 +76,7 @@ export const FOOD_EMOJI: Record<string, string> = {
   산딸기: '🍓', 한라봉: '🍊', 천혜향: '🍊', 레드향: '🍊', 살구: '🍑', 석류: '🍎', 무화과: '🍑', 용과: '🐉',
   패션후르츠: '🍈', 리치: '🍒', 람부탄: '🍒', 건대추: '🌰',
   // 육류
-  삼겹살: '🥓', 베이컨: '🥓', 목살: '🥩', 등심: '🥩', 안심: '🥩', 차돌박이: '🥩', 갈비: '🍖', 불고기감: '🥩',
+  삼겹살: '🥓', 대패삼겹살: '🥓', 베이컨: '🥓', 목살: '🥩', 등심: '🥩', 안심: '🥩', 차돌박이: '🥩', 갈비: '🍖', 불고기감: '🥩',
   소고기다짐육: '🥩', 돼지고기다짐육: '🥩',
   닭다리살: '🍗', 닭안심: '🍗', 닭봉: '🍗', 양고기: '🥩', 족발: '🍖',
   // 수산물
@@ -211,7 +211,7 @@ export const FINE_CATEGORIES: { code: string; label: string; emoji: string }[] =
 const FINE_BY_NAME: Record<string, string> = {
   // 육류
   소고기: 'meat', 돼지고기: 'meat', 닭고기: 'meat', 오리고기: 'meat', 소고기다짐육: 'meat', 돼지고기다짐육: 'meat', 닭가슴살: 'meat',
-  삼겹살: 'meat', 목살: 'meat', 등심: 'meat', 안심: 'meat', 양지: 'meat', 사태: 'meat', 차돌박이: 'meat',
+  삼겹살: 'meat', 대패삼겹살: 'meat', 목살: 'meat', 등심: 'meat', 안심: 'meat', 양지: 'meat', 사태: 'meat', 차돌박이: 'meat',
   닭다리살: 'meat', 닭안심: 'meat', 닭봉: 'meat', 양고기: 'meat', 불고기감: 'meat', 갈비: 'meat', 족발: 'meat',
   // 수산물
   생선: 'seafood', 새우: 'seafood', 냉동새우: 'seafood', 오징어: 'seafood', 조개: 'seafood', 게: 'seafood',
