@@ -44,7 +44,8 @@ const LEFT: TabDef[] = [
   { key: 'shopping', label: '장보기', icon: 'shopping-cart-simple' },
 ];
 const RIGHT: TabDef[] = [
-  { key: 'fridge', label: '곳간', icon: 'snowflake' },
+  // 곳간 = 창고/팬트리. 앱 전반에서 '곳간으로 이동'에 쓰는 package(상자) 아이콘으로 통일(냉장고 느낌 제거).
+  { key: 'fridge', label: '곳간', icon: 'package' },
   { key: 'recipe', label: '요리추천', icon: 'fork-knife' },
 ];
 
@@ -58,8 +59,7 @@ export function TabBar({ active, onChange }: { active: TabKey; onChange: (k: Tab
     const on = t.key === active;
     return (
       <Pressable key={t.key} style={s.item} onPress={() => onChange(t.key)}>
-        {/* 냉장고(눈결정체)는 fill이 솔리드 덩어리로 보여 모양이 뭉개지므로 bold로 모양 유지 + 색 채움 */}
-        <TabIcon name={t.icon} size={23} active={on} fillWeight={t.icon === 'snowflake' ? 'bold' : 'fill'} />
+        <TabIcon name={t.icon} size={23} active={on} />
         <Text style={[s.label, { color: on ? colors.primary : colors.inkAsst, fontFamily: on ? font.bold : font.semibold }]}>{t.label}</Text>
       </Pressable>
     );
