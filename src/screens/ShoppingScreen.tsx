@@ -268,7 +268,10 @@ export function ShoppingScreen() {
         <HeaderActions showSearch={false} showBell={false} />
       </View>
 
-      <Animated.ScrollView
+      {/* 일반 ScrollView + stickyHeaderIndices. (Animated.ScrollView의 sticky 헤더는 네이티브에서
+          내부 Pressable 터치가 먹지 않아 탭이 안 눌렸다. 일반 ScrollView는 sticky 터치가 정상.)
+          헤더 축소 애니메이션은 onScroll의 Animated.event로 그대로 구동한다. */}
+      <ScrollView
         ref={listRef}
         stickyHeaderIndices={grandTotal > 0 ? [1] : [0]}
         onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
@@ -280,7 +283,7 @@ export function ShoppingScreen() {
         contentContainerStyle={{ paddingBottom: pricingId ? 320 : 20 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* 이번 장보기 요약 — 스크롤하면 위로 밀려 사라진다. 상단: 합계 / 하단: 식재료·생필품 박스 */}
+        {/* 이번 장보기 요약 — 스크롤하면 위로 밀려 사라진다. */}
         {grandTotal > 0 && (
           <View style={s.grandBar}>
             <View style={s.grandTop}>
@@ -309,8 +312,7 @@ export function ShoppingScreen() {
                 <Pressable
                   key={t.key}
                   style={s.tab}
-                  // 스크롤을 내린 상태에서 탭을 바꾸면 짧은 목록이 화면 밖(위)에 남아 빈 화면처럼 보인다.
-                  // 탭 전환 시 맨 위로 올려 새 탭 내용이 바로 보이게 한다(상단 슬림도 함께 펼쳐짐).
+                  // 스크롤 내린 상태에서 탭을 바꾸면 짧은 목록이 화면 밖(위)에 남아 빈 화면처럼 보인다 → 맨 위로.
                   onPress={() => { setTab(t.key); listRef.current?.scrollTo({ y: 0, animated: true }); }}
                 >
                   <Text style={[s.tabText, on && s.tabTextOn]}>{t.label}</Text>
@@ -350,7 +352,7 @@ export function ShoppingScreen() {
             </>
           )}
         </View>
-      </Animated.ScrollView>
+      </ScrollView>
 
       {/* 추가 모달 — 식재료는 카테고리+직접입력(긴 시트), 생필품은 이름 입력만(짧은 시트) */}
       <Modal visible={addOpen} transparent animationType="slide" onRequestClose={closeAdd}>
