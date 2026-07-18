@@ -143,17 +143,20 @@ export function ShoppingScreen() {
   };
 
   // 항목 앞 타일 — 식재료는 식재료 이모지, 생필품은 생필품 이모지.
-  const Lead = ({ item, size }: { item: ShoppingItem; size: number }) =>
+  // (컴포넌트가 아닌 함수로 호출해 재렌더마다 타일이 재마운트되지 않게 한다)
+  const lead = (item: ShoppingItem, size: number) =>
     item.kind === 'household' ? (
       <HouseholdTile name={item.name} size={size} />
     ) : item.category ? (
       <FoodTile name={item.name} category={item.category} size={size} />
     ) : null;
 
-  const Row = ({ item, checkSize = 22 }: { item: ShoppingItem; checkSize?: number }) => {
+  // 컴포넌트(<Row/>)가 아니라 JSX를 반환하는 함수로 둔다. 렌더마다 새 함수 정체성이 생겨
+  // 컴포넌트로 쓰면 금액 한 글자 입력할 때마다 행이 재마운트되어 스크롤/포커스가 튄다.
+  const renderRow = (item: ShoppingItem, checkSize = 22) => {
     const auto = isAuto(item);
     return (
-      <View style={s.row}>
+      <View key={item.id} style={s.row}>
         <Pressable hitSlop={8} onPress={() => toggleShoppingChecked(item.id)}>
           {item.checked ? (
             <Icon name="check-circle" size={checkSize} color={colors.primary} weight="fill" />
@@ -162,7 +165,7 @@ export function ShoppingScreen() {
           )}
         </Pressable>
         <Pressable style={s.rowMain} onPress={() => setActionItem(item)}>
-          <Lead item={item} size={34} />
+          {lead(item, 34)}
           <View style={{ flex: 1 }}>
             <View style={s.nameLine}>
               <Text style={[s.name, item.checked && s.nameDone]} numberOfLines={1}>{item.name}</Text>
@@ -271,7 +274,7 @@ export function ShoppingScreen() {
         <View style={s.content}>
           <SectionTitle title="구매목록" count={buyList.length} actionLabel="추가" actionProminent onAction={openAdd} compact style={s.secTitle} />
           <View style={s.group}>
-            {buyList.length ? buyList.map((it) => <Row key={it.id} item={it} checkSize={18} />) : <Text style={s.empty}>{emptyMsg}</Text>}
+            {buyList.length ? buyList.map((it) => renderRow(it, 18)) : <Text style={s.empty}>{emptyMsg}</Text>}
           </View>
 
           {done.length > 0 && (
@@ -293,7 +296,7 @@ export function ShoppingScreen() {
                   </Pressable>
                 </View>
               </View>
-              <View style={s.group}>{done.map((it) => <Row key={it.id} item={it} />)}</View>
+              <View style={s.group}>{done.map((it) => renderRow(it))}</View>
             </>
           )}
         </View>
@@ -407,7 +410,7 @@ export function ShoppingScreen() {
             {actionItem && (
               <>
                 <View style={s.sheetHead}>
-                  <Lead item={actionItem} size={40} />
+                  {lead(actionItem, 40)}
                   <View style={{ flex: 1 }}>
                     <Text style={s.sheetName}>{actionItem.name}</Text>
                     <Text style={s.note}>{actionItem.note ?? (isAuto(actionItem) ? SOURCE_LABEL[actionItem.source] : actionItem.kind === 'household' ? '생필품' : '직접 추가')}</Text>
