@@ -50,18 +50,26 @@ export function ShoppingScreen() {
   const listRef = useRef<ScrollView>(null);
   const scrollOffset = useRef(0); // 현재 세로 스크롤 위치(실측)
   const priceInputRef = useRef<TextInput>(null); // 편집 중인 금액 입력칸
-  useEffect(() => {
-    const sub = Keyboard.addListener('keyboardDidShow', (e) => {
-      const input = priceInputRef.current;
-      if (!input) return; // 금액 편집 중이 아니면 무시
-      const kbTop = e.endCoordinates.screenY; // 키패드 상단의 화면 Y
-      input.measureInWindow((_x, y, _w, h) => {
-        const margin = 28;
-        const overflow = y + h - (kbTop - margin); // 입력칸 하단이 키패드에 얼마나 가렸는지
-        if (overflow > 0) listRef.current?.scrollTo({ y: scrollOffset.current + overflow, animated: true });
-      });
+  const kbTopRef = useRef(0); // 키패드 상단의 화면 Y (올라와 있을 때만 >0)
+  // 현재 포커스된 입력칸이 키패드에 가리면 그만큼 위로 스크롤한다.
+  // '다음' 키로 아래 칸으로 넘어갈 때는 키패드가 이미 떠 있어 keyboardDidShow가 안 오므로 직접 호출한다.
+  const ensureInputVisible = () => {
+    const input = priceInputRef.current;
+    const kbTop = kbTopRef.current;
+    if (!input || !kbTop) return;
+    input.measureInWindow((_x, y, _w, h) => {
+      const margin = 28;
+      const overflow = y + h - (kbTop - margin);
+      if (overflow > 0) listRef.current?.scrollTo({ y: scrollOffset.current + overflow, animated: true });
     });
-    return () => sub.remove();
+  };
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', (e) => {
+      kbTopRef.current = e.endCoordinates.screenY;
+      ensureInputVisible();
+    });
+    const hide = Keyboard.addListener('keyboardDidHide', () => { kbTopRef.current = 0; });
+    return () => { show.remove(); hide.remove(); };
   }, []);
   const [tab, setTab] = useState<ShoppingKind>('food');
   const [pricingId, setPricingId] = useState<string | null>(null); // 금액 인라인 편집 중인 행
@@ -90,12 +98,40 @@ export function ShoppingScreen() {
   const foodTotal = shopping.filter((x) => x.checked && (x.kind ?? 'food') === 'food').reduce((sum, x) => sum + (x.price ?? 0), 0);
   const householdTotal = shopping.filter((x) => x.checked && x.kind === 'household').reduce((sum, x) => sum + (x.price ?? 0), 0);
 
-  const startPrice = (it: ShoppingItem) => { setPriceDraft(it.price != null ? String(it.price) : ''); setPricingId(it.id); };
-  const commitPrice = () => {
-    if (!pricingId) return;
-    const n = parseInt(priceDraft.replace(/[^0-9]/g, ''), 10);
-    setShoppingPrice(pricingId, isNaN(n) || n <= 0 ? undefined : n);
-    setPricingId(null); setPriceDraft('');
+  // 편집 중인 (행 id, 입력값)의 단일 소스. 상태(priceDraft)는 렌더용, 저장 판단은 이 ref로 해서
+  // 칸을 바꾸는 순간 이전 값이 새 칸 값으로 덮여 사라지던 문제를 막는다.
+  const editingRef = useRef<{ id: string; draft: string } | null>(null);
+  const saveDraft = (id: string, draft: string) => {
+    const n = parseInt(draft.replace(/[^0-9]/g, ''), 10);
+    setShoppingPrice(id, isNaN(n) || n <= 0 ? undefined : n);
+  };
+  const startPrice = (it: ShoppingItem) => {
+    // 다른 칸을 편집 중이었다면 그 값을 먼저 저장(덮어쓰기 전에).
+    if (editingRef.current && editingRef.current.id !== it.id) saveDraft(editingRef.current.id, editingRef.current.draft);
+    const draft = it.price != null ? String(it.price) : '';
+    editingRef.current = { id: it.id, draft };
+    setPriceDraft(draft);
+    setPricingId(it.id);
+    setTimeout(ensureInputVisible, 80); // 새 칸 마운트·포커스 후 키패드 위로
+  };
+  const onDraftChange = (text: string) => {
+    const clean = text.replace(/[^0-9]/g, '');
+    if (editingRef.current) editingRef.current.draft = clean;
+    setPriceDraft(clean);
+  };
+  // 편집 종료(완료 키 / 바깥 탭). 현재 값 저장 후 입력 상태 해제.
+  const finishPrice = () => {
+    if (editingRef.current) saveDraft(editingRef.current.id, editingRef.current.draft);
+    editingRef.current = null;
+    setPricingId(null);
+    setPriceDraft('');
+  };
+  // '다음' 키 — 현재 값 저장 후 아래 구매완료 항목으로 넘어간다(있으면). 없으면 종료.
+  const nextPrice = (current: ShoppingItem) => {
+    const idx = done.findIndex((x) => x.id === current.id);
+    const next = done[idx + 1];
+    if (next) startPrice(next); // startPrice가 현재 값 저장 + 다음 칸 포커스
+    else finishPrice();
   };
 
   const openAdd = () => { setPickCat(null); setAddName(''); setSelected([]); setAddOpen(true); };
@@ -176,19 +212,27 @@ export function ShoppingScreen() {
           {/* 구매완료 행: 금액 인라인 입력/수정 · 구매목록 행: 자세히 보기 캐럿 */}
           {item.checked ? (
             pricingId === item.id ? (
-              <TextInput
-                ref={priceInputRef}
-                autoFocus
-                value={priceDraft}
-                onChangeText={(t) => setPriceDraft(t.replace(/[^0-9]/g, ''))}
-                keyboardType="number-pad"
-                onBlur={commitPrice}
-                onSubmitEditing={commitPrice}
-                placeholder="0"
-                placeholderTextColor={colors.inkAsst}
-                style={s.priceInput}
-                returnKeyType="done"
-              />
+              (() => {
+                const dIdx = done.findIndex((x) => x.id === item.id);
+                const hasNext = dIdx >= 0 && dIdx < done.length - 1; // 아래에 구매완료 항목이 더 있으면 '다음'
+                return (
+                  <TextInput
+                    ref={priceInputRef}
+                    autoFocus
+                    value={priceDraft}
+                    onChangeText={onDraftChange}
+                    keyboardType="number-pad"
+                    // 다음 칸이 있으면 키패드를 내리지 않고(blurOnSubmit=false) 아래 칸으로 넘어간다.
+                    blurOnSubmit={!hasNext}
+                    onBlur={() => { if (editingRef.current?.id === item.id) finishPrice(); }}
+                    onSubmitEditing={() => nextPrice(item)}
+                    placeholder="0"
+                    placeholderTextColor={colors.inkAsst}
+                    style={s.priceInput}
+                    returnKeyType={hasNext ? 'next' : 'done'}
+                  />
+                );
+              })()
             ) : (
               <Pressable hitSlop={6} onPress={() => startPrice(item)}>
                 {item.price != null
@@ -262,7 +306,13 @@ export function ShoppingScreen() {
             {TABS.map((t) => {
               const on = tab === t.key;
               return (
-                <Pressable key={t.key} style={s.tab} onPress={() => setTab(t.key)}>
+                <Pressable
+                  key={t.key}
+                  style={s.tab}
+                  // 스크롤을 내린 상태에서 탭을 바꾸면 짧은 목록이 화면 밖(위)에 남아 빈 화면처럼 보인다.
+                  // 탭 전환 시 맨 위로 올려 새 탭 내용이 바로 보이게 한다(상단 슬림도 함께 펼쳐짐).
+                  onPress={() => { setTab(t.key); listRef.current?.scrollTo({ y: 0, animated: true }); }}
+                >
                   <Text style={[s.tabText, on && s.tabTextOn]}>{t.label}</Text>
                   <View style={[s.tabUnderline, on && s.tabUnderlineOn]} />
                 </Pressable>
