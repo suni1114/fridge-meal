@@ -2,8 +2,8 @@
 //  · 식재료: 자동추천(위쪽) + 직접추가를 '구매목록'으로 묶음. 항목 탭 = 냉장고에 추가 / 이름 수정 / 삭제.
 //  · 생필품: 함께 살 휴지·세제 등. 식재료처럼 카테고리에서 골라 담고 이모지 타일로 보인다.
 //    (냉장고에는 들어가지 않으므로 항목 탭 = 이름 수정 / 삭제만)
-import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable, TextInput, Modal, KeyboardAvoidingView, StyleSheet, Platform } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, ScrollView, Pressable, TextInput, Modal, KeyboardAvoidingView, StyleSheet, Platform, Animated } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius, cat } from '../theme/tokens';
 import { font } from '../theme/fonts';
@@ -39,6 +39,13 @@ export function ShoppingScreen() {
   const sheetPad = Platform.OS === 'web' ? 30 : insets.bottom + 30;
   const { shopping, toggleShoppingChecked, addToShopping, renameShopping, removeShopping, clearCheckedShopping, setShoppingPrice, registerToFridge } = useApp();
   const nav = useNav();
+  // 스크롤에 따라 상단 제목을 슬림하게: 서브카피는 사라지고 '장보기 목록'은 작아진다.
+  // 금액 카드는 스크롤 콘텐츠 안에 있어 위로 밀려 사라지고, 탭만 상단에 고정(sticky)된다.
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const COLLAPSE = 60;
+  const titleSize = scrollY.interpolate({ inputRange: [0, COLLAPSE], outputRange: [24, 17], extrapolate: 'clamp' });
+  const subHeight = scrollY.interpolate({ inputRange: [0, COLLAPSE], outputRange: [21, 0], extrapolate: 'clamp' });
+  const subOpacity = scrollY.interpolate({ inputRange: [0, COLLAPSE * 0.5], outputRange: [1, 0], extrapolate: 'clamp' });
   const [tab, setTab] = useState<ShoppingKind>('food');
   const [pricingId, setPricingId] = useState<string | null>(null); // 금액 인라인 편집 중인 행
   const [priceDraft, setPriceDraft] = useState('');
@@ -180,81 +187,94 @@ export function ShoppingScreen() {
 
   return (
     <View style={s.root}>
+      {/* 상단 제목 — 고정. 스크롤하면 서브카피는 사라지고 '장보기 목록'이 작아진다(슬림). */}
       <View style={s.header}>
         <View style={{ flex: 1 }}>
           <View style={s.titleRow}>
-            <Text style={s.title}>장보기 목록</Text>
+            <Animated.Text style={[s.title, { fontSize: titleSize }]}>장보기 목록</Animated.Text>
             <Pressable onPress={() => setHelpOpen(true)} hitSlop={8}>
               <Icon name="info" size={20} color={colors.inkAsst} />
             </Pressable>
           </View>
-          <Text style={s.subtitle}>마트에서 하나씩 체크하며 담으세요</Text>
+          <Animated.View style={{ height: subHeight, opacity: subOpacity, overflow: 'hidden' }}>
+            <Text style={s.subtitle}>마트에서 하나씩 체크하며 담으세요</Text>
+          </Animated.View>
         </View>
         <HeaderActions showSearch={false} showBell={false} />
       </View>
 
-      {/* 이번 장보기 요약 — 탭 위. 상단: 담은 것 합계 / 하단: 식재료·생필품 박스 (샘플과 동일) */}
-      {grandTotal > 0 && (
-        <View style={s.grandBar}>
-          <View style={s.grandTop}>
-            <Text style={s.grandLabel}>구매완료 합계</Text>
-            <Text style={s.grandValue}>{wonMark(grandTotal)}</Text>
-          </View>
-          <View style={s.grandBoxes}>
-            <View style={s.grandBox}>
-              <Text style={s.grandBoxLabel}>식재료</Text>
-              <Text style={s.grandBoxValue}>{wonMark(foodTotal)}</Text>
+      <Animated.ScrollView
+        stickyHeaderIndices={grandTotal > 0 ? [1] : [0]}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}
+        scrollEventThrottle={16}
+        contentContainerStyle={{ paddingBottom: 20 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* 이번 장보기 요약 — 스크롤하면 위로 밀려 사라진다. 상단: 합계 / 하단: 식재료·생필품 박스 */}
+        {grandTotal > 0 && (
+          <View style={s.grandBar}>
+            <View style={s.grandTop}>
+              <Text style={s.grandLabel}>구매완료 합계</Text>
+              <Text style={s.grandValue}>{wonMark(grandTotal)}</Text>
             </View>
-            <View style={s.grandBox}>
-              <Text style={s.grandBoxLabel}>생필품</Text>
-              <Text style={s.grandBoxValue}>{wonMark(householdTotal)}</Text>
-            </View>
-          </View>
-        </View>
-      )}
-
-      {/* 탭 — 식재료 / 생필품 (냉장고 보기방식 탭과 동일한 밑줄 스타일) */}
-      <View style={s.tabs}>
-        {TABS.map((t) => {
-          const on = tab === t.key;
-          return (
-            <Pressable key={t.key} style={s.tab} onPress={() => setTab(t.key)}>
-              <Text style={[s.tabText, on && s.tabTextOn]}>{t.label}</Text>
-              <View style={[s.tabUnderline, on && s.tabUnderlineOn]} />
-            </Pressable>
-          );
-        })}
-      </View>
-
-      <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 22, paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
-        <SectionTitle title="구매목록" count={buyList.length} actionLabel="추가" actionProminent onAction={openAdd} compact style={s.secTitle} />
-        <View style={s.group}>
-          {buyList.length ? buyList.map((it) => <Row key={it.id} item={it} checkSize={18} />) : <Text style={s.empty}>{emptyMsg}</Text>}
-        </View>
-
-        {done.length > 0 && (
-          <>
-            {/* 구매완료 헤더 — 곳간으로 이동 + 전체 삭제 두 액션 */}
-            <View style={s.doneHead}>
-              <View style={s.doneHeadLeft}>
-                <Text style={s.doneHeadTitle}>구매 완료</Text>
-                <Text style={s.doneHeadCount}>{done.length}</Text>
+            <View style={s.grandBoxes}>
+              <View style={s.grandBox}>
+                <Text style={s.grandBoxLabel}>식재료</Text>
+                <Text style={s.grandBoxValue}>{wonMark(foodTotal)}</Text>
               </View>
-              <View style={s.doneActions}>
-                <Pressable style={s.clearBtn} onPress={() => setClearOpen(true)} hitSlop={6}>
-                  <Icon name="trash" size={14} color="#9D4949" />
-                  <Text style={s.clearBtnText}>전체삭제</Text>
-                </Pressable>
-                <Pressable style={s.moveBtn} onPress={() => nav.openRegister(tab)}>
-                  <Text style={s.moveBtnText}>곳간으로 이동</Text>
-                  <Icon name="arrow-right" size={14} color="#2A6B4C" weight="bold" />
-                </Pressable>
+              <View style={s.grandBox}>
+                <Text style={s.grandBoxLabel}>생필품</Text>
+                <Text style={s.grandBoxValue}>{wonMark(householdTotal)}</Text>
               </View>
             </View>
-            <View style={s.group}>{done.map((it) => <Row key={it.id} item={it} />)}</View>
-          </>
+          </View>
         )}
-      </ScrollView>
+
+        {/* 탭 — 식재료 / 생필품. 상단에 슬림하게 고정(sticky). 배경을 깔아 목록이 비치지 않게 한다. */}
+        <View style={s.tabsWrap}>
+          <View style={s.tabs}>
+            {TABS.map((t) => {
+              const on = tab === t.key;
+              return (
+                <Pressable key={t.key} style={s.tab} onPress={() => setTab(t.key)}>
+                  <Text style={[s.tabText, on && s.tabTextOn]}>{t.label}</Text>
+                  <View style={[s.tabUnderline, on && s.tabUnderlineOn]} />
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+        <View style={s.content}>
+          <SectionTitle title="구매목록" count={buyList.length} actionLabel="추가" actionProminent onAction={openAdd} compact style={s.secTitle} />
+          <View style={s.group}>
+            {buyList.length ? buyList.map((it) => <Row key={it.id} item={it} checkSize={18} />) : <Text style={s.empty}>{emptyMsg}</Text>}
+          </View>
+
+          {done.length > 0 && (
+            <>
+              {/* 구매완료 헤더 — 곳간으로 이동 + 전체 삭제 두 액션 */}
+              <View style={s.doneHead}>
+                <View style={s.doneHeadLeft}>
+                  <Text style={s.doneHeadTitle}>구매 완료</Text>
+                  <Text style={s.doneHeadCount}>{done.length}</Text>
+                </View>
+                <View style={s.doneActions}>
+                  <Pressable style={s.clearBtn} onPress={() => setClearOpen(true)} hitSlop={6}>
+                    <Icon name="trash" size={14} color="#9D4949" />
+                    <Text style={s.clearBtnText}>전체삭제</Text>
+                  </Pressable>
+                  <Pressable style={s.moveBtn} onPress={() => nav.openRegister(tab)}>
+                    <Text style={s.moveBtnText}>곳간으로 이동</Text>
+                    <Icon name="arrow-right" size={14} color="#2A6B4C" weight="bold" />
+                  </Pressable>
+                </View>
+              </View>
+              <View style={s.group}>{done.map((it) => <Row key={it.id} item={it} />)}</View>
+            </>
+          )}
+        </View>
+      </Animated.ScrollView>
 
       {/* 추가 모달 — 식재료는 카테고리+직접입력(긴 시트), 생필품은 이름 입력만(짧은 시트) */}
       <Modal visible={addOpen} transparent animationType="slide" onRequestClose={closeAdd}>
@@ -461,15 +481,20 @@ const s = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 10 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   title: { fontFamily: font.extrabold, fontSize: 24, color: colors.ink, letterSpacing: -0.5 },
-  subtitle: { fontFamily: font.medium, fontSize: 13.5, color: colors.inkAlt, marginTop: 5 },
+  subtitle: { fontFamily: font.medium, fontSize: 13.5, lineHeight: 17, color: colors.inkAlt, marginTop: 4 },
 
-  // 탭 (식재료 / 생필품) — 냉장고 viewTabs와 동일한 밑줄 스타일
+  // 탭 고정 래퍼 — sticky일 때 아래 목록이 비치지 않도록 배경(크림)을 전체폭으로 깐다.
+  tabsWrap: { backgroundColor: colors.cream, paddingTop: 2 },
+  // 탭 (식재료 / 생필품) — 냉장고 viewTabs와 동일한 밑줄 스타일. 슬림하게(paddingVertical 7).
   tabs: { flexDirection: 'row', marginHorizontal: 16, borderBottomWidth: 1, borderBottomColor: colors.line },
   tab: { flex: 1, alignItems: 'center' },
-  tabText: { fontFamily: font.bold, fontSize: 15, color: colors.inkAsst, paddingVertical: 9 },
+  tabText: { fontFamily: font.bold, fontSize: 15, color: colors.inkAsst, paddingVertical: 7 },
   tabTextOn: { color: colors.ink },
   tabUnderline: { height: 2.5, width: '100%', backgroundColor: 'transparent', marginBottom: -1 },
   tabUnderlineOn: { backgroundColor: colors.ink },
+
+  // 스크롤 콘텐츠 본문 — 좌우/상단 여백. (탭 래퍼는 전체폭이므로 여기서 좌우 패딩)
+  content: { paddingHorizontal: 16, paddingTop: 18 },
 
   secTitle: { marginBottom: 8 },
   secTitleGap: { marginTop: 14, marginBottom: 8 },
@@ -491,16 +516,16 @@ const s = StyleSheet.create({
   priceEmpty: { fontFamily: font.semibold, fontSize: 12.5, color: colors.inkAsst },
   priceInput: { fontFamily: font.extrabold, fontSize: 14, color: colors.primary, width: 96, textAlign: 'right', paddingVertical: 2, borderBottomWidth: 1.5, borderBottomColor: colors.primary },
 
-  // 이번 장보기 요약 카드 (탭 위) — 짙은 그린 카드. 상단 합계 + 하단 식재료/생필품 박스
-  grandBar: { marginHorizontal: 16, marginTop: 4, marginBottom: 12, padding: 16, borderRadius: radius.xl, backgroundColor: colors.darkGreen },
-  grandTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 },
-  grandLabel: { fontFamily: font.bold, fontSize: 14, color: '#7FE3AA' },
-  grandValue: { fontFamily: font.extrabold, fontSize: 22, color: colors.white, letterSpacing: -0.5 },
+  // 이번 장보기 요약 카드 (탭 위) — 짙은 그린 카드. 상단 합계 + 하단 식재료/생필품 박스. 높이를 슬림하게.
+  grandBar: { marginHorizontal: 16, marginTop: 4, marginBottom: 10, padding: 13, borderRadius: radius.xl, backgroundColor: colors.darkGreen },
+  grandTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 9 },
+  grandLabel: { fontFamily: font.bold, fontSize: 13, color: '#7FE3AA' },
+  grandValue: { fontFamily: font.extrabold, fontSize: 19, color: colors.white, letterSpacing: -0.5 },
   // 하단 식재료 / 생필품 박스 — 카드 위에 살짝 밝은 어두운 패널
-  grandBoxes: { flexDirection: 'row', gap: 10 },
-  grandBox: { flex: 1, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: radius.md, paddingHorizontal: 13, paddingVertical: 11, gap: 5 },
-  grandBoxLabel: { fontFamily: font.bold, fontSize: 12.5, color: '#9FBCAB' },
-  grandBoxValue: { fontFamily: font.extrabold, fontSize: 15, color: colors.white },
+  grandBoxes: { flexDirection: 'row', gap: 8 },
+  grandBox: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 8 },
+  grandBoxLabel: { fontFamily: font.bold, fontSize: 12, color: '#9FBCAB' },
+  grandBoxValue: { fontFamily: font.extrabold, fontSize: 14, color: colors.white },
 
   // 구매완료 헤더 (곳간으로 이동 + 전체 삭제)
   doneHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 20, marginBottom: 8 },

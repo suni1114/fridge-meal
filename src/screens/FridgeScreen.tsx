@@ -9,6 +9,7 @@ import {
   Modal,
   StyleSheet,
   Platform,
+  Animated,
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
@@ -53,6 +54,19 @@ export function FridgeScreen() {
   const [w, setW] = useState(0);
   const pagerRef = useRef<ScrollView>(null);
 
+  // 스크롤에 따라 상단 4줄(곳간 제목 + 식재료탭 + 냉장탭 + 정렬)을 슬림하게 압축한다.
+  // 본문 세로 스크롤값을 하나의 Animated 값으로 모아, 제목은 작아지고 나머지 줄은 위로 붙는다.
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const COLLAPSE = 56;
+  const iv = (from: number, to: number) => scrollY.interpolate({ inputRange: [0, COLLAPSE], outputRange: [from, to], extrapolate: 'clamp' });
+  const titleSize = iv(24, 17);
+  const headPadTop = iv(12, 6);
+  const headPadBottom = iv(10, 5);
+  const tabBarMt = iv(8, 3);
+  const locTabsMt = iv(10, 5);
+  const sortPadTop = iv(12, 6);
+  const onBodyScroll = Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false });
+
   const sortKey = (SORTS[sortIdx] ?? SORTS[0]).key; // 범위 이탈(과거 상태 잔존 등)에도 안전하게
   // 같은 재료를 또 산 경우(우유·우유2)는 정렬과 무관하게 위아래로 붙여 보여준다.
   // 정렬 결과에서 같은 이름(번호 뗀 기준)이 처음 나온 자리에 같은 묶음을 모은다.
@@ -94,12 +108,13 @@ export function FridgeScreen() {
 
   const goTab = (i: number) => {
     setTab(i);
+    scrollY.setValue(0); // 새 보관위치 페이지는 맨 위 → 상단 줄을 다시 펼친다
     pagerRef.current?.scrollTo({ x: i * w, animated: true });
   };
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (w > 0) {
       const i = Math.round(e.nativeEvent.contentOffset.x / w);
-      if (i !== tab) setTab(i);
+      if (i !== tab) { setTab(i); scrollY.setValue(0); }
     }
   };
 
@@ -162,14 +177,14 @@ export function FridgeScreen() {
 
   return (
     <View style={s.root}>
-      <View style={s.header}>
-        <Text style={s.title}>곳간</Text>
+      <Animated.View style={[s.header, { paddingTop: headPadTop, paddingBottom: headPadBottom }]}>
+        <Animated.Text style={[s.title, { fontSize: titleSize }]}>곳간</Animated.Text>
         <HeaderActions
           showBell={false}
           searchActive={searchOpen}
           onSearch={() => setSearchOpen((o) => { if (o) setQuery(''); return !o; })}
         />
-      </View>
+      </Animated.View>
 
       {searchOpen && (
         <View style={s.searchRow}>
@@ -184,7 +199,7 @@ export function FridgeScreen() {
       )}
 
       {/* 최상위 구분 — 식재료 / 생필품 밑줄 탭(각 50%). 식재료 탭 안, 글자 오른쪽에 위치/종류 세그먼트. */}
-      <View style={s.tabBar}>
+      <Animated.View style={[s.tabBar, { marginTop: tabBarMt }]}>
         <Pressable style={s.viewTab} onPress={() => setTopTab('food')}>
           <View style={s.viewTabRow}>
             <Text style={[s.viewTabText, topTab === 'food' && s.viewTabTextOn]}>식재료</Text>
@@ -210,11 +225,11 @@ export function FridgeScreen() {
           </View>
           <View style={[s.viewUnderline, topTab === 'household' && s.viewUnderlineOn]} />
         </Pressable>
-      </View>
+      </Animated.View>
 
       {/* 위치 모드일 때만 보관위치 하위 탭 — 냉장·냉동·실온 (아이콘 + 개수, 선택 시 채움) */}
       {topTab === 'food' && foodGroup === 'location' && (
-        <View style={s.locTabs}>
+        <Animated.View style={[s.locTabs, { marginTop: locTabsMt }]}>
           {locTabs.map((t, i) => {
             const on = i === tabClamped;
             return (
@@ -225,11 +240,11 @@ export function FridgeScreen() {
               </Pressable>
             );
           })}
-        </View>
+        </Animated.View>
       )}
 
       {/* 정렬 — 칩 (임박순·최신순·이름순·잔량순) */}
-      <View style={s.sortRow}>
+      <Animated.View style={[s.sortRow, { paddingTop: sortPadTop }]}>
         <Icon name="funnel" size={13} color={colors.inkAsst} weight="bold" />
         {sortOrder.map((i) => {
           const srt = SORTS[i];
@@ -241,7 +256,7 @@ export function FridgeScreen() {
           );
         })}
         <Text style={s.countText}>{topTab === 'food' ? (foodGroup === 'location' ? listFor(tabClamped).length : foodAll.length) : householdList.length}개</Text>
-      </View>
+      </Animated.View>
 
       {topTab === 'food' && foodGroup === 'location' ? (
         /* 식재료 · 위치별 — 좌우 스와이프되는 보관위치 페이지 */
@@ -259,7 +274,7 @@ export function FridgeScreen() {
                 const list = listFor(i);
                 const emptyMsg = `${t.label} 보관 식재료이 없어요.`;
                 return (
-                  <ScrollView key={t.label} style={{ width: w }} contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 4, paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
+                  <ScrollView key={t.label} style={{ width: w }} contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 4, paddingBottom: 24 }} showsVerticalScrollIndicator={false} onScroll={onBodyScroll} scrollEventThrottle={16}>
                     {list.length > 0 && <View style={s.listBox}>{list.map(renderRow)}</View>}
                     {list.length === 0 && <Text style={s.empty}>{emptyMsg}</Text>}
                   </ScrollView>
@@ -270,12 +285,12 @@ export function FridgeScreen() {
         </View>
       ) : topTab === 'food' ? (
         /* 식재료 · 종류별 — 보관위치 무시하고 카테고리로 묶은 한 목록 */
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 4, paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 4, paddingBottom: 24 }} showsVerticalScrollIndicator={false} onScroll={onBodyScroll} scrollEventThrottle={16}>
           {foodAll.length > 0 ? renderCategoryGroups(foodAll) : <Text style={s.empty}>등록된 식재료이 없어요.</Text>}
         </ScrollView>
       ) : (
         /* 생필품 — 보관위치 구분 없이 한 목록 */
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 4, paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 4, paddingBottom: 24 }} showsVerticalScrollIndicator={false} onScroll={onBodyScroll} scrollEventThrottle={16}>
           {householdList.length > 0 && <View style={s.listBox}>{householdList.map(renderRow)}</View>}
           {householdList.length === 0 && <Text style={s.empty}>등록된 생필품이 없어요.</Text>}
         </ScrollView>
