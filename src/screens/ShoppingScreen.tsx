@@ -2,8 +2,8 @@
 //  · 식재료: 자동추천(위쪽) + 직접추가를 '구매목록'으로 묶음. 항목 탭 = 냉장고에 추가 / 이름 수정 / 삭제.
 //  · 생필품: 함께 살 휴지·세제 등. 식재료처럼 카테고리에서 골라 담고 이모지 타일로 보인다.
 //    (냉장고에는 들어가지 않으므로 항목 탭 = 이름 수정 / 삭제만)
-import React, { useState, useRef } from 'react';
-import { View, Text, ScrollView, Pressable, TextInput, Modal, KeyboardAvoidingView, StyleSheet, Platform, Animated } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, ScrollView, Pressable, TextInput, Modal, KeyboardAvoidingView, StyleSheet, Platform, Animated, Keyboard } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius, cat } from '../theme/tokens';
 import { font } from '../theme/fonts';
@@ -46,6 +46,23 @@ export function ShoppingScreen() {
   const titleSize = scrollY.interpolate({ inputRange: [0, COLLAPSE], outputRange: [24, 17], extrapolate: 'clamp' });
   const subHeight = scrollY.interpolate({ inputRange: [0, COLLAPSE], outputRange: [21, 0], extrapolate: 'clamp' });
   const subOpacity = scrollY.interpolate({ inputRange: [0, COLLAPSE * 0.5], outputRange: [1, 0], extrapolate: 'clamp' });
+  // 금액 인라인 입력 시 키패드가 입력칸을 가리지 않도록: 포커스된 칸을 키패드 위로 스크롤해 올린다.
+  const listRef = useRef<ScrollView>(null);
+  const scrollOffset = useRef(0); // 현재 세로 스크롤 위치(실측)
+  const priceInputRef = useRef<TextInput>(null); // 편집 중인 금액 입력칸
+  useEffect(() => {
+    const sub = Keyboard.addListener('keyboardDidShow', (e) => {
+      const input = priceInputRef.current;
+      if (!input) return; // 금액 편집 중이 아니면 무시
+      const kbTop = e.endCoordinates.screenY; // 키패드 상단의 화면 Y
+      input.measureInWindow((_x, y, _w, h) => {
+        const margin = 28;
+        const overflow = y + h - (kbTop - margin); // 입력칸 하단이 키패드에 얼마나 가렸는지
+        if (overflow > 0) listRef.current?.scrollTo({ y: scrollOffset.current + overflow, animated: true });
+      });
+    });
+    return () => sub.remove();
+  }, []);
   const [tab, setTab] = useState<ShoppingKind>('food');
   const [pricingId, setPricingId] = useState<string | null>(null); // 금액 인라인 편집 중인 행
   const [priceDraft, setPriceDraft] = useState('');
@@ -157,6 +174,7 @@ export function ShoppingScreen() {
           {item.checked ? (
             pricingId === item.id ? (
               <TextInput
+                ref={priceInputRef}
                 autoFocus
                 value={priceDraft}
                 onChangeText={(t) => setPriceDraft(t.replace(/[^0-9]/g, ''))}
@@ -204,10 +222,15 @@ export function ShoppingScreen() {
       </View>
 
       <Animated.ScrollView
+        ref={listRef}
         stickyHeaderIndices={grandTotal > 0 ? [1] : [0]}
-        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+          useNativeDriver: false,
+          listener: (e: any) => { scrollOffset.current = e.nativeEvent.contentOffset.y; },
+        })}
         scrollEventThrottle={16}
-        contentContainerStyle={{ paddingBottom: 20 }}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: pricingId ? 320 : 20 }}
         showsVerticalScrollIndicator={false}
       >
         {/* 이번 장보기 요약 — 스크롤하면 위로 밀려 사라진다. 상단: 합계 / 하단: 식재료·생필품 박스 */}
