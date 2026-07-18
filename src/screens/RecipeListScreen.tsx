@@ -45,12 +45,18 @@ export function RecipeListScreen() {
   const focus = nav.recipeFocus;
   const focusList = focus ? all.filter((m) => recipeUsesIngredient(m.recipe, focus)) : [];
 
+  // 탭을 눌러 프로그램 스크롤하는 동안엔 onScroll의 탭 변경을 무시한다.
+  // (안 그러면 애니메이션이 지나가는 중간 페이지마다 setTab이 불려 '반찬→메인'처럼 튄다)
+  const programmatic = useRef(false);
   const goTab = (i: number) => {
     setTab(i);
     scrollY.setValue(0); // 새 카테고리 페이지는 맨 위 → 상단을 다시 펼친다
+    programmatic.current = true;
     pagerRef.current?.scrollTo({ x: i * w, animated: true });
+    setTimeout(() => { programmatic.current = false; }, 350); // 애니메이션 종료 후 스와이프 추적 재개
   };
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (programmatic.current) return; // 탭 눌러 이동 중 — 중간 페이지로 튀지 않게
     if (w > 0) {
       const i = Math.round(e.nativeEvent.contentOffset.x / w);
       if (i !== tab) { setTab(i); scrollY.setValue(0); }

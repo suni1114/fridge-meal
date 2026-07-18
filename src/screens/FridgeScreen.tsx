@@ -106,12 +106,17 @@ export function FridgeScreen() {
   // 카테고리별 보기용 — 보관위치 무시하고 식재료 전체.
   const foodAll = sortList(fridge.filter((x) => x.kind !== 'household' && x.name.includes(q)));
 
+  // 탭을 눌러 프로그램 스크롤하는 동안엔 onScroll의 탭 변경을 무시(중간 페이지로 튐 방지).
+  const programmatic = useRef(false);
   const goTab = (i: number) => {
     setTab(i);
     scrollY.setValue(0); // 새 보관위치 페이지는 맨 위 → 상단 줄을 다시 펼친다
+    programmatic.current = true;
     pagerRef.current?.scrollTo({ x: i * w, animated: true });
+    setTimeout(() => { programmatic.current = false; }, 350);
   };
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (programmatic.current) return;
     if (w > 0) {
       const i = Math.round(e.nativeEvent.contentOffset.x / w);
       if (i !== tab) { setTab(i); scrollY.setValue(0); }
